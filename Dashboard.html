@@ -22,7 +22,6 @@
         }
 
         .app-list {
-            /* ปรับให้เป็น 3 คอลัมน์ตายตัว แต่ยังคงตอบสนองต่อหน้าจอเล็ก */
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
             gap: 25px;
@@ -30,7 +29,6 @@
             margin: 0 auto;
         }
 
-        /* สำหรับหน้าจอใหญ่กว่า 768px บังคับให้เป็น 3 คอลัมน์เพื่อความสวยงาม */
         @media(min-width: 768px) {
              .app-list {
                 grid-template-columns: repeat(3, 1fr);
@@ -51,7 +49,6 @@
             box-shadow: 0 12px 25px rgba(0,0,0,0.15);
         }
 
-        /* Class สำหรับไอคอน (Base64 Image) */
         .app-icon {
             width: 80px;
             height: 80px;
@@ -66,20 +63,36 @@
             font-weight: 600;
         }
 
+        /* 🚀 สไตล์ใหม่สำหรับปุ่ม (คล้าย Bootstrap Success) */
         .app-card a {
-            display: inline-block;
+            display: inline-flex; 
+            align-items: center;
+            justify-content: center;
             text-decoration: none;
-            background-color: #0078d4;
+            background-color: #28a745; /* สีเขียว (Success) */
             color: #fff;
             font-weight: 600;
-            padding: 10px 20px;
-            border-radius: 8px;
-            transition: background-color 0.2s;
+            padding: 8px 18px; 
+            border-radius: 10px; 
+            transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 10px rgba(40, 167, 69, 0.4); 
+            font-size: 0.95rem; 
+            margin-top: 10px; 
         }
 
         .app-card a:hover {
-            background-color: #005ea3;
+            background-color: #1e7e34; 
+            transform: translateY(-3px); 
+            box-shadow: 0 6px 15px rgba(40, 167, 69, 0.6); 
         }
+
+        .app-card a svg {
+            margin-right: 8px; 
+            width: 16px;
+            height: 16px;
+            vertical-align: middle; /* จัดตำแหน่งไอคอนให้ตรงกลางกับข้อความ */
+        }
+        /* 🚀 สิ้นสุดสไตล์ปุ่ม */
 
         @media(max-width: 500px) {
             h1 {
@@ -88,6 +101,10 @@
             .app-icon {
                 width: 60px;
                 height: 60px;
+            }
+            .app-card a {
+                padding: 7px 15px; 
+                font-size: 0.9rem;
             }
         }
     </style>
@@ -98,39 +115,75 @@
 
     <div class="app-list">
         <div class="app-card">
-            <img class="app-icon" src="[ใส่โค้ด base64-image.de สำหรับ App 1 ที่นี่]" alt="App 1 Icon">
-            <h3>แอป 1</h3>
-            <a href="https://apps.powerapps.com/play/e/default-539e183a-2de4-4fef-8217-904f310d2199/a/238383c5-0b83-4b23-9fa7-d93ee4b37334?tenantId=539e183a-2de4-4fef-8217-904f310d2199&sourcetime=1760414179421" target="_blank">เปิดแอป</a>
+            <img class="app-icon" src="[ใส่โค้ด base64-image.de สำหรับ App 1 ที่นี่]" alt="Cleaning Score Icon">
+            <h3>Cleaning Score</h3>
+            <a href="https://apps.powerapps.com/play/e/default-539e183a-2de4-4fef-8217-904f310d2199/a/238383c5-0b83-4b23-9fa7-d93ee4b37334?tenantId=539e183a-2de4-4fef-8217-904f310d2199&sourcetime=1760414179421" target="_blank">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+                    <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+                </svg>
+                Open App
+            </a>
         </div>
         
         <div class="app-card">
-            <img class="app-icon" src="[ใส่โค้ด base64-image.de สำหรับ App 2 ที่นี่]" alt="App 2 Icon">
-            <h3>แอป 2</h3>
-            <a href="https://apps.powerapps.com/play/e/default-539e183a-2de4-4fef-8217-904f310d2199/a/8375232e-6ab1-4b26-9a96-8d5e69917fe1?tenantId=539e183a-2de4-4fef-8217-904f310d2199&hint=a83576b0-7e93-493a-a638-e4fa78875f72&sourcetime=1760414199762" target="_blank">เปิดแอป</a>
+            <img class="app-icon" src="[ใส่โค้ด base64-image.de สำหรับ App 2 ที่นี่]" alt="Building&Utility Store Icon">
+            <h3>Building&Utility Store</h3>
+            <a href="https://apps.powerapps.com/play/e/default-539e183a-2de4-4fef-8217-904f310d2199/a/8375232e-6ab1-4b26-9a96-8d5e69917fe1?tenantId=539e183a-2de4-4fef-8217-904f310d2199&hint=a83576b0-7e93-493a-a638-e4fa78875f72&sourcetime=1760414199762" target="_blank">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+                    <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+                </svg>
+                Open App
+            </a>
         </div>
         
         <div class="app-card">
-            <img class="app-icon" src="[ใส่โค้ด base64-image.de สำหรับ App 3 ที่นี่]" alt="App 3 Icon">
-            <h3>แอป 3</h3>
-            <a href="https://apps.powerapps.com/play/e/default-539e183a-2de4-4fef-8217-904f310d2199/a/3c80c557-06e0-4da5-b214-bfaa88be5935?tenantId=539e183a-2de4-4fef-8217-904f310d2199&sourcetime=1760414214077" target="_blank">เปิดแอป</a>
+            <img class="app-icon" src="[ใส่โค้ด base64-image.de สำหรับ App 3 ที่นี่]" alt="Roof Inspection Icon">
+            <h3>Roof Inspection</h3>
+            <a href="https://apps.powerapps.com/play/e/default-539e183a-2de4-4fef-8217-904f310d2199/a/3c80c557-06e0-4da5-b214-bfaa88be5935?tenantId=539e183a-2de4-4fef-8217-904f310d2199&sourcetime=1760414214077" target="_blank">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+                    <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+                </svg>
+                Open App
+            </a>
         </div>
         
         <div class="app-card">
-            <img class="app-icon" src="[ใส่โค้ด base64-image.de สำหรับ App 4 ที่นี่]" alt="App 4 Icon">
-            <h3>แอป 4</h3>
-            <a href="https://apps.powerapps.com/play/e/default-539e183a-2de4-4fef-8217-904f310d2199/a/bcb43fcf-c883-4002-adc0-dd6d4be43ea7?tenantId=539e183a-2de4-4fef-8217-904f310d2199&sourcetime=1760414231908" target="_blank">เปิดแอป</a>
+            <img class="app-icon" src="[ใส่โค้ด base64-image.de สำหรับ App 4 ที่นี่]" alt="EZ Purlin Icon">
+            <h3>EZ Purlin</h3>
+            <a href="https://apps.powerapps.com/play/e/default-539e183a-2de4-4fef-8217-904f310d2199/a/bcb43fcf-c883-4002-adc0-dd6d4be43ea7?tenantId=539e183a-2de4-4fef-8217-904f310d2199&sourcetime=1760414231908" target="_blank">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+                    <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+                </svg>
+                Open App
+            </a>
         </div>
         
         <div class="app-card">
-            <img class="app-icon" src="[ใส่โค้ด base64-image.de สำหรับ App 5 ที่นี่]" alt="App 5 Icon">
-            <h3>แอป 5</h3>
-            <a href="https://apps.powerapps.com/play/e/default-539e183a-2de4-4fef-8217-904f310d2199/a/78b2e3fc-effb-4837-92db-c90e02d467b4?tenantId=539e183a-2de4-4fef-8217-904f310d2199&hint=474b3868-38e2-427e-989d-3fe96e51f556&sourcetime=1760414257350" target="_blank">เปิดแอป</a>
+            <img class="app-icon" src="[ใส่โค้ด base64-image.de สำหรับ App 5 ที่นี่]" alt="แจ้งซ่อมห้องน้ำออนไลน์ Icon">
+            <h3>แจ้งซ่อมห้องน้ำออนไลน์</h3>
+            <a href="https://apps.powerapps.com/play/e/default-539e183a-2de4-4fef-8217-904f310d2199/a/78b2e3fc-effb-4837-92db-c90e02d467b4?tenantId=539e183a-2de4-4fef-8217-904f310d2199&hint=474b3868-38e2-427e-989d-3fe96e51f556&sourcetime=1760414257350" target="_blank">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+                    <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+                </svg>
+                Open App
+            </a>
         </div>
         
         <div class="app-card">
             <img class="app-icon" src="[ใส่โค้ด base64-image.de สำหรับ EasyLeave ที่นี่]" alt="EasyLeave Icon">
             <h3>EasyLeave</h3>
-            <a href="https://ssi-building.github.io/EasyLeave/Dashboard-admin.html" target="_blank">เปิดแอป</a>
+            <a href="https://ssi-building.github.io/EasyLeave/Dashboard-admin.html" target="_blank">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+                    <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+                </svg>
+                Open App
+            </a>
         </div>
     </div>
 
