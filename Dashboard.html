@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รวมแอปของฉัน</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #102a43;
+            font-weight: 600;
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+        }
+
+        .app-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .app-card {
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            padding: 25px 20px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .app-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+        }
+
+        .app-card img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            margin-bottom: 15px;
+        }
+
+        .app-card h3 {
+            margin: 10px 0;
+            color: #243b53;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .app-card a {
+            display: inline-block;
+            text-decoration: none;
+            background-color: #0078d4;
+            color: #fff;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .app-card a:hover {
+            background-color: #005ea3;
+        }
+
+        @media(max-width: 500px) {
+            h1 {
+                font-size: 2rem;
+            }
+            .app-card img {
+                width: 60px;
+                height: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>รวมแอปของฉัน</h1>
+
+    <div class="app-list">
+        <div class="app-card">
+            <img src="https://via.placeholder.com/80?text=App1" alt="App 1 Icon">
+            <h3>แอป 1</h3>
+            <a href="https://apps.powerapps.com/play/e/default-539e183a-2de4-4fef-8217-904f310d2199/a/238383c5-0b83-4b23-9fa7-d93ee4b37334?tenantId=539e183a-2de4-4fef-8217-904f310d2199&sourcetime=1760414179421" target="_blank">เปิดแอป</a>
+        </div>
+        <div class="app-card">
+            <img src="https://via.placeholder.com/80?text=App2" alt="App 2 Icon">
+            <h3>แอป 2</h3>
+            <a href="https://apps.powerapps.com/play/e/default-539e183a-2de4-4fef-8217-904f310d2199/a/8375232e-6ab1-4b26-9a96-8d5e69917fe1?tenantId=539e183a-2de4-4fef-8217-904f310d2199&hint=a83576b0-7e93-493a-a638-e4fa78875f72&sourcetime=1760414199762" target="_blank">เปิดแอป</a>
+        </div>
+        <div class="app-card">
+            <img src="https://via.placeholder.com/80?text=App3" alt="App 3 Icon">
+            <h3>แอป 3</h3>
+            <a href="https://apps.powerapps.com/play/e/default-539e183a-2de4-4fef-8217-904f310d2199/a/3c80c557-06e0-4da5-b214-bfaa88be5935?tenantId=539e183a-2de4-4fef-8217-904f310d2199&sourcetime=1760414214077" target="_blank">เปิดแอป</a>
+        </div>
+        <div class="app-card">
+            <img src="https://via.placeholder.com/80?text=App4" alt="App 4 Icon">
+            <h3>แอป 4</h3>
+            <a href="https://apps.powerapps.com/play/e/default-539e183a-2de4-4fef-8217-904f310d2199/a/bcb43fcf-c883-4002-adc0-dd6d4be43ea7?tenantId=539e183a-2de4-4fef-8217-904f310d2199&sourcetime=1760414231908" target="_blank">เปิดแอป</a>
+        </div>
+        <div class="app-card">
+            <img src="https://via.placeholder.com/80?text=App5" alt="App 5 Icon">
+            <h3>แอป 5</h3>
+            <a href="https://apps.powerapps.com/play/e/default-539e183a-2de4-4fef-8217-904f310d2199/a/78b2e3fc-effb-4837-92db-c90e02d467b4?tenantId=539e183a-2de4-4fef-8217-904f310d2199&hint=474b3868-38e2-427e-989d-3fe96e51f556&sourcetime=1760414257350" target="_blank">เปิดแอป</a>
+        </div>
+        <div class="app-card">
+            <img src="https://via.placeholder.com/80?text=EasyLeave" alt="EasyLeave Icon">
+            <h3>EasyLeave</h3>
+            <a href="https://ssi-building.github.io/EasyLeave/Dashboard-admin.html" target="_blank">เปิดแอป</a>
+        </div>
+    </div>
+
+</body>
+</html>
