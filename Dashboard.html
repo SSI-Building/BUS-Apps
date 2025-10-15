@@ -5,13 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BUS Apps</title>
 <style>
+    /* ---------------------------------------------------------------------- */
+    /* ส่วนที่ 1: การจัดวางพื้นฐานและ Header */
+    /* ---------------------------------------------------------------------- */
     html, body {
         margin: 0;
         padding: 0;
         font-family: 'Inter', sans-serif;
         height: 100%;
         overflow-x: hidden;
-        background: rgba(220,220, 220, 0.1); /* โปร่งใส */
+        background: transparent;
     }
 
     /* Canvas Background */
@@ -21,8 +24,8 @@
         left: 0;
         width: 100vw;
         height: 100vh;
-        z-index: -1; /* อยู่ด้านหลัง */
-        pointer-events: none; /* ไม่รบกวนคลิกเนื้อหา */
+        z-index: -1;
+        pointer-events: none;
     }
 
     .header-section {
@@ -30,19 +33,19 @@
         flex-direction: column;
         justify-content: flex-start;
         align-items: center;
-        padding: 20px;
+        padding: 40px 20px 20px 20px; 
         text-align: center;
     }
 
     .fancy-title {
-        font-size: 2rem;
+        font-size: 2.5rem; 
         font-weight: 800;
         background: linear-gradient(90deg, #28a745, #71c77f, #1e7e34);
         background-size: 200% 200%;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         letter-spacing: 1px;
-        margin-bottom: 5px;
+        margin-bottom: 10px; 
         animation: gradientMove 4s infinite linear;
     }
 
@@ -54,20 +57,33 @@
 
     .header-section p {
         margin: 0;
-        font-size: 1rem;
+        font-size: 1.1rem; 
         color: #243b53;
+        font-weight: 600;
     }
 
+    /* ---------------------------------------------------------------------- */
+    /* ส่วนที่ 2: การจัดวาง App List (ส่วนที่ปรับปรุงหลัก: ใช้ Flexbox แทน Grid) */
+    /* ---------------------------------------------------------------------- */
+
     .app-list {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 25px;
-        max-width: 1200px;
+        display: flex; 
+        flex-wrap: wrap; 
+        justify-content: center; /* ⭐ จัดกึ่งกลาง Card ที่เหลือเสมอ ⭐ */
+        align-items: flex-start; 
+
+        gap: 25px; 
+        max-width: 1200px; /* Container กว้างสุด 1200px */
         margin: 20px auto 50px auto;
         padding: 0 20px;
     }
 
     .app-card {
+        /* ⭐⭐⭐ ปรับค่าใหม่สำหรับ 4 items/Row ⭐⭐⭐ */
+        flex: 1 1 200px; /* ความกว้างขั้นต่ำของ Card (Responsive Breakpoint) */
+        max-width: 280px; /* ความกว้างสูงสุด: (1200px - 3*25px) / 4 = 281.25px. เราใช้ 280px เพื่อให้ลงตัว */
+        min-width: 200px; 
+
         background-color: rgba(255,255,255,0.95);
         border-radius: 20px;
         padding: 25px 20px;
@@ -77,6 +93,10 @@
         position: relative;
         overflow: hidden;
     }
+    
+    /* ---------------------------------------------------------------------- */
+    /* ส่วนที่ 3: Styling Card (คงเดิม) */
+    /* ---------------------------------------------------------------------- */
 
     .app-card:hover {
         transform: translateY(-10px);
