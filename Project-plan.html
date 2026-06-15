@@ -182,7 +182,7 @@
             </div>
 
             <label style="font-weight: 600; color: #34495e; font-size: 13px; margin-bottom: 8px; display:block;">
-                <i class="fa-solid fa-timeline" style="color: var(--primary-color);"></i> กำหนดสัปดาห์ (1-4) ของ 7 กระบวนการ (หากข้ามกระบวนการไหน ให้ปล่อยว่างไว้)
+                <i class="fa-solid fa-timeline" style="color: var(--primary-color);"></i> กำหนดสัปดาห์ (1-4) ของ 7 กระบวนการ <span style="color:#e74c3c;">(ระบบจะล็อคไม่ให้เลือกเวลาก่อนหน้าขั้นตอนแรกอัตโนมัติ)</span>
             </label>
             <div class="timeline-table-container">
                 <table class="timeline-table">
@@ -277,31 +277,19 @@
             "7. ส่งมอบงาน"
         ];
 
-        // ฟังก์ชันสร้าง Dropdown ของสัปดาห์ (48 ออปชัน 0 ถึง 47)
-        function generateWeekOptions() {
-            let opts = `<option value="">- เลือก -</option>`;
-            for (let m = 0; m < 12; m++) {
-                for (let w = 1; w <= 4; w++) {
-                    let globalIndex = (m * 4) + (w - 1);
-                    opts += `<option value="${globalIndex}">${months[m]} W${w}</option>`;
-                }
-            }
-            return opts;
-        }
-
-        // โครงสร้างข้อมูลใหม่ รองรับ Array ของ 7 ขั้นตอน (แต่ละขั้นตอนมี pS, pE, aS, aE)
+        // ข้อมูลตัวอย่างเริ่มต้น
         let projectData = [
             {
                 id: 1, type: 'Major Improvement', description: 'ปรับปรุงถนนช่วงแยก Slabyard - Fire Station', status: 'Normal',
                 assignee: 'Pandda/Phuritat', progressPlan: 100, progressActual: 33, budgetPlan: 2800000, budgetActual: 1500000, remark: 'อยู่ระหว่างรอ Suppler เสนอราคา',
                 timeline: [
-                    { pS: 4, pE: 7, aS: 4, aE: 6 },     // 1. ออกแบบ (Feb W1 - Feb W4) | Act: Feb W1 - Feb W3
-                    { pS: 8, pE: 8, aS: 7, aE: 7 },     // 2. PR (Mar W1) | Act: Feb W4
-                    { pS: 9, pE: 10, aS: 8, aE: 11 },   // 3. ต่อรอง (Mar W2 - Mar W3) | Act: Mar W1 - Mar W4
-                    { pS: 11, pE: 11, aS: "", aE: "" }, // 4. PO (Mar W4)
-                    { pS: 12, pE: 20, aS: "", aE: "" }, // 5. ดำเนินการ (Apr W1 - Jun W1)
-                    { pS: 21, pE: 22, aS: "", aE: "" }, // 6. ตรวจรับ
-                    { pS: 23, pE: 23, aS: "", aE: "" }  // 7. ส่งมอบ
+                    { pS: 4, pE: 7, aS: 4, aE: 6 },     
+                    { pS: 8, pE: 8, aS: 7, aE: 7 },     
+                    { pS: 9, pE: 10, aS: 8, aE: 11 },   
+                    { pS: 11, pE: 11, aS: "", aE: "" }, 
+                    { pS: 12, pE: 20, aS: "", aE: "" }, 
+                    { pS: 21, pE: 22, aS: "", aE: "" }, 
+                    { pS: 23, pE: 23, aS: "", aE: "" }  
                 ]
             },
             {
@@ -311,8 +299,8 @@
                     { pS: "", pE: "", aS: "", aE: "" }, 
                     { pS: "", pE: "", aS: "", aE: "" }, 
                     { pS: "", pE: "", aS: "", aE: "" }, 
-                    { pS: 10, pE: 10, aS: 10, aE: 10 },   // 4. PO (Mar W3)
-                    { pS: 40, pE: 43, aS: "", aE: "" },   // 5. ดำเนินการ (Nov W1 - Nov W4) **กระโดดมาเดือน พ.ย.**
+                    { pS: 10, pE: 10, aS: 10, aE: 10 },   
+                    { pS: 40, pE: 43, aS: "", aE: "" },   
                     { pS: "", pE: "", aS: "", aE: "" }, 
                     { pS: "", pE: "", aS: "", aE: "" }  
                 ]
@@ -345,6 +333,68 @@
             }
         });
 
+        // ฟังก์ชันอัปเดตสิทธิ์การเลือก Dropdown รายบรรทัด (ขัดขวางไม่ให้เลือกย้อนหลังขั้นตอนก่อนหน้า)
+        function updateDropdownLimits() {
+            let lastPlanEnd = -1;
+            let lastActualEnd = -1;
+
+            for (let i = 0; i < 7; i++) {
+                const pS = document.getElementById(`pS_${i}`);
+                const pE = document.getElementById(`pE_${i}`);
+                const aS = document.getElementById(`aS_${i}`);
+                const aE = document.getElementById(`aE_${i}`);
+
+                // --- ภาค PLAN ---
+                let currentPlanStart = pS.value !== "" ? parseInt(pS.value) : -1;
+                // ล็อคค่าเริ่มต้น: ต้องไม่ก่อนหน้าวันสิ้นสุดของข้อก่อนหน้า
+                Array.from(pS.options).forEach(opt => {
+                    if(opt.value !== "") {
+                        let val = parseInt(opt.value);
+                        opt.disabled = val < lastPlanEnd;
+                    }
+                });
+                // ล็อคค่าสิ้นสุด: ต้องไม่ก่อนหน้าวันเริ่มต้นของตัวเอง
+                Array.from(pE.options).forEach(opt => {
+                    if(opt.value !== "") {
+                        let val = parseInt(opt.value);
+                        opt.disabled = val < currentPlanStart;
+                    }
+                });
+                // เก็บประวัติวันสิ้นสุดล่าสุดของกลุ่ม Plan
+                if (pE.value !== "") lastPlanEnd = Math.max(lastPlanEnd, parseInt(pE.value));
+                else if (pS.value !== "") lastPlanEnd = Math.max(lastPlanEnd, parseInt(pS.value));
+
+                // --- ภาค ACTUAL ---
+                let currentActualStart = aS.value !== "" ? parseInt(aS.value) : -1;
+                Array.from(aS.options).forEach(opt => {
+                    if(opt.value !== "") {
+                        let val = parseInt(opt.value);
+                        opt.disabled = val < lastActualEnd;
+                    }
+                });
+                Array.from(aE.options).forEach(opt => {
+                    if(opt.value !== "") {
+                        let val = parseInt(opt.value);
+                        opt.disabled = val < currentActualStart;
+                    }
+                });
+                if (aE.value !== "") lastActualEnd = Math.max(lastActualEnd, parseInt(aE.value));
+                else if (aS.value !== "") lastActualEnd = Math.max(lastActualEnd, parseInt(aS.value));
+            }
+        }
+
+        // ฟังก์ชันสร้างรายการสัปดาห์ 48 ช่อง
+        function buildSelectOptions(selectElement) {
+            let html = '<option value="">- เลือก -</option>';
+            for (let m = 0; m < 12; m++) {
+                for (let w = 1; w <= 4; w++) {
+                    let globalIndex = (m * 4) + (w - 1);
+                    html += `<option value="${globalIndex}">${months[m]} W${w}</option>`;
+                }
+            }
+            selectElement.innerHTML = html;
+        }
+
         function initApp() {
             const weeksHeader = document.getElementById('weeksHeaderRow');
             const processTbody = document.getElementById('processTbody');
@@ -368,21 +418,33 @@
                 activeMonthHeader.style.borderBottom = '2px solid #c0392b';
             }
 
-            // Gen แถวตาราง 7 ขั้นตอน ในฟอร์ม
-            const optionsHtml = generateWeekOptions();
+            // สรรสร้างตาราง 7 ขั้นตอนบนฟอร์ม
             let processRows = '';
             for (let i = 0; i < 7; i++) {
                 processRows += `
                     <tr>
                         <td class="process-name">${processNames[i]}</td>
-                        <td><select id="pS_${i}">${optionsHtml}</select></td>
-                        <td><select id="pE_${i}">${optionsHtml}</select></td>
-                        <td><select id="aS_${i}">${optionsHtml}</select></td>
-                        <td><select id="aE_${i}">${optionsHtml}</select></td>
+                        <td><select id="pS_${i}"></select></td>
+                        <td><select id="pE_${i}"></select></td>
+                        <td><select id="aS_${i}"></select></td>
+                        <td><select id="aE_${i}"></select></td>
                     </tr>
                 `;
             }
             processTbody.innerHTML = processRows;
+
+            // ผูก Options รายช่องพร้อมติด Event ดักฟังความเคลื่อนไหวเพื่อคำนวณการบล็อคข้ามขั้น
+            for (let i = 0; i < 7; i++) {
+                buildSelectOptions(document.getElementById(`pS_${i}`));
+                buildSelectOptions(document.getElementById(`pE_${i}`));
+                buildSelectOptions(document.getElementById(`aS_${i}`));
+                buildSelectOptions(document.getElementById(`aE_${i}`));
+
+                document.getElementById(`pS_${i}`).addEventListener('change', updateDropdownLimits);
+                document.getElementById(`pE_${i}`).addEventListener('change', updateDropdownLimits);
+                document.getElementById(`aS_${i}`).addEventListener('change', updateDropdownLimits);
+                document.getElementById(`aE_${i}`).addEventListener('change', updateDropdownLimits);
+            }
         }
 
         function renderTable() {
@@ -393,9 +455,7 @@
             projectData.sort((a, b) => typeOrder.indexOf(a.type) - typeOrder.indexOf(b.type));
 
             const typeCounts = {};
-            projectData.forEach(item => {
-                typeCounts[item.type] = (typeCounts[item.type] || 0) + 1;
-            });
+            projectData.forEach(item => { typeCounts[item.type] = (typeCounts[item.type] || 0) + 1; });
 
             let totalActualProgress = 0;
             let activeTasksCount = 0;
@@ -407,8 +467,8 @@
                     activeTasksCount++;
                 }
                 
-                let budgetTextPlan = row.budgetPlan ? Number(row.budgetPlan).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
-                let budgetTextActual = row.budgetActual ? Number(row.budgetActual).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+                let budgetTextPlan = row.budgetPlan ? Number(row.budgetPlan).toLocaleString(undefined, {minimumFractionDigits: 2}) : '-';
+                let budgetTextActual = row.budgetActual ? Number(row.budgetActual).toLocaleString(undefined, {minimumFractionDigits: 2}) : '-';
                 
                 const splitAssignee = row.assignee.split('/');
                 const planAssignee = splitAssignee[0] || row.assignee;
@@ -443,7 +503,7 @@
                     descriptionDisplay = `<span class="status-strike">${row.description}</span> <span class="status-badge badge-canceled">CANCELED</span>`;
                 }
 
-                // ==================== วาดแถวที่ 1 (Plan) ====================
+                // แถวที่ 1 (Plan)
                 let htmlRow1 = `
                     <tr data-id="${row.id}">
                         ${typeCellHtml}
@@ -460,16 +520,14 @@
                     let processNumHtml = '';
                     let isColored = false;
                     
-                    // เช็คทั้ง 7 กระบวนการว่าสัปดาห์นี้ตรงกับ Plan กระบวนการไหนบ้าง
                     row.timeline.forEach((proc, i) => {
                         if (proc.pS !== "" && proc.pE !== "") {
                             if (globalW >= parseInt(proc.pS) && globalW <= parseInt(proc.pE)) {
-                                processNumHtml = i + 1; // ใส่ตัวเลขกระบวนการ 1-7
+                                processNumHtml = i + 1;
                                 isColored = true;
                             }
                         }
                     });
-                    
                     htmlRow1 += `<td class="week-cell ${isColored ? 'plan-bar' : ''} ${isCurrentWeekCol ? 'current-week-cell' : ''}">${processNumHtml}</td>`;
                 }
                 
@@ -484,7 +542,7 @@
                     </tr>
                 `;
 
-                // ==================== วาดแถวที่ 2 (Actual) ====================
+                // แถวที่ 2 (Actual)
                 let htmlRow2 = `
                     <tr data-id="${row.id}-act">
                         <td class="sub-row">${actualAssignee}</td>
@@ -498,16 +556,14 @@
                     let processNumHtml = '';
                     let isColored = false;
                     
-                    // เช็คทั้ง 7 กระบวนการว่าสัปดาห์นี้ตรงกับ Actual กระบวนการไหนบ้าง
                     row.timeline.forEach((proc, i) => {
                         if (proc.aS !== "" && proc.aE !== "") {
                             if (globalW >= parseInt(proc.aS) && globalW <= parseInt(proc.aE)) {
-                                processNumHtml = i + 1; // ใส่ตัวเลขกระบวนการ 1-7
+                                processNumHtml = i + 1;
                                 isColored = true;
                             }
                         }
                     });
-                    
                     htmlRow2 += `<td class="week-cell ${isColored ? 'actual-bar' : ''} ${isCurrentWeekCol ? 'current-week-cell' : ''}">${processNumHtml}</td>`;
                 }
                 htmlRow2 += `</tr>`;
@@ -528,7 +584,6 @@
             const budgetPlanVal = document.getElementById('budgetPlan').value;
             const budgetActualVal = document.getElementById('budgetActual').value;
 
-            // ดึงข้อมูล 7 กระบวนการจากตารางในฟอร์ม
             let timelineData = [];
             for (let i = 0; i < 7; i++) {
                 timelineData.push({
@@ -582,7 +637,6 @@
             document.getElementById('progressActual').value = task.progressActual;
             document.getElementById('remark').value = task.remark || '';
 
-            // เอาข้อมูล 7 ขั้นตอนหยอดกลับเข้าไปในตารางในฟอร์ม
             for (let i = 0; i < 7; i++) {
                 let p = task.timeline[i];
                 document.getElementById(`pS_${i}`).value = p.pS !== null ? p.pS : '';
@@ -590,6 +644,9 @@
                 document.getElementById(`aS_${i}`).value = p.aS !== null ? p.aS : '';
                 document.getElementById(`aE_${i}`).value = p.aE !== null ? p.aE : '';
             }
+
+            // รันการเช็คล็อคตัวเลือกทันทีที่ดึงข้อมูลขึ้นมาแก้ไข
+            updateDropdownLimits();
 
             document.getElementById('formWrapper').classList.add('editing');
             document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-pen-to-square" style="color: #f39c12;"></i> <span>แก้ไขแผนงาน: ${task.description.substring(0, 30)}...</span>`;
@@ -604,9 +661,7 @@
             const task = projectData[index];
             if (confirm(`คุณต้องการลบงาน "${task.description}" ออกจากตารางใช่หรือไม่?`)) {
                 projectData.splice(index, 1);
-                if (parseInt(document.getElementById('editIndex').value) === index) {
-                    resetForm();
-                }
+                if (parseInt(document.getElementById('editIndex').value) === index) { resetForm(); }
                 renderTable();
             }
         }
@@ -627,6 +682,7 @@
                 document.getElementById(`aS_${i}`).value = '';
                 document.getElementById(`aE_${i}`).value = '';
             }
+            updateDropdownLimits();
         }
 
         function resetForm() {
