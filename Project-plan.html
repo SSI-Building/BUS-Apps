@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบอัปเดตแผนงานประจำปี 2026 (Advanced Process Gantt Chart)</title>
+    <title>ระบบอัปเดตแผนงานประจำปี 2026 (Interactive Gantt Chart)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -53,6 +53,8 @@
         .btn-submit:hover { background-color: var(--primary-hover); }
         .btn-toggle { background-color: #34495e; color: white; margin-bottom: 15px; }
         .btn-toggle:hover { background-color: #2c3e50; }
+        .btn-hide-inside { background-color: #7f8c8d; color: white; }
+        .btn-hide-inside:hover { background-color: #616a6b; }
         .btn-cancel { background-color: #95a5a6; color: white; }
         .btn-cancel:hover { background-color: #7f8c8d; }
 
@@ -77,9 +79,25 @@
         .type-text-wrapper { writing-mode: vertical-lr; transform: rotate(180deg); font-weight: bold; color: #475569; font-size: 12px; letter-spacing: 1px; white-space: nowrap; }
 
         /* Gantt Bars & Steps */
-        .plan-bar { background-color: var(--plan-color) !important; color: white !important; font-weight: bold; font-size: 10px !important; }
-        .actual-bar { background-color: var(--actual-color) !important; color: white !important; font-weight: bold; font-size: 10px !important; }
-        .week-cell { width: 14px; font-size: 9px; padding: 0; color: #64748b; }
+        .plan-bar { background-color: var(--plan-color) !important; color: white !important; font-weight: bold; font-size: 11px !important; }
+        .actual-bar { background-color: var(--actual-color) !important; color: white !important; font-weight: bold; font-size: 11px !important; }
+        
+        /* สไตล์ช่องตารางสำหรับกรอกข้อมูลสดแบบ Excel */
+        .week-cell { 
+            width: 16px; 
+            font-size: 11px; 
+            padding: 0; 
+            color: #64748b;
+            cursor: cell; 
+            outline: none;
+            transition: background-color 0.1s;
+        }
+        .week-cell:focus {
+            background-color: #fffde7 !important; 
+            box-shadow: inset 0 0 4px rgba(0,0,0,0.2);
+            color: #000 !important;
+        }
+
         .month-header { font-size: 11px; font-weight: bold; border-bottom: 2px solid #94a3b8; }
         .sub-row { font-size: 11px; color: #64748b; background-color: #f8fafc; }
 
@@ -131,7 +149,7 @@
     <button class="btn btn-toggle" id="toggleFormBtn"><i class="fa-solid fa-plus"></i> เพิ่มแผนงานใหม่</button>
 
     <div class="form-container" id="formWrapper" style="display: none;">
-        <h3 id="formTitle"><i class="fa-solid fa-circle-plus" style="color: var(--primary-color);"></i> <span>ฟอร์มจัดการแผนงาน (ระบุเวลาอิสระ 7 ขั้นตอน)</span></h3>
+        <h3 id="formTitle"><i class="fa-solid fa-circle-plus" style="color: var(--primary-color);"></i> <span>ฟอร์มจัดการแผนงาน</span></h3>
         <form id="planForm">
             <input type="hidden" id="editIndex" value="-1">
 
@@ -182,7 +200,7 @@
             </div>
 
             <label style="font-weight: 600; color: #34495e; font-size: 13px; margin-bottom: 8px; display:block;">
-                <i class="fa-solid fa-timeline" style="color: var(--primary-color);"></i> กำหนดสัปดาห์ (1-4) ของ 7 กระบวนการ <span style="color:#e74c3c;">(ระบบจะล็อคไม่ให้เลือกเวลาก่อนหน้าขั้นตอนแรกอัตโนมัติ)</span>
+                <i class="fa-solid fa-timeline" style="color: var(--primary-color);"></i> กำหนดสัปดาห์ (1-4) ของ 7 กระบวนการ 
             </label>
             <div class="timeline-table-container">
                 <table class="timeline-table">
@@ -206,6 +224,7 @@
             </div>
 
             <div class="btn-group">
+                <button type="button" class="btn btn-hide-inside" id="hideFormInsideBtn"><i class="fa-solid fa-eye-slash"></i> 🙈 ซ่อนฟอร์ม</button>
                 <button type="submit" class="btn btn-submit" id="submitBtn"><i class="fa-solid fa-floppy-disk"></i> บันทึกลงตาราง</button>
                 <button type="button" class="btn btn-cancel" id="cancelBtn" style="display: none;"><i class="fa-solid fa-xmark"></i> ยกเลิกการแก้ไข</button>
             </div>
@@ -221,6 +240,7 @@
         <div class="process-item"><span>5</span> ดำเนินการ</div>
         <div class="process-item"><span>6</span> ตรวจรับงาน</div>
         <div class="process-item"><span>7</span> ส่งมอบงาน</div>
+        <span style="font-size:11px; color:#e74c3c; margin-left:auto; font-weight:bold;"><i class="fa-solid fa-keyboard"></i> เคล็ดลับ: สามารถคลิกช่องในตารางแล้วกดแป้นเลข 1-7 เพื่อหยอดสีตรงๆ ได้เลยเหมือน Excel!</span>
     </div>
 
     <div class="table-responsive">
@@ -266,7 +286,6 @@
 
     <script>
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        
         const processNames = [
             "1. ออกแบบ จัดทำเงื่อนไขและข้อกำหนด",
             "2. PR (Purchase Requisition)",
@@ -277,35 +296,36 @@
             "7. ส่งมอบงาน"
         ];
 
-        // ข้อมูลตัวอย่างเริ่มต้น
+        // ฐานข้อมูลเริ่มต้น (เก็บค่าในอาร์เรย์แบบ 48 ช่อง เพื่อให้กรอกแบบ Excel ได้อย่างสมบูรณ์)
         let projectData = [
             {
                 id: 1, type: 'Major Improvement', description: 'ปรับปรุงถนนช่วงแยก Slabyard - Fire Station', status: 'Normal',
                 assignee: 'Pandda/Phuritat', progressPlan: 100, progressActual: 33, budgetPlan: 2800000, budgetActual: 1500000, remark: 'อยู่ระหว่างรอ Suppler เสนอราคา',
-                timeline: [
-                    { pS: 4, pE: 7, aS: 4, aE: 6 },     
-                    { pS: 8, pE: 8, aS: 7, aE: 7 },     
-                    { pS: 9, pE: 10, aS: 8, aE: 11 },   
-                    { pS: 11, pE: 11, aS: "", aE: "" }, 
-                    { pS: 12, pE: 20, aS: "", aE: "" }, 
-                    { pS: 21, pE: 22, aS: "", aE: "" }, 
-                    { pS: 23, pE: 23, aS: "", aE: "" }  
-                ]
+                // อาเรย์ 48 ช่อง แทนสัปดาห์ทั้งหมดในปี (เก็บค่าเลขกระบวนการ 1-7 หรือเว้นว่าง)
+                weeksPlan: Array(48).fill(""),
+                weeksActual: Array(48).fill("")
             },
             {
                 id: 2, type: 'Support', description: 'งานย้ายป้ายเขตอาคารโรงงานเพื่อเปิดทางสัญจรใหม่', status: 'Normal',
                 assignee: 'Panatda/Phurithat', progressPlan: 100, progressActual: 20, budgetPlan: null, budgetActual: 5000, remark: 'ข้ามไปดำเนินการเดือน พ.ย.',
-                timeline: [
-                    { pS: "", pE: "", aS: "", aE: "" }, 
-                    { pS: "", pE: "", aS: "", aE: "" }, 
-                    { pS: "", pE: "", aS: "", aE: "" }, 
-                    { pS: 10, pE: 10, aS: 10, aE: 10 },   
-                    { pS: 40, pE: 43, aS: "", aE: "" },   
-                    { pS: "", pE: "", aS: "", aE: "" }, 
-                    { pS: "", pE: "", aS: "", aE: "" }  
-                ]
+                weeksPlan: Array(48).fill(""),
+                weeksActual: Array(48).fill("")
             }
         ];
+
+        // หยอดค่าตั้งต้นให้ข้อมูลจำลองข้อ 1 และ 2
+        for(let i=4;i<=7;i++) projectData[0].weeksPlan[i] = "1";
+        for(let i=4;i<=6;i++) projectData[0].weeksActual[i] = "1";
+        projectData[0].weeksPlan[8] = "2"; projectData[0].weeksActual[7] = "2";
+        projectData[0].weeksPlan[9] = "3"; projectData[0].weeksPlan[10] = "3";
+        for(let i=8;i<=11;i++) projectData[0].weeksActual[i] = "3";
+        projectData[0].weeksPlan[11] = "4"; 
+        for(let i=12;i<=20;i++) projectData[0].weeksPlan[i] = "5";
+        projectData[0].weeksPlan[21] = "6"; projectData[0].weeksPlan[22] = "6";
+        projectData[0].weeksPlan[23] = "7";
+
+        projectData[1].weeksPlan[10] = "4"; projectData[1].weeksActual[10] = "4";
+        for(let i=40;i<=43;i++) projectData[1].weeksPlan[i] = "5";
 
         const targetDate = new Date("2026-06-15");
         const currentMonthIndex = targetDate.getMonth();
@@ -319,9 +339,10 @@
         const currentGlobalWeekCol = (currentMonthIndex * 4) + (currentWeekOfIndex - 1);
 
         const toggleFormBtn = document.getElementById('toggleFormBtn');
+        const hideFormInsideBtn = document.getElementById('hideFormInsideBtn');
         const formWrapper = document.getElementById('formWrapper');
         
-        toggleFormBtn.addEventListener('click', () => {
+        function toggleFormVisibility() {
             if (formWrapper.style.display === 'none') {
                 formWrapper.style.display = 'block';
                 toggleFormBtn.innerHTML = '<i class="fa-solid fa-minus"></i> ซ่อนฟอร์มแผนงาน';
@@ -331,59 +352,41 @@
                 toggleFormBtn.innerHTML = '<i class="fa-solid fa-plus"></i> เพิ่มแผนงานใหม่';
                 toggleFormBtn.style.backgroundColor = '#34495e';
             }
-        });
+        }
+        toggleFormBtn.addEventListener('click', toggleFormVisibility);
+        hideFormInsideBtn.addEventListener('click', toggleFormVisibility);
 
-        // ฟังก์ชันอัปเดตสิทธิ์การเลือก Dropdown รายบรรทัด (ขัดขวางไม่ให้เลือกย้อนหลังขั้นตอนก่อนหน้า)
+        function generateWeekOptions() {
+            let opts = `<option value="">- เลือก -</option>`;
+            for (let m = 0; m < 12; m++) {
+                for (let w = 1; w <= 4; w++) {
+                    let globalIndex = (m * 4) + (w - 1);
+                    opts += `<option value="${globalIndex}">${months[m]} W${w}</option>`;
+                }
+            }
+            return opts;
+        }
+
         function updateDropdownLimits() {
-            let lastPlanEnd = -1;
-            let lastActualEnd = -1;
-
+            let lastPlanEnd = -1; let lastActualEnd = -1;
             for (let i = 0; i < 7; i++) {
-                const pS = document.getElementById(`pS_${i}`);
-                const pE = document.getElementById(`pE_${i}`);
-                const aS = document.getElementById(`aS_${i}`);
-                const aE = document.getElementById(`aE_${i}`);
+                const pS = document.getElementById(`pS_${i}`); const pE = document.getElementById(`pE_${i}`);
+                const aS = document.getElementById(`aS_${i}`); const aE = document.getElementById(`aE_${i}`);
 
-                // --- ภาค PLAN ---
                 let currentPlanStart = pS.value !== "" ? parseInt(pS.value) : -1;
-                // ล็อคค่าเริ่มต้น: ต้องไม่ก่อนหน้าวันสิ้นสุดของข้อก่อนหน้า
-                Array.from(pS.options).forEach(opt => {
-                    if(opt.value !== "") {
-                        let val = parseInt(opt.value);
-                        opt.disabled = val < lastPlanEnd;
-                    }
-                });
-                // ล็อคค่าสิ้นสุด: ต้องไม่ก่อนหน้าวันเริ่มต้นของตัวเอง
-                Array.from(pE.options).forEach(opt => {
-                    if(opt.value !== "") {
-                        let val = parseInt(opt.value);
-                        opt.disabled = val < currentPlanStart;
-                    }
-                });
-                // เก็บประวัติวันสิ้นสุดล่าสุดของกลุ่ม Plan
+                Array.from(pS.options).forEach(opt => { if(opt.value !== "") opt.disabled = parseInt(opt.value) < lastPlanEnd; });
+                Array.from(pE.options).forEach(opt => { if(opt.value !== "") opt.disabled = parseInt(opt.value) < currentPlanStart; });
                 if (pE.value !== "") lastPlanEnd = Math.max(lastPlanEnd, parseInt(pE.value));
                 else if (pS.value !== "") lastPlanEnd = Math.max(lastPlanEnd, parseInt(pS.value));
 
-                // --- ภาค ACTUAL ---
                 let currentActualStart = aS.value !== "" ? parseInt(aS.value) : -1;
-                Array.from(aS.options).forEach(opt => {
-                    if(opt.value !== "") {
-                        let val = parseInt(opt.value);
-                        opt.disabled = val < lastActualEnd;
-                    }
-                });
-                Array.from(aE.options).forEach(opt => {
-                    if(opt.value !== "") {
-                        let val = parseInt(opt.value);
-                        opt.disabled = val < currentActualStart;
-                    }
-                });
+                Array.from(aS.options).forEach(opt => { if(opt.value !== "") opt.disabled = parseInt(opt.value) < lastActualEnd; });
+                Array.from(aE.options).forEach(opt => { if(opt.value !== "") opt.disabled = parseInt(opt.value) < currentActualStart; });
                 if (aE.value !== "") lastActualEnd = Math.max(lastActualEnd, parseInt(aE.value));
                 else if (aS.value !== "") lastActualEnd = Math.max(lastActualEnd, parseInt(aS.value));
             }
         }
 
-        // ฟังก์ชันสร้างรายการสัปดาห์ 48 ช่อง
         function buildSelectOptions(selectElement) {
             let html = '<option value="">- เลือก -</option>';
             for (let m = 0; m < 12; m++) {
@@ -413,37 +416,62 @@
 
             const activeMonthHeader = document.getElementById(`month-${currentMonthIndex}`);
             if (activeMonthHeader) {
-                activeMonthHeader.style.backgroundColor = '#e74c3c';
-                activeMonthHeader.style.color = '#ffffff';
-                activeMonthHeader.style.borderBottom = '2px solid #c0392b';
+                activeMonthHeader.style.backgroundColor = '#e74c3c'; activeMonthHeader.style.color = '#ffffff'; activeMonthHeader.style.borderBottom = '2px solid #c0392b';
             }
 
-            // สรรสร้างตาราง 7 ขั้นตอนบนฟอร์ม
             let processRows = '';
             for (let i = 0; i < 7; i++) {
-                processRows += `
-                    <tr>
-                        <td class="process-name">${processNames[i]}</td>
-                        <td><select id="pS_${i}"></select></td>
-                        <td><select id="pE_${i}"></select></td>
-                        <td><select id="aS_${i}"></select></td>
-                        <td><select id="aE_${i}"></select></td>
-                    </tr>
-                `;
+                processRows += `<tr><td class="process-name">${processNames[i]}</td><td><select id="pS_${i}"></select></td><td><select id="pE_${i}"></select></td><td><select id="aS_${i}"></select></td><td><select id="aE_${i}"></select></td></tr>`;
             }
             processTbody.innerHTML = processRows;
 
-            // ผูก Options รายช่องพร้อมติด Event ดักฟังความเคลื่อนไหวเพื่อคำนวณการบล็อคข้ามขั้น
             for (let i = 0; i < 7; i++) {
-                buildSelectOptions(document.getElementById(`pS_${i}`));
-                buildSelectOptions(document.getElementById(`pE_${i}`));
-                buildSelectOptions(document.getElementById(`aS_${i}`));
-                buildSelectOptions(document.getElementById(`aE_${i}`));
+                buildSelectOptions(document.getElementById(`pS_${i}`)); buildSelectOptions(document.getElementById(`pE_${i}`)); buildSelectOptions(document.getElementById(`aS_${i}`)); buildSelectOptions(document.getElementById(`aE_${i}`));
+                document.getElementById(`pS_${i}`).addEventListener('change', updateDropdownLimits); document.getElementById(`pE_${i}`).addEventListener('change', updateDropdownLimits); document.getElementById(`aS_${i}`).addEventListener('change', updateDropdownLimits); document.getElementById(`aE_${i}`).addEventListener('change', updateDropdownLimits);
+            }
+        }
 
-                document.getElementById(`pS_${i}`).addEventListener('change', updateDropdownLimits);
-                document.getElementById(`pE_${i}`).addEventListener('change', updateDropdownLimits);
-                document.getElementById(`aS_${i}`).addEventListener('change', updateDropdownLimits);
-                document.getElementById(`aE_${i}`).addEventListener('change', updateDropdownLimits);
+        // ฟังก์ชันแก้ไขข้อมูลรายช่องตารางสไตล์ Excel 
+        function cellEditHandler(dbIndex, weekGlobalIdx, rowType, cellElement) {
+            let newValue = cellElement.innerText.trim();
+            
+            // กรองเงื่อนไข: ยอมรับเฉพาะเลข 1-7 หรือค่าว่างเท่านั้น
+            if (newValue === "" || (parseInt(newValue) >= 1 && parseInt(newValue) <= 7)) {
+                if (rowType === 'plan') {
+                    projectData[dbIndex].weeksPlan[weekGlobalIdx] = newValue;
+                } else {
+                    projectData[dbIndex].weeksActual[weekGlobalIdx] = newValue;
+                }
+                
+                // ถอดหรือใส่คลาสแถบสีตามข้อมูล
+                if (newValue !== "") {
+                    cellElement.className = `week-cell ${rowType === 'plan' ? 'plan-bar' : 'actual-bar'}`;
+                } else {
+                    cellElement.className = 'week-cell';
+                }
+                
+                // เช็คเพื่อคงสถานะ Tracker เส้นสัปดาห์ปัจจุบัน
+                if (weekGlobalIdx === currentGlobalWeekCol) {
+                    cellElement.classList.add('current-week-cell');
+                }
+                
+                // อัปเดต Progress ภาพรวมใหม่ทันที
+                let totalActualProgress = 0;
+                let activeTasksCount = 0;
+                projectData.forEach(row => {
+                    if (row.status === 'Normal') {
+                        totalActualProgress += Number(row.progressActual);
+                        activeTasksCount++;
+                    }
+                });
+                let avgProgress = activeTasksCount > 0 ? Math.round(totalActualProgress / activeTasksCount) : 0;
+                document.getElementById('totalProgressSummary').innerText = avgProgress + '%';
+                document.getElementById('totalProgressCell').innerText = avgProgress + '%';
+            } else {
+                // หากกรอกตัวเลขผิดพลาด ให้ดีดคืนค่าเดิม
+                alert("กรุณากรอกเฉพาะตัวเลขกระบวนการ 1 ถึง 7 เท่านั้นครับช่าง");
+                let oldValue = rowType === 'plan' ? projectData[dbIndex].weeksPlan[weekGlobalIdx] : projectData[dbIndex].weeksActual[weekGlobalIdx];
+                cellElement.innerText = oldValue;
             }
         }
 
@@ -461,7 +489,7 @@
             let activeTasksCount = 0;
             const typeRenderedTracker = {};
 
-            projectData.forEach((row, index) => {
+            projectData.forEach((row, dataIndex) => {
                 if(row.status === 'Normal') {
                     totalActualProgress += Number(row.progressActual);
                     activeTasksCount++;
@@ -507,7 +535,7 @@
                 let htmlRow1 = `
                     <tr data-id="${row.id}">
                         ${typeCellHtml}
-                        <td rowspan="2" style="font-weight: bold; background-color: #fafafa;">${index + 1}</td>
+                        <td rowspan="2" style="font-weight: bold; background-color: #fafafa;">${dataIndex + 1}</td>
                         <td rowspan="2" class="text-left" style="font-weight: 500;">${descriptionDisplay}</td>
                         <td class="sub-row">${planAssignee}</td>
                         <td style="font-weight: bold; color: var(--plan-color);">${row.progressPlan}%</td>
@@ -515,28 +543,24 @@
                         <td style="font-weight: bold; color: var(--plan-color); background-color: #fafafa;">${budgetTextPlan}</td>
                 `;
 
+                // วาด 48 ช่องแบบเปิด Contenteditable ให้พิมพ์ลงไปตรงๆ แบบ Excel ได้
                 for (let globalW = 0; globalW < 48; globalW++) {
                     let isCurrentWeekCol = (globalW === currentGlobalWeekCol);
-                    let processNumHtml = '';
-                    let isColored = false;
+                    let val = row.weeksPlan[globalW];
+                    let isColored = val !== "";
                     
-                    row.timeline.forEach((proc, i) => {
-                        if (proc.pS !== "" && proc.pE !== "") {
-                            if (globalW >= parseInt(proc.pS) && globalW <= parseInt(proc.pE)) {
-                                processNumHtml = i + 1;
-                                isColored = true;
-                            }
-                        }
-                    });
-                    htmlRow1 += `<td class="week-cell ${isColored ? 'plan-bar' : ''} ${isCurrentWeekCol ? 'current-week-cell' : ''}">${processNumHtml}</td>`;
+                    htmlRow1 += `<td contenteditable="true" 
+                                     class="week-cell ${isColored ? 'plan-bar' : ''} ${isCurrentWeekCol ? 'current-week-cell' : ''}" 
+                                     onblur="cellEditHandler(${dataIndex}, ${globalW}, 'plan', this)"
+                                     onkeydown="if(event.keyCode===13){event.preventDefault(); this.blur();}">${val}</td>`;
                 }
                 
                 htmlRow1 += `
                         <td rowspan="2" class="text-left" style="font-size: 11px; color: #e67e22; max-width: 150px; overflow-wrap: break-word;">${row.remark || ''}</td>
                         <td rowspan="2">
                             <div class="action-btns">
-                                <button type="button" class="btn-table btn-edit" onclick="editTask(${index})" title="แก้ไข"><i class="fa-solid fa-pen-to-square"></i></button>
-                                <button type="button" class="btn-table btn-delete" onclick="deleteTask(${index})" title="ลบ"><i class="fa-solid fa-trash-can"></i></button>
+                                <button type="button" class="btn-table btn-edit" onclick="editTask(${dataIndex})" title="แก้ไขแบบละเอียด"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button type="button" class="btn-table btn-delete" onclick="deleteTask(${dataIndex})" title="ลบ"><i class="fa-solid fa-trash-can"></i></button>
                             </div>
                         </td>
                     </tr>
@@ -553,18 +577,13 @@
 
                 for (let globalW = 0; globalW < 48; globalW++) {
                     let isCurrentWeekCol = (globalW === currentGlobalWeekCol);
-                    let processNumHtml = '';
-                    let isColored = false;
+                    let val = row.weeksActual[globalW];
+                    let isColored = val !== "";
                     
-                    row.timeline.forEach((proc, i) => {
-                        if (proc.aS !== "" && proc.aE !== "") {
-                            if (globalW >= parseInt(proc.aS) && globalW <= parseInt(proc.aE)) {
-                                processNumHtml = i + 1;
-                                isColored = true;
-                            }
-                        }
-                    });
-                    htmlRow2 += `<td class="week-cell ${isColored ? 'actual-bar' : ''} ${isCurrentWeekCol ? 'current-week-cell' : ''}">${processNumHtml}</td>`;
+                    htmlRow2 += `<td contenteditable="true" 
+                                     class="week-cell ${isColored ? 'actual-bar' : ''} ${isCurrentWeekCol ? 'current-week-cell' : ''}" 
+                                     onblur="cellEditHandler(${dataIndex}, ${globalW}, 'actual', this)"
+                                     onkeydown="if(event.keyCode===13){event.preventDefault(); this.blur();}">${val}</td>`;
                 }
                 htmlRow2 += `</tr>`;
 
@@ -579,40 +598,72 @@
 
         document.getElementById('planForm').addEventListener('submit', function(e) {
             e.preventDefault();
-
             const editIndex = parseInt(document.getElementById('editIndex').value);
             const budgetPlanVal = document.getElementById('budgetPlan').value;
             const budgetActualVal = document.getElementById('budgetActual').value;
 
-            let timelineData = [];
-            for (let i = 0; i < 7; i++) {
-                timelineData.push({
-                    pS: document.getElementById(`pS_${i}`).value,
-                    pE: document.getElementById(`pE_${i}`).value,
-                    aS: document.getElementById(`aS_${i}`).value,
-                    aE: document.getElementById(`aE_${i}`).value
-                });
-            }
-
-            const taskData = {
-                type: document.getElementById('taskType').value,
-                description: document.getElementById('description').value,
-                status: document.getElementById('taskStatus').value,
-                assignee: document.getElementById('assignee').value,
-                progressPlan: parseInt(document.getElementById('progressPlan').value),
-                progressActual: parseInt(document.getElementById('progressActual').value),
-                budgetPlan: budgetPlanVal ? parseFloat(budgetPlanVal) : null,
-                budgetActual: budgetActualVal ? parseFloat(budgetActualVal) : null,
-                timeline: timelineData,
-                remark: document.getElementById('remark').value
-            };
-
             if (editIndex === -1) {
-                taskData.id = Date.now();
+                // เพิ่มงานชิ้นใหม่และเซ็ตอาร์เรย์ 48 สัปดาห์ว่าง
+                let taskData = {
+                    id: Date.now(),
+                    type: document.getElementById('taskType').value,
+                    description: document.getElementById('description').value,
+                    status: document.getElementById('taskStatus').value,
+                    assignee: document.getElementById('assignee').value,
+                    progressPlan: parseInt(document.getElementById('progressPlan').value),
+                    progressActual: parseInt(document.getElementById('progressActual').value),
+                    budgetPlan: budgetPlanVal ? parseFloat(budgetPlanVal) : null,
+                    budgetActual: budgetActualVal ? parseFloat(budgetActualVal) : null,
+                    weeksPlan: Array(48).fill(""),
+                    weeksActual: Array(48).fill(""),
+                    remark: document.getElementById('remark').value
+                };
+
+                // แปลงข้อมูลจาก Form 7 ขั้นตอนลงอาร์เรย์สัปดาห์หลัก
+                for (let i = 0; i < 7; i++) {
+                    let pS = document.getElementById(`pS_${i}`).value;
+                    let pE = document.getElementById(`pE_${i}`).value;
+                    let aS = document.getElementById(`aS_${i}`).value;
+                    let aE = document.getElementById(`aE_${i}`).value;
+
+                    if(pS !== "" && pE !== "") {
+                        for(let w = parseInt(pS); w <= parseInt(pE); w++) taskData.weeksPlan[w] = (i + 1).toString();
+                    }
+                    if(aS !== "" && aE !== "") {
+                        for(let w = parseInt(aS); w <= parseInt(aE); w++) taskData.weeksActual[w] = (i + 1).toString();
+                    }
+                }
                 projectData.push(taskData);
             } else {
-                taskData.id = projectData[editIndex].id;
-                projectData[editIndex] = taskData;
+                // แก้ไขงานชิ้นเดิม
+                let currentItem = projectData[editIndex];
+                currentItem.type = document.getElementById('taskType').value;
+                currentItem.description = document.getElementById('description').value;
+                currentItem.status = document.getElementById('taskStatus').value;
+                currentItem.assignee = document.getElementById('assignee').value;
+                currentItem.progressPlan = parseInt(document.getElementById('progressPlan').value);
+                currentItem.progressActual = parseInt(document.getElementById('progressActual').value);
+                currentItem.budgetPlan = budgetPlanVal ? parseFloat(budgetPlanVal) : null;
+                currentItem.budgetActual = budgetActualVal ? parseFloat(budgetActualVal) : null;
+                currentItem.remark = document.getElementById('remark').value;
+
+                // ล้างค่าเก่าแล้วอัปเดตอาร์เรย์สัปดาห์ตามตาราง 7 ขั้นตอนในฟอร์ม
+                currentItem.weeksPlan = Array(48).fill("");
+                currentItem.weeksActual = Array(48).fill("");
+
+                for (let i = 0; i < 7; i++) {
+                    let pS = document.getElementById(`pS_${i}`).value;
+                    let pE = document.getElementById(`pE_${i}`).value;
+                    let aS = document.getElementById(`aS_${i}`).value;
+                    let aE = document.getElementById(`aE_${i}`).value;
+
+                    if(pS !== "" && pE !== "") {
+                        for(let w = parseInt(pS); w <= parseInt(pE); w++) currentItem.weeksPlan[w] = (i + 1).toString();
+                    }
+                    if(aS !== "" && aE !== "") {
+                        for(let w = parseInt(aS); w <= parseInt(aE); w++) currentItem.weeksActual[w] = (i + 1).toString();
+                    }
+                }
                 resetForm();
             }
 
@@ -622,7 +673,7 @@
 
         window.editTask = function(index) {
             if(formWrapper.style.display === 'none') {
-                toggleFormBtn.click();
+                toggleFormVisibility();
             }
 
             const task = projectData[index];
@@ -637,15 +688,20 @@
             document.getElementById('progressActual').value = task.progressActual;
             document.getElementById('remark').value = task.remark || '';
 
+            // ถอดรหัสอาเรย์ 48 ช่อง กลับมาเป็นจุดเริ่ม-จบของ 7 ขั้นตอนเพื่อโชว์ในฟอร์ม
             for (let i = 0; i < 7; i++) {
-                let p = task.timeline[i];
-                document.getElementById(`pS_${i}`).value = p.pS !== null ? p.pS : '';
-                document.getElementById(`pE_${i}`).value = p.pE !== null ? p.pE : '';
-                document.getElementById(`aS_${i}`).value = p.aS !== null ? p.aS : '';
-                document.getElementById(`aE_${i}`).value = p.aE !== null ? p.aE : '';
+                let stepStr = (i + 1).toString();
+                let pS = task.weeksPlan.indexOf(stepStr);
+                let pE = task.weeksPlan.lastIndexOf(stepStr);
+                let aS = task.weeksActual.indexOf(stepStr);
+                let aE = task.weeksActual.lastIndexOf(stepStr);
+
+                document.getElementById(`pS_${i}`).value = pS !== -1 ? pS : '';
+                document.getElementById(`pE_${i}`).value = pE !== -1 ? pE : '';
+                document.getElementById(`aS_${i}`).value = aS !== -1 ? aS : '';
+                document.getElementById(`aE_${i}`).value = aE !== -1 ? aE : '';
             }
 
-            // รันการเช็คล็อคตัวเลือกทันทีที่ดึงข้อมูลขึ้นมาแก้ไข
             updateDropdownLimits();
 
             document.getElementById('formWrapper').classList.add('editing');
@@ -658,7 +714,6 @@
         }
 
         window.deleteTask = function(index) {
-            const task = projectData[index];
             if (confirm(`คุณต้องการลบงาน "${task.description}" ออกจากตารางใช่หรือไม่?`)) {
                 projectData.splice(index, 1);
                 if (parseInt(document.getElementById('editIndex').value) === index) { resetForm(); }
@@ -688,7 +743,7 @@
         function resetForm() {
             document.getElementById('editIndex').value = '-1';
             document.getElementById('formWrapper').classList.remove('editing');
-            document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-circle-plus" style="color: var(--primary-color);"></i> <span>ฟอร์มจัดการแผนงาน (ระบุเวลาอิสระ 7 ขั้นตอน)</span>`;
+            document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-circle-plus" style="color: var(--primary-color);"></i> <span>ฟอร์มจัดการแผนงาน</span>`;
             document.getElementById('submitBtn').innerHTML = `<i class="fa-solid fa-floppy-disk"></i> บันทึกลงตาราง`;
             document.getElementById('submitBtn').style.backgroundColor = 'var(--primary-color)';
             document.getElementById('cancelBtn').style.display = 'none';
