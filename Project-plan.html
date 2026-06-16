@@ -18,17 +18,33 @@
             --today-color: #ff4d4d; 
         }
 
-        body { font-family: 'Sarabun', sans-serif; margin: 20px; background-color: #f4f6f9; color: #333; font-size: 13px; }
-        h2 { margin-top: 0; color: #1a252f; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        body { font-family: 'Sarabun', sans-serif; margin: 0; background-color: #f4f6f9; color: #333; font-size: 13px; padding-bottom: 50px; }
+        h2 { margin-top: 0; color: #1a252f; font-weight: 700; display: flex; align-items: center; gap: 10px; padding: 20px 20px 0 20px; }
 
-        /* Status Board */
+        /* ================= ระบบ TAB ด้านล่างสไตล์ EXCEL ================= */
+        .tab-content { display: none; padding: 0 20px 20px 20px; animation: fadeEffect 0.3s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeEffect { from {opacity: 0;} to {opacity: 1;} }
+
+        .excel-tab-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%; background-color: #e1e1e1;
+            border-top: 1px solid #ccc; display: flex; align-items: flex-end; padding-left: 10px; z-index: 1000; height: 35px;
+        }
+        .excel-tab-btn {
+            background-color: #f3f3f3; border: 1px solid #ccc; border-bottom: none; border-radius: 5px 5px 0 0;
+            cursor: pointer; padding: 8px 20px; margin-right: 2px; font-family: 'Sarabun', sans-serif; font-size: 13px;
+            color: #555; transition: 0.2s; height: 30px; display: flex; align-items: center; gap: 6px;
+        }
+        .excel-tab-btn:hover { background-color: #eaeaea; }
+        .excel-tab-btn.active { background-color: #fff; border-top: 3px solid var(--primary-color); color: #000; font-weight: bold; height: 35px; }
+
+        /* ================= สไตล์หน้า Tab 1 ================= */
         .status-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .status-card { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; border-left: 4px solid var(--primary-color); }
         .status-card.today { border-left-color: var(--today-color); }
         .status-card-info h4 { margin: 0; color: #7f8c8d; font-size: 12px; text-transform: uppercase; }
         .status-card-info p { margin: 5px 0 0 0; font-size: 18px; font-weight: bold; color: #2c3e50; }
 
-        /* Form Styling */
         .form-container { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 3px 6px rgba(0,0,0,0.08); margin-bottom: 20px; border-top: 4px solid var(--primary-color); transition: border-color 0.3s; }
         .form-container.editing { border-top-color: #f39c12; }
         .form-container h3 { margin-top: 0; margin-bottom: 15px; font-size: 16px; color: #2c3e50; display: flex; align-items: center; gap: 8px; }
@@ -38,7 +54,6 @@
         .form-group input, .form-group select { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-family: 'Sarabun', sans-serif; font-size: 13px; outline: none; transition: border-color 0.2s; }
         .form-group input:focus, .form-group select:focus { border-color: var(--primary-color); }
 
-        /* Timeline 7 Steps Table inside Form */
         .timeline-table-container { margin-bottom: 15px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; }
         .timeline-table { width: 100%; border-collapse: collapse; text-align: center; }
         .timeline-table th { background-color: #f8fafc; padding: 8px; border-bottom: 1px solid #cbd5e1; font-size: 12px; color: #475569; }
@@ -58,13 +73,11 @@
         .btn-cancel { background-color: #95a5a6; color: white; }
         .btn-cancel:hover { background-color: #7f8c8d; }
 
-        /* Legend 7 ขั้นตอน */
         .process-legend { background: #fff; padding: 12px 20px; border-radius: 8px; border-left: 4px solid #f39c12; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; align-items: center; flex-wrap: wrap; gap: 15px; }
         .process-legend strong { color: #2c3e50; font-size: 13px; }
         .process-item { font-size: 12px; color: #34495e; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; }
         .process-item span { font-weight: bold; color: var(--plan-color); margin-right: 4px; }
 
-        /* Table Styling */
         .table-responsive { overflow-x: auto; background: #fff; box-shadow: 0 3px 6px rgba(0,0,0,0.08); border-radius: 8px; border: 1px solid #e2e8f0; }
         table { border-collapse: collapse; width: 100%; min-width: 1700px; text-align: center; }
         th, td { border: 1px solid #cbd5e1; padding: 6px 4px; height: 24px; }
@@ -73,247 +86,254 @@
         .bg-total { background-color: #f8fafc; font-weight: bold; }
         .text-left { text-align: left; padding-left: 10px; }
 
-        /* Vertical Type CSS */
         .type-vertical-cell { background-color: #f1f5f9; border-right: 2px solid #94a3b8; padding: 0; width: 50px; min-width: 50px; position: relative; }
         .type-vertical-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .type-text-wrapper { writing-mode: vertical-lr; transform: rotate(180deg); font-weight: bold; color: #475569; font-size: 12px; letter-spacing: 1px; white-space: nowrap; }
 
-        /* Gantt Bars & Steps */
         .plan-bar { background-color: var(--plan-color) !important; color: white !important; font-weight: bold; font-size: 11px !important; }
         .actual-bar { background-color: var(--actual-color) !important; color: white !important; font-weight: bold; font-size: 11px !important; }
         
-        /* สไตล์ช่องตารางสำหรับกรอกข้อมูลสดแบบ Excel */
-        .week-cell { 
-            width: 16px; 
-            font-size: 11px; 
-            padding: 0; 
-            color: #64748b;
-            cursor: cell; 
-            outline: none;
-            transition: background-color 0.1s;
-        }
-        .week-cell:focus {
-            background-color: #fffde7 !important; 
-            box-shadow: inset 0 0 4px rgba(0,0,0,0.2);
-            color: #000 !important;
-        }
+        .week-cell { width: 16px; font-size: 11px; padding: 0; color: #64748b; cursor: cell; outline: none; transition: background-color 0.1s; }
+        .week-cell:focus { background-color: #fffde7 !important; box-shadow: inset 0 0 4px rgba(0,0,0,0.2); color: #000 !important; }
 
         .month-header { font-size: 11px; font-weight: bold; border-bottom: 2px solid #94a3b8; }
         .sub-row { font-size: 11px; color: #64748b; background-color: #f8fafc; }
 
-        /* Current Week Tracker */
         .current-week-header { background-color: var(--today-color) !important; color: white !important; font-weight: bold !important; position: relative; animation: pulse-header 2.5s infinite; }
         .current-week-cell { position: relative; }
         .current-week-cell::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255, 77, 77, 0.08); border-left: 1.5px dashed var(--today-color); border-right: 1.5px dashed var(--today-color); pointer-events: none; z-index: 5; }
         @keyframes pulse-header { 0% { background-color: var(--today-color); } 50% { background-color: #ff1a1a; box-shadow: 0 0 8px rgba(255, 77, 77, 0.6); } 100% { background-color: var(--today-color); } }
 
-        /* Actions & Badges */
+        /* ================= Action Column & Toggle Styles ================= */
+        .action-col { display: none !important; } /* ซ่อนเป็นค่าเริ่มต้น */
+        .show-actions .action-col { display: table-cell !important; } /* แสดงเมื่อมีการสลับคลาส */
+        
         .action-btns { display: flex; gap: 5px; justify-content: center; }
         .btn-table { border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; display: inline-flex; align-items: center; gap: 3px; color: white; }
         .btn-edit { background-color: #f39c12; } .btn-edit:hover { background-color: #e67e22; }
         .btn-delete { background-color: #e74c3c; } .btn-delete:hover { background-color: #c0392b; }
+        
+        /* ปุ่มเปิด/ปิด Actions ตรงหัวตาราง */
+        .btn-toggle-action {
+            background-color: rgba(30, 41, 59, 0.1); border: 1px solid rgba(30, 41, 59, 0.2);
+            color: #1e293b; border-radius: 4px; padding: 2px 6px; cursor: pointer;
+            float: right; transition: all 0.2s; font-size: 12px;
+        }
+        .btn-toggle-action:hover { background-color: rgba(30, 41, 59, 0.2); }
+        .show-actions .btn-toggle-action { background-color: #1e293b; color: #fff; }
+
         .status-strike { text-decoration: line-through; color: #e74c3c !important; font-weight: 600; }
-        .status-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 5px; vertical-align: middle; text-decoration: none !important; }
+        .status-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 5px; vertical-align: middle; }
         .badge-hold { background-color: #e67e22; color: white; }
         .badge-canceled { background-color: #c0392b; color: white; }
+
+        /* ================= สไตล์เฉพาะสำหรับ Tab 2 (Major/ENG Table) ================= */
+        .major-table th { background-color: #c5e0b4; color: #000; font-weight: 600; border: 1px solid #555; padding: 8px 4px; font-size: 12px; }
+        .major-table td { border: 1px solid #555; padding: 4px; font-size: 11.5px; color: #000; }
+        .major-table .month-col { width: 25px; min-width: 25px; background-image: linear-gradient(90deg, transparent 48%, #ddd 50%, transparent 52%); background-size: 25% 100%; }
+        .major-table .month-hdr { width: 25px; }
+        .progress-wrapper { position: relative; width: 100%; height: 18px; background-color: #e9ecef; text-align: right; }
+        .progress-fill { position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, #27ae60, #2ecc71); z-index: 1; }
+        .progress-text { position: relative; z-index: 2; padding-right: 5px; font-size: 11px; font-weight: bold; line-height: 18px; }
+        .rowspan-cell { background-color: #fff; vertical-align: top; padding-top: 10px !important; }
     </style>
 </head>
 <body>
 
-    <h2><i class="fa-solid fa-calendar-days" style="color: var(--primary-color);"></i> ระบบจัดการและอัปเดตแผนงานประจำปี 2026</h2>
+    <h2 style="margin-bottom: 0;"><i class="fa-solid fa-calendar-days" style="color: var(--primary-color);"></i> ระบบจัดการและอัปเดตแผนงานประจำปี</h2>
 
-    <div class="status-board">
-        <div class="status-card today">
-            <div class="status-card-info">
-                <h4>สัปดาห์ปัจจุบัน (Current Status)</h4>
-                <p id="currentDateStr">กำลังคำนวณ...</p>
-            </div>
-            <i class="fa-solid fa-location-dot" style="font-size: 24px; color: var(--today-color);"></i>
+    <div id="MainGanttTab" class="tab-content active" style="padding-top: 20px;">
+        <div class="status-board">
+            <div class="status-card today"><div class="status-card-info"><h4>สัปดาห์ปัจจุบัน (Current Status)</h4><p id="currentDateStr">กำลังคำนวณ...</p></div><i class="fa-solid fa-location-dot" style="font-size: 24px; color: var(--today-color);"></i></div>
+            <div class="status-card"><div class="status-card-info"><h4>จำนวนแผนงานทั้งหมด (Total Tasks)</h4><p id="totalTasksCount">0 งาน</p></div><i class="fa-solid fa-list-check" style="font-size: 24px; color: var(--primary-color);"></i></div>
+            <div class="status-card" style="border-left-color: var(--actual-color);"><div class="status-card-info"><h4>ความคืบหน้าภาพรวม (Total Progress)</h4><p id="totalProgressSummary">0%</p></div><i class="fa-solid fa-chart-line" style="font-size: 24px; color: var(--actual-color);"></i></div>
         </div>
-        <div class="status-card">
-            <div class="status-card-info">
-                <h4>จำนวนแผนงานทั้งหมด (Total Tasks)</h4>
-                <p id="totalTasksCount">0 งาน</p>
-            </div>
-            <i class="fa-solid fa-list-check" style="font-size: 24px; color: var(--primary-color);"></i>
-        </div>
-        <div class="status-card" style="border-left-color: var(--actual-color);">
-            <div class="status-card-info">
-                <h4>ความคืบหน้าภาพรวม (Total Progress)</h4>
-                <p id="totalProgressSummary">0%</p>
-            </div>
-            <i class="fa-solid fa-chart-line" style="font-size: 24px; color: var(--actual-color);"></i>
-        </div>
-    </div>
 
-    <button class="btn btn-toggle" id="toggleFormBtn"><i class="fa-solid fa-plus"></i> เพิ่มแผนงานใหม่</button>
+        <button class="btn btn-toggle" id="toggleFormBtn"><i class="fa-solid fa-plus"></i> เพิ่มแผนงานใหม่</button>
 
-    <div class="form-container" id="formWrapper" style="display: none;">
-        <h3 id="formTitle"><i class="fa-solid fa-circle-plus" style="color: var(--primary-color);"></i> <span>ฟอร์มจัดการแผนงาน</span></h3>
-        <form id="planForm">
-            <input type="hidden" id="editIndex" value="-1">
+        <div class="form-container" id="formWrapper" style="display: none;">
+            <h3 id="formTitle"><i class="fa-solid fa-circle-plus" style="color: var(--primary-color);"></i> <span>ฟอร์มจัดการแผนงาน</span></h3>
+            <form id="planForm">
+                <input type="hidden" id="editIndex" value="-1">
 
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Type (ประเภทงาน)</label>
-                    <select id="taskType" required>
-                        <option value="Major Improvement">Major Improvement</option>
-                        <option value="Improvement ENG">Improvement ENG</option>
-                        <option value="Abnormal">Abnormal</option>
-                        <option value="Support">Support</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Description (รายละเอียดงาน)</label>
-                    <input type="text" id="description" placeholder="เช่น ปรับปรุงถนน, ซ่อมอาคาร" required>
-                </div>
-                <div class="form-group">
-                    <label>สถานะงาน (Status)</label>
-                    <select id="taskStatus" required style="border-color: #95a5a6;">
-                        <option value="Normal">🟢 ปกติ (Normal)</option>
-                        <option value="Hold">🟠 เลื่อน/หยุดชั่วคราว (Hold)</option>
-                        <option value="Canceled">🔴 ยกเลิก (Canceled)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>ผู้รับผิดชอบหลัก (Plan / Actual)</label>
-                    <input type="text" id="assignee" placeholder="เช่น Pandda / Phuritat" required>
-                </div>
-            </div>
-
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Budget - Plan / Actual (Baht)</label>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="number" id="budgetPlan" placeholder="งบประมาณที่ตั้งไว้" style="width:50%;">
-                        <input type="number" id="budgetActual" placeholder="ค่าใช้จ่ายจริง" style="width:50%;">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Year (ปี)</label>
+                        <input type="number" id="taskYear" value="2026" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Type (ประเภทงาน)</label>
+                        <select id="taskType" required>
+                            <option value="Major Improvement">Major Improvement</option>
+                            <option value="Improvement ENG">Improvement ENG</option>
+                            <option value="Abnormal">Abnormal</option>
+                            <option value="Support">Support</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Description (รายละเอียดงาน)</label>
+                        <input type="text" id="description" placeholder="เช่น ปรับปรุงถนน, ซ่อมอาคาร" required>
+                    </div>
+                    <div class="form-group">
+                        <label>สถานะงาน (Status)</label>
+                        <select id="taskStatus" required style="border-color: #95a5a6;">
+                            <option value="Normal">🟢 ปกติ (Normal)</option>
+                            <option value="Hold">🟠 เลื่อน/หยุดชั่วคราว (Hold)</option>
+                            <option value="Canceled">🔴 ยกเลิก (Canceled)</option>
+                        </select>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>Progress - Plan (%)</label>
-                    <input type="number" id="progressPlan" value="100" min="0" max="100">
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Type Budget</label>
+                        <select id="typeBudget" required>
+                            <option value="CAPEX">CAPEX</option>
+                            <option value="OPEX">OPEX</option>
+                            <option value="-">- (ไม่ใช้งบ)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>ผู้รับผิดชอบหลัก (Plan / Actual)</label>
+                        <input type="text" id="assignee" placeholder="เช่น Pandda / Phuritat" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Budget - Plan / Actual (Baht)</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="number" id="budgetPlan" placeholder="Plan" style="width:50%;">
+                            <input type="number" id="budgetActual" placeholder="Actual" style="width:50%;">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Progress - Plan/Actual (%)</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="number" id="progressPlan" value="100" min="0" max="100" style="width:50%;" title="Plan">
+                            <input type="number" id="progressActual" value="0" min="0" max="100" style="width:50%;" title="Actual">
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Progress - Actual (%)</label>
-                    <input type="number" id="progressActual" value="0" min="0" max="100">
+
+                <label style="font-weight: 600; color: #34495e; font-size: 13px; margin-bottom: 8px; display:block;">
+                    <i class="fa-solid fa-timeline" style="color: var(--primary-color);"></i> กำหนดสัปดาห์ (1-4) ของ 7 กระบวนการ 
+                </label>
+                <div class="timeline-table-container">
+                    <table class="timeline-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 30%; text-align: left; padding-left: 10px;">กระบวนการหลัก</th>
+                                <th style="width: 17.5%;">Plan: เริ่ม</th><th style="width: 17.5%;">Plan: สิ้นสุด</th>
+                                <th style="width: 17.5%;">Actual: เริ่ม</th><th style="width: 17.5%;">Actual: สิ้นสุด</th>
+                            </tr>
+                        </thead>
+                        <tbody id="processTbody"></tbody>
+                    </table>
                 </div>
-            </div>
 
-            <label style="font-weight: 600; color: #34495e; font-size: 13px; margin-bottom: 8px; display:block;">
-                <i class="fa-solid fa-timeline" style="color: var(--primary-color);"></i> กำหนดสัปดาห์ (1-4) ของ 7 กระบวนการ 
-            </label>
-            <div class="timeline-table-container">
-                <table class="timeline-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 30%; text-align: left; padding-left: 10px;">กระบวนการหลัก</th>
-                            <th style="width: 17.5%;">Plan: เริ่ม</th>
-                            <th style="width: 17.5%;">Plan: สิ้นสุด</th>
-                            <th style="width: 17.5%;">Actual: เริ่ม</th>
-                            <th style="width: 17.5%;">Actual: สิ้นสุด</th>
-                        </tr>
-                    </thead>
-                    <tbody id="processTbody">
-                        </tbody>
-                </table>
-            </div>
+                <div style="display: flex; flex-direction: column; margin-bottom: 15px;">
+                    <label style="font-weight: 600; color: #34495e; font-size: 12px; margin-bottom: 5px;">Remark (หมายเหตุ)</label>
+                    <input type="text" id="remark" placeholder="เช่น อยู่ระหว่างรอ Supplier เสนอราคา" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-family: 'Sarabun';">
+                </div>
 
-            <div style="display: flex; flex-direction: column; margin-bottom: 15px;">
-                <label style="font-weight: 600; color: #34495e; font-size: 12px; margin-bottom: 5px;">Remark (หมายเหตุ)</label>
-                <input type="text" id="remark" placeholder="เช่น อยู่ระหว่างรอ Supplier เสนอราคา" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-family: 'Sarabun';">
-            </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-hide-inside" id="hideFormInsideBtn"><i class="fa-solid fa-eye-slash"></i> 🙈 ซ่อนฟอร์ม</button>
+                    <button type="submit" class="btn btn-submit" id="submitBtn"><i class="fa-solid fa-floppy-disk"></i> บันทึกลงตาราง</button>
+                    <button type="button" class="btn btn-cancel" id="cancelBtn" style="display: none;"><i class="fa-solid fa-xmark"></i> ยกเลิกการแก้ไข</button>
+                </div>
+            </form>
+        </div>
 
-            <div class="btn-group">
-                <button type="button" class="btn btn-hide-inside" id="hideFormInsideBtn"><i class="fa-solid fa-eye-slash"></i> 🙈 ซ่อนฟอร์ม</button>
-                <button type="submit" class="btn btn-submit" id="submitBtn"><i class="fa-solid fa-floppy-disk"></i> บันทึกลงตาราง</button>
-                <button type="button" class="btn btn-cancel" id="cancelBtn" style="display: none;"><i class="fa-solid fa-xmark"></i> ยกเลิกการแก้ไข</button>
-            </div>
-        </form>
+        <div class="process-legend">
+            <strong><i class="fa-solid fa-circle-info"></i> คำอธิบายตัวเลข (Process):</strong>
+            <div class="process-item"><span>1</span> ออกแบบ/จัดทำเงื่อนไขฯ</div>
+            <div class="process-item"><span>2</span> PR</div>
+            <div class="process-item"><span>3</span> ต่อรอง/สรุปราคา</div>
+            <div class="process-item"><span>4</span> PO</div>
+            <div class="process-item"><span>5</span> ดำเนินการ</div>
+            <div class="process-item"><span>6</span> ตรวจรับงาน</div>
+            <div class="process-item"><span>7</span> ส่งมอบงาน</div>
+        </div>
+
+        <div class="table-responsive">
+            <table id="ganttTable">
+                <thead>
+                    <tr class="bg-cyan">
+                        <th rowspan="2" style="width: 50px;">Type</th>
+                        <th rowspan="2" style="width: 40px;">Item</th>
+                        <th rowspan="2" style="width: 300px;">Description</th>
+                        <th rowspan="2" style="width: 70px;">Type Budget</th>
+                        <th rowspan="2" style="width: 100px;">ผู้รับผิดชอบ</th>
+                        <th rowspan="2" style="width: 60px;">Progress</th>
+                        <th rowspan="2" style="width: 50px;">Plan/Work</th>
+                        <th rowspan="2" style="width: 100px;">Budget(Baht)</th>
+                        <th colspan="4" class="month-header" id="month-0">Jan-26</th><th colspan="4" class="month-header" id="month-1">Feb-26</th><th colspan="4" class="month-header" id="month-2">Mar-26</th><th colspan="4" class="month-header" id="month-3">Apr-26</th><th colspan="4" class="month-header" id="month-4">May-26</th><th colspan="4" class="month-header" id="month-5">Jun-26</th><th colspan="4" class="month-header" id="month-6">Jul-26</th><th colspan="4" class="month-header" id="month-7">Aug-26</th><th colspan="4" class="month-header" id="month-8">Sep-26</th><th colspan="4" class="month-header" id="month-9">Oct-26</th><th colspan="4" class="month-header" id="month-10">Nov-26</th><th colspan="4" class="month-header" id="month-11">Dec-26</th>
+                        <th rowspan="2" style="width: 160px; text-align: left; padding-left: 10px;">
+                            Remark 
+                            <button class="btn-toggle-action" onclick="toggleActionColumn()" title="แสดง/ซ่อน เมนูจัดการ">
+                                <i class="fa-solid fa-gear"></i>
+                            </button>
+                        </th>
+                        <th rowspan="2" class="action-col" style="width: 80px;">Actions</th>
+                    </tr>
+                    <tr class="bg-cyan" id="weeksHeaderRow"></tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+                <tfoot>
+                    <tr class="bg-total">
+                        <td colspan="5" style="color: var(--primary-color); text-align: right; padding-right: 15px; font-size: 14px;">TOTAL PROGRESS (คิดเฉพาะงานที่กำลังทำ)</td>
+                        <td id="totalProgressCell" style="font-size: 16px; color: #2c3e50;">0%</td>
+                        <td colspan="50"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
     </div>
 
-    <div class="process-legend">
-        <strong><i class="fa-solid fa-circle-info"></i> คำอธิบายตัวเลข (Process):</strong>
-        <div class="process-item"><span>1</span> ออกแบบ/จัดทำเงื่อนไขฯ</div>
-        <div class="process-item"><span>2</span> PR</div>
-        <div class="process-item"><span>3</span> ต่อรอง/สรุปราคา</div>
-        <div class="process-item"><span>4</span> PO</div>
-        <div class="process-item"><span>5</span> ดำเนินการ</div>
-        <div class="process-item"><span>6</span> ตรวจรับงาน</div>
-        <div class="process-item"><span>7</span> ส่งมอบงาน</div>
-        <span style="font-size:11px; color:#e74c3c; margin-left:auto; font-weight:bold;"><i class="fa-solid fa-keyboard"></i> เคล็ดลับ: สามารถคลิกช่องในตารางแล้วกดแป้นเลข 1-7 เพื่อหยอดสีตรงๆ ได้เลยเหมือน Excel!</span>
+    <div id="MajorTab" class="tab-content" style="padding-top: 20px;">
+        <h2 style="margin-bottom: 20px; padding: 0;"><i class="fa-solid fa-list-check" style="color: #27ae60;"></i> สรุปแผนงานปรับปรุง (Major Improvement & Improvement ENG)</h2>
+        <div class="table-responsive">
+            <table class="major-table" id="majorEngTable" style="min-width: 1500px;">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">Item</th><th style="width: 250px;">Improvement Topic</th><th style="width: 150px;">ที่มา/ความสำคัญของโครงการ</th><th style="width: 150px;">ประโยชน์ที่จะได้รับ</th><th style="width: 200px;">ขั้นตอน</th>
+                        <th class="month-hdr">Jan</th><th class="month-hdr">Feb</th><th class="month-hdr">Mar</th><th class="month-hdr">Apr</th><th class="month-hdr">May</th><th class="month-hdr">Jun</th><th class="month-hdr">Jul</th><th class="month-hdr">Aug</th><th class="month-hdr">Sep</th><th class="month-hdr">Oct</th><th class="month-hdr">Nov</th><th class="month-hdr">Dec</th>
+                        <th style="width: 100px;">Status</th><th style="width: 120px;">%Progress</th><th style="width: 150px;">ความคืบหน้า</th><th style="width: 150px;">Remark</th>
+                    </tr>
+                </thead>
+                <tbody id="majorEngTbody"></tbody>
+            </table>
+        </div>
     </div>
 
-    <div class="table-responsive">
-        <table id="ganttTable">
-            <thead>
-                <tr class="bg-cyan">
-                    <th rowspan="2" style="width: 50px;">Type</th>
-                    <th rowspan="2" style="width: 40px;">Item</th>
-                    <th rowspan="2" style="width: 320px;">Description</th>
-                    <th rowspan="2" style="width: 100px;">ผู้รับผิดชอบ</th>
-                    <th rowspan="2" style="width: 60px;">Progress</th>
-                    <th rowspan="2" style="width: 50px;">Plan/Work</th>
-                    <th rowspan="2" style="width: 100px;">Budget(Baht)</th>
-                    <th colspan="4" class="month-header" id="month-0">Jan-26</th>
-                    <th colspan="4" class="month-header" id="month-1">Feb-26</th>
-                    <th colspan="4" class="month-header" id="month-2">Mar-26</th>
-                    <th colspan="4" class="month-header" id="month-3">Apr-26</th>
-                    <th colspan="4" class="month-header" id="month-4">May-26</th>
-                    <th colspan="4" class="month-header" id="month-5">Jun-26</th>
-                    <th colspan="4" class="month-header" id="month-6">Jul-26</th>
-                    <th colspan="4" class="month-header" id="month-7">Aug-26</th>
-                    <th colspan="4" class="month-header" id="month-8">Sep-26</th>
-                    <th colspan="4" class="month-header" id="month-9">Oct-26</th>
-                    <th colspan="4" class="month-header" id="month-10">Nov-26</th>
-                    <th colspan="4" class="month-header" id="month-11">Dec-26</th>
-                    <th rowspan="2" style="width: 150px;">Remark</th>
-                    <th rowspan="2" style="width: 100px;">Actions</th>
-                </tr>
-                <tr class="bg-cyan" id="weeksHeaderRow">
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-            </tbody>
-            <tfoot>
-                <tr class="bg-total">
-                    <td colspan="4" style="color: var(--primary-color); text-align: right; padding-right: 15px; font-size: 14px;">TOTAL PROGRESS (คิดเฉพาะงานที่กำลังทำ)</td>
-                    <td id="totalProgressCell" style="font-size: 16px; color: #2c3e50;">0%</td>
-                    <td colspan="46"></td>
-                </tr>
-            </tfoot>
-        </table>
+    <div class="excel-tab-bar">
+        <button class="excel-tab-btn active" onclick="openTab(event, 'MainGanttTab')"><i class="fa-solid fa-table"></i> แผนงานหลัก (Master Gantt)</button>
+        <button class="excel-tab-btn" onclick="openTab(event, 'MajorTab')"><i class="fa-solid fa-file-invoice"></i> สรุปงาน Major/ENG</button>
     </div>
 
     <script>
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const processNames = [
-            "1. ออกแบบ จัดทำเงื่อนไขและข้อกำหนด",
-            "2. PR (Purchase Requisition)",
-            "3. ขั้นตอนต่อรองและสรุปราคา",
-            "4. PO (Purchase Order)",
-            "5. อยู่ระหว่างดำเนินการ",
-            "6. ขั้นตอนตรวจรับงาน",
-            "7. ส่งมอบงาน"
+        const processNamesOriginal = [
+            "1. ออกแบบ จัดทำเงื่อนไขและข้อกำหนด", "2. PR (Purchase Requisition)", "3. ขั้นตอนต่อรองและสรุปราคา", 
+            "4. PO (Purchase Order)", "5. อยู่ระหว่างดำเนินการ", "6. ขั้นตอนตรวจรับงาน", "7. ส่งมอบงาน"
+        ];
+        const processNamesTab2 = [
+            "ออกแบบ จัดทำเงื่อนไขและข้อกำหนด", "PR (Purchase Requisition)", "ขั้นตอนต่อรองและสรุปราคา", 
+            "PO (Purchase Order)", "อยู่ระหว่างดำเนินการ", "ขั้นตอนตรวจรับงาน", "ส่งมอบงาน"
         ];
 
-        // ฐานข้อมูลเริ่มต้น (เก็บค่าในอาร์เรย์แบบ 48 ช่อง เพื่อให้กรอกแบบ Excel ได้อย่างสมบูรณ์)
+        // เพิ่ม year และ typeBudget ใน Mock Data
         let projectData = [
             {
-                id: 1, type: 'Major Improvement', description: 'ปรับปรุงถนนช่วงแยก Slabyard - Fire Station', status: 'Normal',
+                id: 1, type: 'Major Improvement', description: 'ปรับปรุงถนนช่วงแยก Slabyard - Fire Station', typeBudget: 'CAPEX', year: 2026, status: 'Normal',
                 assignee: 'Pandda/Phuritat', progressPlan: 100, progressActual: 33, budgetPlan: 2800000, budgetActual: 1500000, remark: 'อยู่ระหว่างรอ Suppler เสนอราคา',
-                // อาเรย์ 48 ช่อง แทนสัปดาห์ทั้งหมดในปี (เก็บค่าเลขกระบวนการ 1-7 หรือเว้นว่าง)
-                weeksPlan: Array(48).fill(""),
-                weeksActual: Array(48).fill("")
+                weeksPlan: Array(48).fill(""), weeksActual: Array(48).fill("")
             },
             {
-                id: 2, type: 'Support', description: 'งานย้ายป้ายเขตอาคารโรงงานเพื่อเปิดทางสัญจรใหม่', status: 'Normal',
-                assignee: 'Panatda/Phurithat', progressPlan: 100, progressActual: 20, budgetPlan: null, budgetActual: 5000, remark: 'ข้ามไปดำเนินการเดือน พ.ย.',
-                weeksPlan: Array(48).fill(""),
-                weeksActual: Array(48).fill("")
+                id: 2, type: 'Improvement ENG', description: 'งานปรับปรุงอาคาร Canteen', typeBudget: 'OPEX', year: 2026, status: 'Normal',
+                assignee: 'Panatda/Phurithat', progressPlan: 100, progressActual: 59, budgetPlan: null, budgetActual: 5000, remark: '',
+                weeksPlan: Array(48).fill(""), weeksActual: Array(48).fill("")
             }
         ];
 
-        // หยอดค่าตั้งต้นให้ข้อมูลจำลองข้อ 1 และ 2
         for(let i=4;i<=7;i++) projectData[0].weeksPlan[i] = "1";
         for(let i=4;i<=6;i++) projectData[0].weeksActual[i] = "1";
         projectData[0].weeksPlan[8] = "2"; projectData[0].weeksActual[7] = "2";
@@ -324,25 +344,39 @@
         projectData[0].weeksPlan[21] = "6"; projectData[0].weeksPlan[22] = "6";
         projectData[0].weeksPlan[23] = "7";
 
-        projectData[1].weeksPlan[10] = "4"; projectData[1].weeksActual[10] = "4";
-        for(let i=40;i<=43;i++) projectData[1].weeksPlan[i] = "5";
+        projectData[1].weeksActual[0] = "1"; projectData[1].weeksActual[1] = "2"; 
+        projectData[1].weeksActual[2] = "3"; projectData[1].weeksActual[3] = "4"; 
+        projectData[1].weeksActual[4] = "5"; 
 
         const targetDate = new Date("2026-06-15");
         const currentMonthIndex = targetDate.getMonth();
         const currentDay = targetDate.getDate();
-        
         let currentWeekOfIndex = 1;
         if (currentDay > 21) currentWeekOfIndex = 4;
         else if (currentDay > 14) currentWeekOfIndex = 3;
         else if (currentDay > 7) currentWeekOfIndex = 2;
-
         const currentGlobalWeekCol = (currentMonthIndex * 4) + (currentWeekOfIndex - 1);
 
-        const toggleFormBtn = document.getElementById('toggleFormBtn');
-        const hideFormInsideBtn = document.getElementById('hideFormInsideBtn');
-        const formWrapper = document.getElementById('formWrapper');
-        
+        // ================= Toggle Action Column =================
+        function toggleActionColumn() {
+            document.getElementById('ganttTable').classList.toggle('show-actions');
+        }
+
+        // ================= Tab Navigation =================
+        function openTab(evt, tabName) {
+            let tabcontent = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabcontent.length; i++) tabcontent[i].classList.remove("active");
+            let tablinks = document.getElementsByClassName("excel-tab-btn");
+            for (let i = 0; i < tablinks.length; i++) tablinks[i].classList.remove("active");
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+            if(tabName === 'MajorTab') renderMajorEngTable();
+        }
+
+        // ================= Form & Dropdown Logic =================
         function toggleFormVisibility() {
+            const formWrapper = document.getElementById('formWrapper');
+            const toggleFormBtn = document.getElementById('toggleFormBtn');
             if (formWrapper.style.display === 'none') {
                 formWrapper.style.display = 'block';
                 toggleFormBtn.innerHTML = '<i class="fa-solid fa-minus"></i> ซ่อนฟอร์มแผนงาน';
@@ -353,18 +387,18 @@
                 toggleFormBtn.style.backgroundColor = '#34495e';
             }
         }
-        toggleFormBtn.addEventListener('click', toggleFormVisibility);
-        hideFormInsideBtn.addEventListener('click', toggleFormVisibility);
+        document.getElementById('toggleFormBtn').addEventListener('click', toggleFormVisibility);
+        document.getElementById('hideFormInsideBtn').addEventListener('click', toggleFormVisibility);
 
-        function generateWeekOptions() {
-            let opts = `<option value="">- เลือก -</option>`;
+        function buildSelectOptions(selectElement) {
+            let html = '<option value="">- เลือก -</option>';
             for (let m = 0; m < 12; m++) {
                 for (let w = 1; w <= 4; w++) {
                     let globalIndex = (m * 4) + (w - 1);
-                    opts += `<option value="${globalIndex}">${months[m]} W${w}</option>`;
+                    html += `<option value="${globalIndex}">${months[m]} W${w}</option>`;
                 }
             }
-            return opts;
+            selectElement.innerHTML = html;
         }
 
         function updateDropdownLimits() {
@@ -387,94 +421,30 @@
             }
         }
 
-        function buildSelectOptions(selectElement) {
-            let html = '<option value="">- เลือก -</option>';
-            for (let m = 0; m < 12; m++) {
-                for (let w = 1; w <= 4; w++) {
-                    let globalIndex = (m * 4) + (w - 1);
-                    html += `<option value="${globalIndex}">${months[m]} W${w}</option>`;
-                }
-            }
-            selectElement.innerHTML = html;
-        }
-
-        function initApp() {
-            const weeksHeader = document.getElementById('weeksHeaderRow');
-            const processTbody = document.getElementById('processTbody');
-            document.getElementById('currentDateStr').innerText = `${months[currentMonthIndex]}-26 (สัปดาห์ที่ ${currentWeekOfIndex})`;
-
-            let weeksHtml = '';
-            let colIndex = 0;
-            for (let m = 0; m < 12; m++) {
-                for (let w = 1; w <= 4; w++) {
-                    const isToday = (colIndex === currentGlobalWeekCol);
-                    weeksHtml += `<td class="week-cell ${isToday ? 'current-week-header' : ''}" title="${months[m]}-26 Week ${w}">${w}</td>`;
-                    colIndex++;
-                }
-            }
-            weeksHeader.innerHTML = weeksHtml;
-
-            const activeMonthHeader = document.getElementById(`month-${currentMonthIndex}`);
-            if (activeMonthHeader) {
-                activeMonthHeader.style.backgroundColor = '#e74c3c'; activeMonthHeader.style.color = '#ffffff'; activeMonthHeader.style.borderBottom = '2px solid #c0392b';
-            }
-
-            let processRows = '';
-            for (let i = 0; i < 7; i++) {
-                processRows += `<tr><td class="process-name">${processNames[i]}</td><td><select id="pS_${i}"></select></td><td><select id="pE_${i}"></select></td><td><select id="aS_${i}"></select></td><td><select id="aE_${i}"></select></td></tr>`;
-            }
-            processTbody.innerHTML = processRows;
-
-            for (let i = 0; i < 7; i++) {
-                buildSelectOptions(document.getElementById(`pS_${i}`)); buildSelectOptions(document.getElementById(`pE_${i}`)); buildSelectOptions(document.getElementById(`aS_${i}`)); buildSelectOptions(document.getElementById(`aE_${i}`));
-                document.getElementById(`pS_${i}`).addEventListener('change', updateDropdownLimits); document.getElementById(`pE_${i}`).addEventListener('change', updateDropdownLimits); document.getElementById(`aS_${i}`).addEventListener('change', updateDropdownLimits); document.getElementById(`aE_${i}`).addEventListener('change', updateDropdownLimits);
-            }
-        }
-
-        // ฟังก์ชันแก้ไขข้อมูลรายช่องตารางสไตล์ Excel 
         function cellEditHandler(dbIndex, weekGlobalIdx, rowType, cellElement) {
             let newValue = cellElement.innerText.trim();
-            
-            // กรองเงื่อนไข: ยอมรับเฉพาะเลข 1-7 หรือค่าว่างเท่านั้น
             if (newValue === "" || (parseInt(newValue) >= 1 && parseInt(newValue) <= 7)) {
-                if (rowType === 'plan') {
-                    projectData[dbIndex].weeksPlan[weekGlobalIdx] = newValue;
-                } else {
-                    projectData[dbIndex].weeksActual[weekGlobalIdx] = newValue;
-                }
+                if (rowType === 'plan') projectData[dbIndex].weeksPlan[weekGlobalIdx] = newValue;
+                else projectData[dbIndex].weeksActual[weekGlobalIdx] = newValue;
                 
-                // ถอดหรือใส่คลาสแถบสีตามข้อมูล
-                if (newValue !== "") {
-                    cellElement.className = `week-cell ${rowType === 'plan' ? 'plan-bar' : 'actual-bar'}`;
-                } else {
-                    cellElement.className = 'week-cell';
-                }
+                if (newValue !== "") cellElement.className = `week-cell ${rowType === 'plan' ? 'plan-bar' : 'actual-bar'}`;
+                else cellElement.className = 'week-cell';
+                if (weekGlobalIdx === currentGlobalWeekCol) cellElement.classList.add('current-week-cell');
                 
-                // เช็คเพื่อคงสถานะ Tracker เส้นสัปดาห์ปัจจุบัน
-                if (weekGlobalIdx === currentGlobalWeekCol) {
-                    cellElement.classList.add('current-week-cell');
-                }
-                
-                // อัปเดต Progress ภาพรวมใหม่ทันที
-                let totalActualProgress = 0;
-                let activeTasksCount = 0;
-                projectData.forEach(row => {
-                    if (row.status === 'Normal') {
-                        totalActualProgress += Number(row.progressActual);
-                        activeTasksCount++;
-                    }
-                });
+                let totalActualProgress = 0, activeTasksCount = 0;
+                projectData.forEach(row => { if (row.status === 'Normal') { totalActualProgress += Number(row.progressActual); activeTasksCount++; }});
                 let avgProgress = activeTasksCount > 0 ? Math.round(totalActualProgress / activeTasksCount) : 0;
                 document.getElementById('totalProgressSummary').innerText = avgProgress + '%';
                 document.getElementById('totalProgressCell').innerText = avgProgress + '%';
+                
+                renderMajorEngTable();
             } else {
-                // หากกรอกตัวเลขผิดพลาด ให้ดีดคืนค่าเดิม
-                alert("กรุณากรอกเฉพาะตัวเลขกระบวนการ 1 ถึง 7 เท่านั้นครับช่าง");
-                let oldValue = rowType === 'plan' ? projectData[dbIndex].weeksPlan[weekGlobalIdx] : projectData[dbIndex].weeksActual[weekGlobalIdx];
-                cellElement.innerText = oldValue;
+                alert("กรุณากรอกเฉพาะตัวเลขกระบวนการ 1 ถึง 7 เท่านั้น");
+                cellElement.innerText = rowType === 'plan' ? projectData[dbIndex].weeksPlan[weekGlobalIdx] : projectData[dbIndex].weeksActual[weekGlobalIdx];
             }
         }
 
+        // ================= Tab 1 Render Table =================
         function renderTable() {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
@@ -485,8 +455,7 @@
             const typeCounts = {};
             projectData.forEach(item => { typeCounts[item.type] = (typeCounts[item.type] || 0) + 1; });
 
-            let totalActualProgress = 0;
-            let activeTasksCount = 0;
+            let totalActualProgress = 0, activeTasksCount = 0;
             const typeRenderedTracker = {};
 
             projectData.forEach((row, dataIndex) => {
@@ -504,86 +473,47 @@
 
                 let typeCellHtml = '';
                 if (!typeRenderedTracker[row.type]) {
-                    const taskCountInGroup = typeCounts[row.type];
-                    const totalRowsForType = taskCountInGroup * 2; 
-
-                    let displayTypeText = row.type;
-                    if (taskCountInGroup === 1) { 
-                        if (row.type === 'Major Improvement') displayTypeText = 'M. Imp.';
-                        else if (row.type === 'Improvement ENG') displayTypeText = 'Imp. ENG';
-                    } else if (taskCountInGroup === 2) { 
-                        if (row.type === 'Major Improvement') displayTypeText = 'Major Imp.';
-                    }
-
-                    typeCellHtml = `
-                        <td rowspan="${totalRowsForType}" class="type-vertical-cell">
-                            <div class="type-vertical-container" title="${row.type}">
-                                <div class="type-text-wrapper">${displayTypeText}</div>
-                            </div>
-                        </td>`;
+                    const totalRowsForType = typeCounts[row.type] * 2; 
+                    let displayTypeText = typeCounts[row.type] === 1 ? (row.type === 'Major Improvement' ? 'M. Imp.' : (row.type === 'Improvement ENG' ? 'Imp. ENG' : row.type)) : (row.type === 'Major Improvement' ? 'Major Imp.' : row.type);
+                    typeCellHtml = `<td rowspan="${totalRowsForType}" class="type-vertical-cell"><div class="type-vertical-container" title="${row.type}"><div class="type-text-wrapper">${displayTypeText}</div></div></td>`;
                     typeRenderedTracker[row.type] = true;
                 }
 
                 let descriptionDisplay = row.description;
-                if(row.status === 'Hold') {
-                    descriptionDisplay = `<span class="status-strike">${row.description}</span> <span class="status-badge badge-hold">HOLD</span>`;
-                } else if(row.status === 'Canceled') {
-                    descriptionDisplay = `<span class="status-strike">${row.description}</span> <span class="status-badge badge-canceled">CANCELED</span>`;
-                }
+                if(row.status === 'Hold') descriptionDisplay = `<span class="status-strike">${row.description}</span> <span class="status-badge badge-hold">HOLD</span>`;
+                else if(row.status === 'Canceled') descriptionDisplay = `<span class="status-strike">${row.description}</span> <span class="status-badge badge-canceled">CANCELED</span>`;
 
-                // แถวที่ 1 (Plan)
-                let htmlRow1 = `
-                    <tr data-id="${row.id}">
-                        ${typeCellHtml}
-                        <td rowspan="2" style="font-weight: bold; background-color: #fafafa;">${dataIndex + 1}</td>
-                        <td rowspan="2" class="text-left" style="font-weight: 500;">${descriptionDisplay}</td>
-                        <td class="sub-row">${planAssignee}</td>
-                        <td style="font-weight: bold; color: var(--plan-color);">${row.progressPlan}%</td>
-                        <td class="sub-row">Plan</td>
-                        <td style="font-weight: bold; color: var(--plan-color); background-color: #fafafa;">${budgetTextPlan}</td>
-                `;
+                // แถว 1: Plan (เพิ่ม Type Budget)
+                let htmlRow1 = `<tr data-id="${row.id}">${typeCellHtml}
+                    <td rowspan="2" style="font-weight: bold; background-color: #fafafa;">${dataIndex + 1}</td>
+                    <td rowspan="2" class="text-left" style="font-weight: 500;">${descriptionDisplay}</td>
+                    <td rowspan="2" style="font-weight: 600; color: #2c3e50; background-color: #f8fafc;">${row.typeBudget || '-'}</td>
+                    <td class="sub-row">${planAssignee}</td>
+                    <td style="font-weight: bold; color: var(--plan-color);">${row.progressPlan}%</td>
+                    <td class="sub-row">Plan</td>
+                    <td style="font-weight: bold; color: var(--plan-color); background-color: #fafafa;">${budgetTextPlan}</td>`;
 
-                // วาด 48 ช่องแบบเปิด Contenteditable ให้พิมพ์ลงไปตรงๆ แบบ Excel ได้
                 for (let globalW = 0; globalW < 48; globalW++) {
                     let isCurrentWeekCol = (globalW === currentGlobalWeekCol);
                     let val = row.weeksPlan[globalW];
-                    let isColored = val !== "";
-                    
-                    htmlRow1 += `<td contenteditable="true" 
-                                     class="week-cell ${isColored ? 'plan-bar' : ''} ${isCurrentWeekCol ? 'current-week-cell' : ''}" 
-                                     onblur="cellEditHandler(${dataIndex}, ${globalW}, 'plan', this)"
-                                     onkeydown="if(event.keyCode===13){event.preventDefault(); this.blur();}">${val}</td>`;
+                    htmlRow1 += `<td contenteditable="true" class="week-cell ${val !== "" ? 'plan-bar' : ''} ${isCurrentWeekCol ? 'current-week-cell' : ''}" onblur="cellEditHandler(${dataIndex}, ${globalW}, 'plan', this)" onkeydown="if(event.keyCode===13){event.preventDefault(); this.blur();}">${val}</td>`;
                 }
                 
-                htmlRow1 += `
-                        <td rowspan="2" class="text-left" style="font-size: 11px; color: #e67e22; max-width: 150px; overflow-wrap: break-word;">${row.remark || ''}</td>
-                        <td rowspan="2">
-                            <div class="action-btns">
-                                <button type="button" class="btn-table btn-edit" onclick="editTask(${dataIndex})" title="แก้ไขแบบละเอียด"><i class="fa-solid fa-pen-to-square"></i></button>
-                                <button type="button" class="btn-table btn-delete" onclick="deleteTask(${dataIndex})" title="ลบ"><i class="fa-solid fa-trash-can"></i></button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
+                // คอลัมน์ Action ซ่อนด้วยคลาส .action-col
+                htmlRow1 += `<td rowspan="2" class="text-left" style="font-size: 11px; color: #e67e22; max-width: 150px; overflow-wrap: break-word;">${row.remark || ''}</td>
+                    <td rowspan="2" class="action-col">
+                        <div class="action-btns">
+                            <button type="button" class="btn-table btn-edit" onclick="editTask(${dataIndex})" title="แก้ไขแบบละเอียด"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button type="button" class="btn-table btn-delete" onclick="deleteTask(${dataIndex})" title="ลบ"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </td></tr>`;
 
-                // แถวที่ 2 (Actual)
-                let htmlRow2 = `
-                    <tr data-id="${row.id}-act">
-                        <td class="sub-row">${actualAssignee}</td>
-                        <td style="font-weight: bold; color: var(--actual-color);">${row.progressActual}%</td>
-                        <td class="sub-row">Actual</td>
-                        <td style="font-weight: bold; color: var(--actual-color); background-color: #fafafa;">${budgetTextActual}</td>
-                `;
-
+                // แถว 2: Actual
+                let htmlRow2 = `<tr data-id="${row.id}-act"><td class="sub-row">${actualAssignee}</td><td style="font-weight: bold; color: var(--actual-color);">${row.progressActual}%</td><td class="sub-row">Actual</td><td style="font-weight: bold; color: var(--actual-color); background-color: #fafafa;">${budgetTextActual}</td>`;
                 for (let globalW = 0; globalW < 48; globalW++) {
                     let isCurrentWeekCol = (globalW === currentGlobalWeekCol);
                     let val = row.weeksActual[globalW];
-                    let isColored = val !== "";
-                    
-                    htmlRow2 += `<td contenteditable="true" 
-                                     class="week-cell ${isColored ? 'actual-bar' : ''} ${isCurrentWeekCol ? 'current-week-cell' : ''}" 
-                                     onblur="cellEditHandler(${dataIndex}, ${globalW}, 'actual', this)"
-                                     onkeydown="if(event.keyCode===13){event.preventDefault(); this.blur();}">${val}</td>`;
+                    htmlRow2 += `<td contenteditable="true" class="week-cell ${val !== "" ? 'actual-bar' : ''} ${isCurrentWeekCol ? 'current-week-cell' : ''}" onblur="cellEditHandler(${dataIndex}, ${globalW}, 'actual', this)" onkeydown="if(event.keyCode===13){event.preventDefault(); this.blur();}">${val}</td>`;
                 }
                 htmlRow2 += `</tr>`;
 
@@ -594,8 +524,47 @@
             let avgProgress = activeTasksCount > 0 ? Math.round(totalActualProgress / activeTasksCount) : 0;
             document.getElementById('totalProgressSummary').innerText = avgProgress + '%';
             document.getElementById('totalProgressCell').innerText = avgProgress + '%';
+            
+            renderMajorEngTable(); 
         }
 
+        // ================= Tab 2 Render Table =================
+        function renderMajorEngTable() {
+            const tbody = document.getElementById('majorEngTbody');
+            tbody.innerHTML = '';
+            const filteredData = projectData.filter(d => d.type === 'Major Improvement' || d.type === 'Improvement ENG');
+
+            filteredData.forEach((task, index) => {
+                let html = `<tr>
+                    <td rowspan="8" class="rowspan-cell" style="text-align: center;">${index + 1}</td>
+                    <td rowspan="8" class="text-left rowspan-cell" style="font-weight: 600;">${task.description}</td>
+                    <td rowspan="8" class="rowspan-cell"></td>
+                    <td rowspan="8" class="rowspan-cell"></td>
+                    <td></td>`;
+                for(let m=0; m<12; m++) html += `<td class="month-col"></td>`;
+                html += `<td style="font-weight: bold; text-align: center;">Over all Progress</td>
+                    <td><div class="progress-wrapper"><div class="progress-fill" style="width: ${task.progressActual}%;"></div><span class="progress-text">${task.progressActual}%</span></div></td>
+                    <td rowspan="8" class="text-left rowspan-cell" style="color: #444;">${task.remark}</td>
+                    <td rowspan="8" class="rowspan-cell"></td></tr>`;
+
+                for(let s = 0; s < 7; s++) {
+                    let stepNumStr = (s + 1).toString();
+                    let stepStatus = "On Progress"; let stepProg = 0;
+                    
+                    if (task.weeksActual.includes(stepNumStr)) { stepStatus = "Finished"; stepProg = 100; } 
+                    else if (s > 0 && task.weeksActual.includes(s.toString()) && task.progressActual > 0) { stepStatus = "On Progress"; stepProg = Math.floor(Math.random() * 30) + 10; }
+                    if (task.progressActual === 0) { stepStatus = "On Progress"; stepProg = 0; }
+
+                    html += `<tr><td class="text-left" style="padding-left: 10px;">${processNamesTab2[s]}</td>`;
+                    for(let m=0; m<12; m++) html += `<td class="month-col"></td>`;
+                    html += `<td style="text-align: center; color: ${stepStatus === 'Finished' ? '#444' : '#666'};">${stepStatus}</td>
+                        <td><div class="progress-wrapper"><div class="progress-fill" style="width: ${stepProg}%;"></div><span class="progress-text">${stepProg}%</span></div></td></tr>`;
+                }
+                tbody.innerHTML += html;
+            });
+        }
+
+        // ================= Form Submission & Actions =================
         document.getElementById('planForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const editIndex = parseInt(document.getElementById('editIndex').value);
@@ -603,81 +572,53 @@
             const budgetActualVal = document.getElementById('budgetActual').value;
 
             if (editIndex === -1) {
-                // เพิ่มงานชิ้นใหม่และเซ็ตอาร์เรย์ 48 สัปดาห์ว่าง
                 let taskData = {
-                    id: Date.now(),
-                    type: document.getElementById('taskType').value,
-                    description: document.getElementById('description').value,
-                    status: document.getElementById('taskStatus').value,
-                    assignee: document.getElementById('assignee').value,
-                    progressPlan: parseInt(document.getElementById('progressPlan').value),
-                    progressActual: parseInt(document.getElementById('progressActual').value),
-                    budgetPlan: budgetPlanVal ? parseFloat(budgetPlanVal) : null,
-                    budgetActual: budgetActualVal ? parseFloat(budgetActualVal) : null,
-                    weeksPlan: Array(48).fill(""),
-                    weeksActual: Array(48).fill(""),
-                    remark: document.getElementById('remark').value
+                    id: Date.now(), 
+                    year: parseInt(document.getElementById('taskYear').value),
+                    typeBudget: document.getElementById('typeBudget').value,
+                    type: document.getElementById('taskType').value, description: document.getElementById('description').value,
+                    status: document.getElementById('taskStatus').value, assignee: document.getElementById('assignee').value,
+                    progressPlan: parseInt(document.getElementById('progressPlan').value), progressActual: parseInt(document.getElementById('progressActual').value),
+                    budgetPlan: budgetPlanVal ? parseFloat(budgetPlanVal) : null, budgetActual: budgetActualVal ? parseFloat(budgetActualVal) : null,
+                    weeksPlan: Array(48).fill(""), weeksActual: Array(48).fill(""), remark: document.getElementById('remark').value
                 };
 
-                // แปลงข้อมูลจาก Form 7 ขั้นตอนลงอาร์เรย์สัปดาห์หลัก
                 for (let i = 0; i < 7; i++) {
-                    let pS = document.getElementById(`pS_${i}`).value;
-                    let pE = document.getElementById(`pE_${i}`).value;
-                    let aS = document.getElementById(`aS_${i}`).value;
-                    let aE = document.getElementById(`aE_${i}`).value;
-
-                    if(pS !== "" && pE !== "") {
-                        for(let w = parseInt(pS); w <= parseInt(pE); w++) taskData.weeksPlan[w] = (i + 1).toString();
-                    }
-                    if(aS !== "" && aE !== "") {
-                        for(let w = parseInt(aS); w <= parseInt(aE); w++) taskData.weeksActual[w] = (i + 1).toString();
-                    }
+                    let pS = document.getElementById(`pS_${i}`).value; let pE = document.getElementById(`pE_${i}`).value;
+                    let aS = document.getElementById(`aS_${i}`).value; let aE = document.getElementById(`aE_${i}`).value;
+                    if(pS !== "" && pE !== "") for(let w = parseInt(pS); w <= parseInt(pE); w++) taskData.weeksPlan[w] = (i + 1).toString();
+                    if(aS !== "" && aE !== "") for(let w = parseInt(aS); w <= parseInt(aE); w++) taskData.weeksActual[w] = (i + 1).toString();
                 }
                 projectData.push(taskData);
             } else {
-                // แก้ไขงานชิ้นเดิม
                 let currentItem = projectData[editIndex];
-                currentItem.type = document.getElementById('taskType').value;
-                currentItem.description = document.getElementById('description').value;
-                currentItem.status = document.getElementById('taskStatus').value;
-                currentItem.assignee = document.getElementById('assignee').value;
-                currentItem.progressPlan = parseInt(document.getElementById('progressPlan').value);
-                currentItem.progressActual = parseInt(document.getElementById('progressActual').value);
-                currentItem.budgetPlan = budgetPlanVal ? parseFloat(budgetPlanVal) : null;
-                currentItem.budgetActual = budgetActualVal ? parseFloat(budgetActualVal) : null;
+                currentItem.year = parseInt(document.getElementById('taskYear').value);
+                currentItem.typeBudget = document.getElementById('typeBudget').value;
+                currentItem.type = document.getElementById('taskType').value; currentItem.description = document.getElementById('description').value;
+                currentItem.status = document.getElementById('taskStatus').value; currentItem.assignee = document.getElementById('assignee').value;
+                currentItem.progressPlan = parseInt(document.getElementById('progressPlan').value); currentItem.progressActual = parseInt(document.getElementById('progressActual').value);
+                currentItem.budgetPlan = budgetPlanVal ? parseFloat(budgetPlanVal) : null; currentItem.budgetActual = budgetActualVal ? parseFloat(budgetActualVal) : null;
                 currentItem.remark = document.getElementById('remark').value;
-
-                // ล้างค่าเก่าแล้วอัปเดตอาร์เรย์สัปดาห์ตามตาราง 7 ขั้นตอนในฟอร์ม
-                currentItem.weeksPlan = Array(48).fill("");
-                currentItem.weeksActual = Array(48).fill("");
-
+                
+                currentItem.weeksPlan = Array(48).fill(""); currentItem.weeksActual = Array(48).fill("");
                 for (let i = 0; i < 7; i++) {
-                    let pS = document.getElementById(`pS_${i}`).value;
-                    let pE = document.getElementById(`pE_${i}`).value;
-                    let aS = document.getElementById(`aS_${i}`).value;
-                    let aE = document.getElementById(`aE_${i}`).value;
-
-                    if(pS !== "" && pE !== "") {
-                        for(let w = parseInt(pS); w <= parseInt(pE); w++) currentItem.weeksPlan[w] = (i + 1).toString();
-                    }
-                    if(aS !== "" && aE !== "") {
-                        for(let w = parseInt(aS); w <= parseInt(aE); w++) currentItem.weeksActual[w] = (i + 1).toString();
-                    }
+                    let pS = document.getElementById(`pS_${i}`).value; let pE = document.getElementById(`pE_${i}`).value;
+                    let aS = document.getElementById(`aS_${i}`).value; let aE = document.getElementById(`aE_${i}`).value;
+                    if(pS !== "" && pE !== "") for(let w = parseInt(pS); w <= parseInt(pE); w++) currentItem.weeksPlan[w] = (i + 1).toString();
+                    if(aS !== "" && aE !== "") for(let w = parseInt(aS); w <= parseInt(aE); w++) currentItem.weeksActual[w] = (i + 1).toString();
                 }
                 resetForm();
             }
-
             renderTable();
             clearInputs();
         });
 
         window.editTask = function(index) {
-            if(formWrapper.style.display === 'none') {
-                toggleFormVisibility();
-            }
-
+            if(document.getElementById('formWrapper').style.display === 'none') toggleFormVisibility();
             const task = projectData[index];
             document.getElementById('editIndex').value = index;
+            document.getElementById('taskYear').value = task.year || 2026;
+            document.getElementById('typeBudget').value = task.typeBudget || '-';
             document.getElementById('taskType').value = task.type;
             document.getElementById('description').value = task.description;
             document.getElementById('taskStatus').value = task.status || 'Normal';
@@ -688,20 +629,13 @@
             document.getElementById('progressActual').value = task.progressActual;
             document.getElementById('remark').value = task.remark || '';
 
-            // ถอดรหัสอาเรย์ 48 ช่อง กลับมาเป็นจุดเริ่ม-จบของ 7 ขั้นตอนเพื่อโชว์ในฟอร์ม
             for (let i = 0; i < 7; i++) {
                 let stepStr = (i + 1).toString();
-                let pS = task.weeksPlan.indexOf(stepStr);
-                let pE = task.weeksPlan.lastIndexOf(stepStr);
-                let aS = task.weeksActual.indexOf(stepStr);
-                let aE = task.weeksActual.lastIndexOf(stepStr);
-
-                document.getElementById(`pS_${i}`).value = pS !== -1 ? pS : '';
-                document.getElementById(`pE_${i}`).value = pE !== -1 ? pE : '';
-                document.getElementById(`aS_${i}`).value = aS !== -1 ? aS : '';
-                document.getElementById(`aE_${i}`).value = aE !== -1 ? aE : '';
+                let pS = task.weeksPlan.indexOf(stepStr); let pE = task.weeksPlan.lastIndexOf(stepStr);
+                let aS = task.weeksActual.indexOf(stepStr); let aE = task.weeksActual.lastIndexOf(stepStr);
+                document.getElementById(`pS_${i}`).value = pS !== -1 ? pS : ''; document.getElementById(`pE_${i}`).value = pE !== -1 ? pE : '';
+                document.getElementById(`aS_${i}`).value = aS !== -1 ? aS : ''; document.getElementById(`aE_${i}`).value = aE !== -1 ? aE : '';
             }
-
             updateDropdownLimits();
 
             document.getElementById('formWrapper').classList.add('editing');
@@ -709,34 +643,23 @@
             document.getElementById('submitBtn').innerHTML = `<i class="fa-solid fa-square-check"></i> อัปเดตข้อมูลงาน`;
             document.getElementById('submitBtn').style.backgroundColor = '#f39c12';
             document.getElementById('cancelBtn').style.display = 'inline-flex';
-
             document.getElementById('formWrapper').scrollIntoView({ behavior: 'smooth' });
         }
 
         window.deleteTask = function(index) {
-            if (confirm(`คุณต้องการลบงาน "${task.description}" ออกจากตารางใช่หรือไม่?`)) {
+            if (confirm(`คุณต้องการลบงาน "${projectData[index].description}" ออกจากตารางใช่หรือไม่?`)) {
                 projectData.splice(index, 1);
-                if (parseInt(document.getElementById('editIndex').value) === index) { resetForm(); }
+                if (parseInt(document.getElementById('editIndex').value) === index) resetForm();
                 renderTable();
             }
         }
 
         function clearInputs() {
-            document.getElementById('description').value = '';
-            document.getElementById('taskStatus').value = 'Normal';
-            document.getElementById('assignee').value = '';
-            document.getElementById('budgetPlan').value = '';
-            document.getElementById('budgetActual').value = '';
-            document.getElementById('progressPlan').value = '100';
-            document.getElementById('progressActual').value = '0';
-            document.getElementById('remark').value = '';
-
-            for (let i = 0; i < 7; i++) {
-                document.getElementById(`pS_${i}`).value = '';
-                document.getElementById(`pE_${i}`).value = '';
-                document.getElementById(`aS_${i}`).value = '';
-                document.getElementById(`aE_${i}`).value = '';
-            }
+            document.getElementById('taskYear').value = 2026; document.getElementById('typeBudget').value = 'CAPEX';
+            document.getElementById('description').value = ''; document.getElementById('taskStatus').value = 'Normal'; document.getElementById('assignee').value = '';
+            document.getElementById('budgetPlan').value = ''; document.getElementById('budgetActual').value = '';
+            document.getElementById('progressPlan').value = '100'; document.getElementById('progressActual').value = '0'; document.getElementById('remark').value = '';
+            for (let i = 0; i < 7; i++) { document.getElementById(`pS_${i}`).value = ''; document.getElementById(`pE_${i}`).value = ''; document.getElementById(`aS_${i}`).value = ''; document.getElementById(`aE_${i}`).value = ''; }
             updateDropdownLimits();
         }
 
@@ -749,8 +672,36 @@
             document.getElementById('cancelBtn').style.display = 'none';
             clearInputs();
         }
-
         document.getElementById('cancelBtn').addEventListener('click', resetForm);
+
+        // ================= Initialize App =================
+        function initApp() {
+            const weeksHeader = document.getElementById('weeksHeaderRow');
+            const processTbody = document.getElementById('processTbody');
+            document.getElementById('currentDateStr').innerText = `${months[currentMonthIndex]}-26 (สัปดาห์ที่ ${currentWeekOfIndex})`;
+
+            let weeksHtml = ''; let colIndex = 0;
+            for (let m = 0; m < 12; m++) {
+                for (let w = 1; w <= 4; w++) {
+                    const isToday = (colIndex === currentGlobalWeekCol);
+                    weeksHtml += `<td class="week-cell ${isToday ? 'current-week-header' : ''}" title="${months[m]}-26 Week ${w}">${w}</td>`;
+                    colIndex++;
+                }
+            }
+            weeksHeader.innerHTML = weeksHtml;
+
+            const activeMonthHeader = document.getElementById(`month-${currentMonthIndex}`);
+            if (activeMonthHeader) { activeMonthHeader.style.backgroundColor = '#e74c3c'; activeMonthHeader.style.color = '#ffffff'; activeMonthHeader.style.borderBottom = '2px solid #c0392b'; }
+
+            let processRows = '';
+            for (let i = 0; i < 7; i++) { processRows += `<tr><td class="process-name">${processNamesOriginal[i]}</td><td><select id="pS_${i}"></select></td><td><select id="pE_${i}"></select></td><td><select id="aS_${i}"></select></td><td><select id="aE_${i}"></select></td></tr>`; }
+            processTbody.innerHTML = processRows;
+
+            for (let i = 0; i < 7; i++) {
+                buildSelectOptions(document.getElementById(`pS_${i}`)); buildSelectOptions(document.getElementById(`pE_${i}`)); buildSelectOptions(document.getElementById(`aS_${i}`)); buildSelectOptions(document.getElementById(`aE_${i}`));
+                document.getElementById(`pS_${i}`).addEventListener('change', updateDropdownLimits); document.getElementById(`pE_${i}`).addEventListener('change', updateDropdownLimits); document.getElementById(`aS_${i}`).addEventListener('change', updateDropdownLimits); document.getElementById(`aE_${i}`).addEventListener('change', updateDropdownLimits);
+            }
+        }
 
         window.onload = function() {
             initApp();
