@@ -3,42 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบอัปเดตแผนงานประจำปี 2026 (Interactive Gantt Chart)</title>
+    <title>ระบบอัปเดตแผนงานประจำปี 2026</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <style>
-        :root {
-            --primary-color: #00bcd4;
-            --primary-hover: #0097a7;
-            --plan-color: #00a2e8; 
-            --actual-color: #8cbd40; 
-            --today-color: #ff4d4d; 
-        }
-
+        :root { --primary-color: #00bcd4; --primary-hover: #0097a7; --plan-color: #00a2e8; --actual-color: #8cbd40; --today-color: #ff4d4d; }
         body { font-family: 'Sarabun', sans-serif; margin: 0; background-color: #f4f6f9; color: #333; font-size: 13px; padding-bottom: 50px; }
         h2 { margin-top: 0; color: #1a252f; font-weight: 700; display: flex; align-items: center; gap: 10px; padding: 20px 20px 0 20px; }
 
-        /* ================= ระบบ TAB ด้านล่างสไตล์ EXCEL ================= */
         .tab-content { display: none; padding: 0 20px 20px 20px; animation: fadeEffect 0.3s; }
         .tab-content.active { display: block; }
         @keyframes fadeEffect { from {opacity: 0;} to {opacity: 1;} }
-
-        .excel-tab-bar {
-            position: fixed; bottom: 0; left: 0; width: 100%; background-color: #e1e1e1;
-            border-top: 1px solid #ccc; display: flex; align-items: flex-end; padding-left: 10px; z-index: 1000; height: 35px;
-        }
-        .excel-tab-btn {
-            background-color: #f3f3f3; border: 1px solid #ccc; border-bottom: none; border-radius: 5px 5px 0 0;
-            cursor: pointer; padding: 8px 20px; margin-right: 2px; font-family: 'Sarabun', sans-serif; font-size: 13px;
-            color: #555; transition: 0.2s; height: 30px; display: flex; align-items: center; gap: 6px;
-        }
+        .excel-tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #e1e1e1; border-top: 1px solid #ccc; display: flex; align-items: flex-end; padding-left: 10px; z-index: 1000; height: 35px; }
+        .excel-tab-btn { background-color: #f3f3f3; border: 1px solid #ccc; border-bottom: none; border-radius: 5px 5px 0 0; cursor: pointer; padding: 8px 20px; margin-right: 2px; font-family: 'Sarabun', sans-serif; font-size: 13px; color: #555; transition: 0.2s; height: 30px; display: flex; align-items: center; gap: 6px; }
         .excel-tab-btn:hover { background-color: #eaeaea; }
         .excel-tab-btn.active { background-color: #fff; border-top: 3px solid var(--primary-color); color: #000; font-weight: bold; height: 35px; }
 
-        /* ================= สไตล์หน้า Tab 1 ================= */
         .status-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .status-card { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; border-left: 4px solid var(--primary-color); }
         .status-card.today { border-left-color: var(--today-color); }
@@ -53,30 +36,19 @@
         .form-group label { margin-bottom: 5px; font-weight: 600; color: #34495e; font-size: 12px; }
         .form-group input, .form-group select { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-family: 'Sarabun', sans-serif; font-size: 13px; outline: none; transition: border-color 0.2s; }
         .form-group input:focus, .form-group select:focus { border-color: var(--primary-color); }
-
-        .timeline-table-container { margin-bottom: 15px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; }
-        .timeline-table { width: 100%; border-collapse: collapse; text-align: center; }
-        .timeline-table th { background-color: #f8fafc; padding: 8px; border-bottom: 1px solid #cbd5e1; font-size: 12px; color: #475569; }
-        .timeline-table td { padding: 5px; border-bottom: 1px solid #e2e8f0; }
-        .timeline-table tr:last-child td { border-bottom: none; }
-        .timeline-table select { padding: 4px; font-size: 11px; width: 100%; }
-        .process-name { text-align: left; font-weight: 600; color: #2c3e50; font-size: 12px; padding-left: 10px !important; }
+        .input-readonly { background-color: #f1f5f9 !important; color: #94a3b8; cursor: not-allowed; border-color: #e2e8f0 !important; font-weight: bold; }
 
         .btn-group { display: flex; gap: 10px; }
         .btn { padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; border: none; transition: background-color 0.2s; }
-        .btn-submit { background-color: var(--primary-color); color: white; }
-        .btn-submit:hover { background-color: var(--primary-hover); }
-        .btn-toggle { background-color: #34495e; color: white; margin-bottom: 15px; }
-        .btn-toggle:hover { background-color: #2c3e50; }
+        .btn-submit { background-color: var(--primary-color); color: white; } .btn-submit:hover { background-color: var(--primary-hover); }
+        .btn-toggle { background-color: #34495e; color: white; margin-bottom: 15px; } .btn-toggle:hover { background-color: #2c3e50; }
         .btn-hide-inside { background-color: #7f8c8d; color: white; }
-        .btn-hide-inside:hover { background-color: #616a6b; }
         .btn-cancel { background-color: #95a5a6; color: white; }
-        .btn-cancel:hover { background-color: #7f8c8d; }
 
-        .process-legend { background: #fff; padding: 12px 20px; border-radius: 8px; border-left: 4px solid #f39c12; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; align-items: center; flex-wrap: wrap; gap: 15px; }
-        .process-legend strong { color: #2c3e50; font-size: 13px; }
-        .process-item { font-size: 12px; color: #34495e; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; }
-        .process-item span { font-weight: bold; color: var(--plan-color); margin-right: 4px; }
+        .process-legend { background: #fff; padding: 12px 20px; border-radius: 8px; border-left: 4px solid #f39c12; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 12px; }
+        .process-legend strong { color: #2c3e50; font-size: 13px; white-space: nowrap; margin-right: 5px; }
+        .process-item { font-size: 12px; color: #34495e; background: #f1f5f9; padding: 5px 10px; border-radius: 4px; white-space: nowrap; display: inline-flex; align-items: center; }
+        .process-item span { font-weight: bold; color: var(--plan-color); margin-right: 5px; font-size: 13px; }
 
         .table-responsive { overflow-x: auto; background: #fff; box-shadow: 0 3px 6px rgba(0,0,0,0.08); border-radius: 8px; border: 1px solid #e2e8f0; }
         table { border-collapse: collapse; width: 100%; min-width: 1700px; text-align: center; }
@@ -89,6 +61,10 @@
         .type-vertical-cell { background-color: #f1f5f9; border-right: 2px solid #94a3b8; padding: 0; width: 50px; min-width: 50px; position: relative; }
         .type-vertical-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .type-text-wrapper { writing-mode: vertical-lr; transform: rotate(180deg); font-weight: bold; color: #475569; font-size: 12px; letter-spacing: 1px; white-space: nowrap; }
+
+        .editable-cell { cursor: text; transition: 0.2s; outline: none; border-radius: 3px; padding: 2px 4px; }
+        .editable-cell:hover { background-color: #f1f5f9; box-shadow: inset 0 0 0 1px #94a3b8; }
+        .editable-cell:focus { background-color: #fffde7; box-shadow: inset 0 0 0 1.5px var(--primary-color); }
 
         .plan-bar { background-color: var(--plan-color) !important; color: white !important; font-weight: bold; font-size: 11px !important; }
         .actual-bar { background-color: var(--actual-color) !important; color: white !important; font-weight: bold; font-size: 11px !important; }
@@ -104,21 +80,13 @@
         .current-week-cell::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255, 77, 77, 0.08); border-left: 1.5px dashed var(--today-color); border-right: 1.5px dashed var(--today-color); pointer-events: none; z-index: 5; }
         @keyframes pulse-header { 0% { background-color: var(--today-color); } 50% { background-color: #ff1a1a; box-shadow: 0 0 8px rgba(255, 77, 77, 0.6); } 100% { background-color: var(--today-color); } }
 
-        /* ================= Action Column & Toggle Styles ================= */
-        .action-col { display: none !important; } /* ซ่อนเป็นค่าเริ่มต้น */
-        .show-actions .action-col { display: table-cell !important; } /* แสดงเมื่อมีการสลับคลาส */
-        
+        .action-col { display: none !important; } 
+        .show-actions .action-col { display: table-cell !important; } 
         .action-btns { display: flex; gap: 5px; justify-content: center; }
         .btn-table { border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; display: inline-flex; align-items: center; gap: 3px; color: white; }
         .btn-edit { background-color: #f39c12; } .btn-edit:hover { background-color: #e67e22; }
         .btn-delete { background-color: #e74c3c; } .btn-delete:hover { background-color: #c0392b; }
-        
-        /* ปุ่มเปิด/ปิด Actions ตรงหัวตาราง */
-        .btn-toggle-action {
-            background-color: rgba(30, 41, 59, 0.1); border: 1px solid rgba(30, 41, 59, 0.2);
-            color: #1e293b; border-radius: 4px; padding: 2px 6px; cursor: pointer;
-            float: right; transition: all 0.2s; font-size: 12px;
-        }
+        .btn-toggle-action { background-color: rgba(30, 41, 59, 0.1); border: 1px solid rgba(30, 41, 59, 0.2); color: #1e293b; border-radius: 4px; padding: 2px 6px; cursor: pointer; float: right; transition: all 0.2s; font-size: 12px; }
         .btn-toggle-action:hover { background-color: rgba(30, 41, 59, 0.2); }
         .show-actions .btn-toggle-action { background-color: #1e293b; color: #fff; }
 
@@ -127,15 +95,25 @@
         .badge-hold { background-color: #e67e22; color: white; }
         .badge-canceled { background-color: #c0392b; color: white; }
 
-        /* ================= สไตล์เฉพาะสำหรับ Tab 2 (Major/ENG Table) ================= */
+        /* ================= Tab 2 ================= */
         .major-table th { background-color: #c5e0b4; color: #000; font-weight: 600; border: 1px solid #555; padding: 8px 4px; font-size: 12px; }
         .major-table td { border: 1px solid #555; padding: 4px; font-size: 11.5px; color: #000; }
-        .major-table .month-col { width: 25px; min-width: 25px; background-image: linear-gradient(90deg, transparent 48%, #ddd 50%, transparent 52%); background-size: 25% 100%; }
-        .major-table .month-hdr { width: 25px; }
-        .progress-wrapper { position: relative; width: 100%; height: 18px; background-color: #e9ecef; text-align: right; }
-        .progress-fill { position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, #27ae60, #2ecc71); z-index: 1; }
-        .progress-text { position: relative; z-index: 2; padding-right: 5px; font-size: 11px; font-weight: bold; line-height: 18px; }
+        .major-table .month-hdr { width: 32px; }
+        .progress-wrapper { position: relative; width: 100%; height: 18px; background-color: #e9ecef; text-align: right; border-radius: 3px; overflow: hidden; }
+        .progress-fill { position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, #27ae60, #2ecc71); z-index: 1; transition: width 0.3s ease; }
+        .progress-text { position: relative; z-index: 2; padding-right: 5px; font-size: 11px; font-weight: bold; line-height: 18px; color: #000; }
         .rowspan-cell { background-color: #fff; vertical-align: top; padding-top: 10px !important; }
+
+        .tab2-week { padding: 0 !important; width: 8px; border-right: 1px dotted #cbd5e1; }
+        .month-end { border-right: 1px solid #94a3b8 !important; }
+        .bar-plan { background: linear-gradient(to bottom, var(--plan-color) 50%, transparent 50%); }
+        .bar-actual { background: linear-gradient(to bottom, transparent 50%, var(--actual-color) 50%); }
+        .bar-both { background: linear-gradient(to bottom, var(--plan-color) 50%, var(--actual-color) 50%); }
+
+        .legend-tab2 { display: flex; gap: 15px; margin-bottom: 10px; font-size: 12px; font-weight: bold; color: #333; }
+        .legend-box { width: 15px; height: 15px; border-radius: 3px; display: inline-block; vertical-align: middle; }
+        .l-plan { background-color: var(--plan-color); }
+        .l-act { background-color: var(--actual-color); }
     </style>
 </head>
 <body>
@@ -145,7 +123,7 @@
     <div id="MainGanttTab" class="tab-content active" style="padding-top: 20px;">
         <div class="status-board">
             <div class="status-card today"><div class="status-card-info"><h4>สัปดาห์ปัจจุบัน (Current Status)</h4><p id="currentDateStr">กำลังคำนวณ...</p></div><i class="fa-solid fa-location-dot" style="font-size: 24px; color: var(--today-color);"></i></div>
-            <div class="status-card"><div class="status-card-info"><h4>จำนวนแผนงานทั้งหมด (Total Tasks)</h4><p id="totalTasksCount">0 งาน</p></div><i class="fa-solid fa-list-check" style="font-size: 24px; color: var(--primary-color);"></i></div>
+            <div class="status-card"><div class="status-card-info"><h4>จำนวนแผนงานทั้งหมด (Total Tasks)</h4><p id="totalTasksCount">กำลังโหลด...</p></div><i class="fa-solid fa-list-check" style="font-size: 24px; color: var(--primary-color);"></i></div>
             <div class="status-card" style="border-left-color: var(--actual-color);"><div class="status-card-info"><h4>ความคืบหน้าภาพรวม (Total Progress)</h4><p id="totalProgressSummary">0%</p></div><i class="fa-solid fa-chart-line" style="font-size: 24px; color: var(--actual-color);"></i></div>
         </div>
 
@@ -157,10 +135,7 @@
                 <input type="hidden" id="editIndex" value="-1">
 
                 <div class="form-grid">
-                    <div class="form-group">
-                        <label>Year (ปี)</label>
-                        <input type="number" id="taskYear" value="2026" required>
-                    </div>
+                    <div class="form-group"><label>Year (ปี)</label><input type="number" id="taskYear" value="2026" required></div>
                     <div class="form-group">
                         <label>Type (ประเภทงาน)</label>
                         <select id="taskType" required>
@@ -170,10 +145,7 @@
                             <option value="Support">Support</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label>Description (รายละเอียดงาน)</label>
-                        <input type="text" id="description" placeholder="เช่น ปรับปรุงถนน, ซ่อมอาคาร" required>
-                    </div>
+                    <div class="form-group"><label>Description (รายละเอียดงาน)</label><input type="text" id="description" placeholder="เช่น ปรับปรุงถนน, ซ่อมอาคาร" required></div>
                     <div class="form-group">
                         <label>สถานะงาน (Status)</label>
                         <select id="taskStatus" required style="border-color: #95a5a6;">
@@ -193,51 +165,25 @@
                             <option value="-">- (ไม่ใช้งบ)</option>
                         </select>
                     </div>
+                    <div class="form-group"><label>ผู้รับผิดชอบหลัก (Plan / Actual)</label><input type="text" id="assignee" placeholder="เช่น Pandda / Phuritat" required></div>
+                    <div class="form-group"><label>Budget - Plan / Actual (Baht)</label><div style="display: flex; gap: 10px;"><input type="number" id="budgetPlan" placeholder="Plan" style="width:50%;"><input type="number" id="budgetActual" placeholder="Actual" style="width:50%;"></div></div>
+                    
                     <div class="form-group">
-                        <label>ผู้รับผิดชอบหลัก (Plan / Actual)</label>
-                        <input type="text" id="assignee" placeholder="เช่น Pandda / Phuritat" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Budget - Plan / Actual (Baht)</label>
+                        <label>Progress - Plan/Actual (%) <span style="font-weight:normal; color:#e74c3c; font-size: 11px;">(คำนวณอัตโนมัติจากตาราง)</span></label>
                         <div style="display: flex; gap: 10px;">
-                            <input type="number" id="budgetPlan" placeholder="Plan" style="width:50%;">
-                            <input type="number" id="budgetActual" placeholder="Actual" style="width:50%;">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Progress - Plan/Actual (%)</label>
-                        <div style="display: flex; gap: 10px;">
-                            <input type="number" id="progressPlan" value="100" min="0" max="100" style="width:50%;" title="Plan">
-                            <input type="number" id="progressActual" value="0" min="0" max="100" style="width:50%;" title="Actual">
+                            <input type="number" id="progressPlan" value="0" class="input-readonly" style="width:50%;" readonly title="Plan (Auto)">
+                            <input type="number" id="progressActual" value="0" class="input-readonly" style="width:50%;" readonly title="Actual (Auto)">
                         </div>
                     </div>
                 </div>
 
-                <label style="font-weight: 600; color: #34495e; font-size: 13px; margin-bottom: 8px; display:block;">
-                    <i class="fa-solid fa-timeline" style="color: var(--primary-color);"></i> กำหนดสัปดาห์ (1-4) ของ 7 กระบวนการ 
-                </label>
-                <div class="timeline-table-container">
-                    <table class="timeline-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 30%; text-align: left; padding-left: 10px;">กระบวนการหลัก</th>
-                                <th style="width: 17.5%;">Plan: เริ่ม</th><th style="width: 17.5%;">Plan: สิ้นสุด</th>
-                                <th style="width: 17.5%;">Actual: เริ่ม</th><th style="width: 17.5%;">Actual: สิ้นสุด</th>
-                            </tr>
-                        </thead>
-                        <tbody id="processTbody"></tbody>
-                    </table>
-                </div>
-
-                <div style="display: flex; flex-direction: column; margin-bottom: 15px;">
-                    <label style="font-weight: 600; color: #34495e; font-size: 12px; margin-bottom: 5px;">Remark (หมายเหตุ)</label>
-                    <input type="text" id="remark" placeholder="เช่น อยู่ระหว่างรอ Supplier เสนอราคา" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-family: 'Sarabun';">
-                </div>
+                <div style="display: flex; flex-direction: column; margin-bottom: 15px;"><label style="font-weight: 600; font-size: 12px; margin-bottom: 5px;">Remark (หมายเหตุ)</label><input type="text" id="remark" placeholder="เช่น อยู่ระหว่างรอ Supplier เสนอราคา"></div>
 
                 <div class="btn-group">
-                    <button type="button" class="btn btn-hide-inside" id="hideFormInsideBtn"><i class="fa-solid fa-eye-slash"></i> 🙈 ซ่อนฟอร์ม</button>
+                    <button type="button" class="btn btn-hide-inside" id="hideFormInsideBtn"><i class="fa-solid fa-eye-slash"></i> ซ่อนฟอร์ม</button>
                     <button type="submit" class="btn btn-submit" id="submitBtn"><i class="fa-solid fa-floppy-disk"></i> บันทึกลงตาราง</button>
-                    <button type="button" class="btn btn-cancel" id="cancelBtn" style="display: none;"><i class="fa-solid fa-xmark"></i> ยกเลิกการแก้ไข</button>
+                    <button type="button" class="btn btn-cancel" id="cancelBtn" style="display: none;"><i class="fa-solid fa-xmark"></i> ยกเลิก</button>
+                    <span id="saveStatus" style="line-height: 38px; margin-left: 10px; font-weight: bold; color: #27ae60;"></span>
                 </div>
             </form>
         </div>
@@ -257,26 +203,14 @@
             <table id="ganttTable">
                 <thead>
                     <tr class="bg-cyan">
-                        <th rowspan="2" style="width: 50px;">Type</th>
-                        <th rowspan="2" style="width: 40px;">Item</th>
-                        <th rowspan="2" style="width: 300px;">Description</th>
-                        <th rowspan="2" style="width: 70px;">Type Budget</th>
-                        <th rowspan="2" style="width: 100px;">ผู้รับผิดชอบ</th>
-                        <th rowspan="2" style="width: 60px;">Progress</th>
-                        <th rowspan="2" style="width: 50px;">Plan/Work</th>
-                        <th rowspan="2" style="width: 100px;">Budget(Baht)</th>
+                        <th rowspan="2" style="width: 50px;">Type</th><th rowspan="2" style="width: 40px;">Item</th><th rowspan="2" style="width: 300px;">Description</th><th rowspan="2" style="width: 70px;">Type Budget</th><th rowspan="2" style="width: 100px;">ผู้รับผิดชอบ</th><th rowspan="2" style="width: 60px;">Progress</th><th rowspan="2" style="width: 50px;">Plan/Work</th><th rowspan="2" style="width: 100px;">Budget(Baht)</th>
                         <th colspan="4" class="month-header" id="month-0">Jan-26</th><th colspan="4" class="month-header" id="month-1">Feb-26</th><th colspan="4" class="month-header" id="month-2">Mar-26</th><th colspan="4" class="month-header" id="month-3">Apr-26</th><th colspan="4" class="month-header" id="month-4">May-26</th><th colspan="4" class="month-header" id="month-5">Jun-26</th><th colspan="4" class="month-header" id="month-6">Jul-26</th><th colspan="4" class="month-header" id="month-7">Aug-26</th><th colspan="4" class="month-header" id="month-8">Sep-26</th><th colspan="4" class="month-header" id="month-9">Oct-26</th><th colspan="4" class="month-header" id="month-10">Nov-26</th><th colspan="4" class="month-header" id="month-11">Dec-26</th>
-                        <th rowspan="2" style="width: 160px; text-align: left; padding-left: 10px;">
-                            Remark 
-                            <button class="btn-toggle-action" onclick="toggleActionColumn()" title="แสดง/ซ่อน เมนูจัดการ">
-                                <i class="fa-solid fa-gear"></i>
-                            </button>
-                        </th>
+                        <th rowspan="2" style="width: 160px; text-align: left; padding-left: 10px;">Remark <button class="btn-toggle-action" onclick="toggleActionColumn()" title="แสดง/ซ่อน เมนูจัดการ"><i class="fa-solid fa-gear"></i></button></th>
                         <th rowspan="2" class="action-col" style="width: 80px;">Actions</th>
                     </tr>
                     <tr class="bg-cyan" id="weeksHeaderRow"></tr>
                 </thead>
-                <tbody id="tableBody"></tbody>
+                <tbody id="tableBody"><tr><td colspan="60" style="padding: 20px;">กำลังเชื่อมต่อฐานข้อมูล...</td></tr></tbody>
                 <tfoot>
                     <tr class="bg-total">
                         <td colspan="5" style="color: var(--primary-color); text-align: right; padding-right: 15px; font-size: 14px;">TOTAL PROGRESS (คิดเฉพาะงานที่กำลังทำ)</td>
@@ -289,13 +223,19 @@
     </div>
 
     <div id="MajorTab" class="tab-content" style="padding-top: 20px;">
-        <h2 style="margin-bottom: 20px; padding: 0;"><i class="fa-solid fa-list-check" style="color: #27ae60;"></i> สรุปแผนงานปรับปรุง (Major Improvement & Improvement ENG)</h2>
+        <h2 style="margin-bottom: 5px; padding: 0;"><i class="fa-solid fa-list-check" style="color: #27ae60;"></i> สรุปแผนงานปรับปรุง (Major Improvement & Improvement ENG)</h2>
+        
+        <div class="legend-tab2">
+            <div><span class="legend-box l-plan"></span> แผนงาน (Plan)</div>
+            <div><span class="legend-box l-act"></span> การทำจริง (Actual)</div>
+        </div>
+
         <div class="table-responsive">
             <table class="major-table" id="majorEngTable" style="min-width: 1500px;">
                 <thead>
                     <tr>
-                        <th style="width: 40px;">Item</th><th style="width: 250px;">Improvement Topic</th><th style="width: 150px;">ที่มา/ความสำคัญของโครงการ</th><th style="width: 150px;">ประโยชน์ที่จะได้รับ</th><th style="width: 200px;">ขั้นตอน</th>
-                        <th class="month-hdr">Jan</th><th class="month-hdr">Feb</th><th class="month-hdr">Mar</th><th class="month-hdr">Apr</th><th class="month-hdr">May</th><th class="month-hdr">Jun</th><th class="month-hdr">Jul</th><th class="month-hdr">Aug</th><th class="month-hdr">Sep</th><th class="month-hdr">Oct</th><th class="month-hdr">Nov</th><th class="month-hdr">Dec</th>
+                        <th style="width: 40px;">Item</th><th style="width: 250px;">Improvement Topic</th><th style="width: 200px;">ที่มา/ความสำคัญของโครงการ</th><th style="width: 200px;">ประโยชน์ที่จะได้รับ</th><th style="width: 200px;">ขั้นตอน</th>
+                        <th colspan="4" class="month-hdr">Jan</th><th colspan="4" class="month-hdr">Feb</th><th colspan="4" class="month-hdr">Mar</th><th colspan="4" class="month-hdr">Apr</th><th colspan="4" class="month-hdr">May</th><th colspan="4" class="month-hdr">Jun</th><th colspan="4" class="month-hdr">Jul</th><th colspan="4" class="month-hdr">Aug</th><th colspan="4" class="month-hdr">Sep</th><th colspan="4" class="month-hdr">Oct</th><th colspan="4" class="month-hdr">Nov</th><th colspan="4" class="month-hdr">Dec</th>
                         <th style="width: 100px;">Status</th><th style="width: 120px;">%Progress</th><th style="width: 150px;">ความคืบหน้า</th><th style="width: 150px;">Remark</th>
                     </tr>
                 </thead>
@@ -311,58 +251,99 @@
 
     <script>
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const processNamesOriginal = [
-            "1. ออกแบบ จัดทำเงื่อนไขและข้อกำหนด", "2. PR (Purchase Requisition)", "3. ขั้นตอนต่อรองและสรุปราคา", 
-            "4. PO (Purchase Order)", "5. อยู่ระหว่างดำเนินการ", "6. ขั้นตอนตรวจรับงาน", "7. ส่งมอบงาน"
-        ];
-        const processNamesTab2 = [
-            "ออกแบบ จัดทำเงื่อนไขและข้อกำหนด", "PR (Purchase Requisition)", "ขั้นตอนต่อรองและสรุปราคา", 
-            "PO (Purchase Order)", "อยู่ระหว่างดำเนินการ", "ขั้นตอนตรวจรับงาน", "ส่งมอบงาน"
-        ];
+        const processNamesTab2 = ["ออกแบบ จัดทำเงื่อนไขและข้อกำหนด", "PR (Purchase Requisition)", "ขั้นตอนต่อรองและสรุปราคา", "PO (Purchase Order)", "อยู่ระหว่างดำเนินการ", "ขั้นตอนตรวจรับงาน", "ส่งมอบงาน"];
 
-        // เพิ่ม year และ typeBudget ใน Mock Data
-        let projectData = [
-            {
-                id: 1, type: 'Major Improvement', description: 'ปรับปรุงถนนช่วงแยก Slabyard - Fire Station', typeBudget: 'CAPEX', year: 2026, status: 'Normal',
-                assignee: 'Pandda/Phuritat', progressPlan: 100, progressActual: 33, budgetPlan: 2800000, budgetActual: 1500000, remark: 'อยู่ระหว่างรอ Suppler เสนอราคา',
-                weeksPlan: Array(48).fill(""), weeksActual: Array(48).fill("")
-            },
-            {
-                id: 2, type: 'Improvement ENG', description: 'งานปรับปรุงอาคาร Canteen', typeBudget: 'OPEX', year: 2026, status: 'Normal',
-                assignee: 'Panatda/Phurithat', progressPlan: 100, progressActual: 59, budgetPlan: null, budgetActual: 5000, remark: '',
-                weeksPlan: Array(48).fill(""), weeksActual: Array(48).fill("")
-            }
-        ];
-
-        for(let i=4;i<=7;i++) projectData[0].weeksPlan[i] = "1";
-        for(let i=4;i<=6;i++) projectData[0].weeksActual[i] = "1";
-        projectData[0].weeksPlan[8] = "2"; projectData[0].weeksActual[7] = "2";
-        projectData[0].weeksPlan[9] = "3"; projectData[0].weeksPlan[10] = "3";
-        for(let i=8;i<=11;i++) projectData[0].weeksActual[i] = "3";
-        projectData[0].weeksPlan[11] = "4"; 
-        for(let i=12;i<=20;i++) projectData[0].weeksPlan[i] = "5";
-        projectData[0].weeksPlan[21] = "6"; projectData[0].weeksPlan[22] = "6";
-        projectData[0].weeksPlan[23] = "7";
-
-        projectData[1].weeksActual[0] = "1"; projectData[1].weeksActual[1] = "2"; 
-        projectData[1].weeksActual[2] = "3"; projectData[1].weeksActual[3] = "4"; 
-        projectData[1].weeksActual[4] = "5"; 
+        let projectData = []; 
 
         const targetDate = new Date("2026-06-15");
         const currentMonthIndex = targetDate.getMonth();
         const currentDay = targetDate.getDate();
         let currentWeekOfIndex = 1;
-        if (currentDay > 21) currentWeekOfIndex = 4;
-        else if (currentDay > 14) currentWeekOfIndex = 3;
-        else if (currentDay > 7) currentWeekOfIndex = 2;
+        if (currentDay > 21) currentWeekOfIndex = 4; else if (currentDay > 14) currentWeekOfIndex = 3; else if (currentDay > 7) currentWeekOfIndex = 2;
         const currentGlobalWeekCol = (currentMonthIndex * 4) + (currentWeekOfIndex - 1);
 
-        // ================= Toggle Action Column =================
-        function toggleActionColumn() {
-            document.getElementById('ganttTable').classList.toggle('show-actions');
+        // =========================================================================
+        // Google Apps Script API
+        // =========================================================================
+        
+        // ใส่ URL ของ Web App ตรงนี้
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJfqMTFvpUEHl07hyNUddV4-vgwA_R-miJrsip5lBLu5BqlwwFqIxeXgyFPGpAto--EA/exec";
+
+        async function loadDataFromGAS() {
+            document.getElementById('totalTasksCount').innerText = 'กำลังโหลดข้อมูล...';
+            try {
+                const response = await fetch(WEB_APP_URL);
+                const dataFromServer = await response.json();
+                projectData = dataFromServer;
+                renderTable();
+            } catch (error) {
+                alert("เกิดข้อผิดพลาดในการดึงข้อมูลจากระบบ: " + error.message);
+                document.getElementById('tableBody').innerHTML = `<tr><td colspan="60" style="padding: 20px; color: red;">โหลดข้อมูลล้มเหลว กรุณาตรวจสอบ URL หรือการตั้งค่า Web App</td></tr>`;
+            }
+        }
+
+        async function saveDataToGAS() {
+            let statusText = document.getElementById('saveStatus');
+            if(statusText) { statusText.innerText = "กำลังบันทึก..."; statusText.style.color = "#f39c12"; }
+            
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(projectData)
+                });
+                const res = await response.json();
+                if(res.status === "success" && statusText) {
+                    statusText.innerText = "บันทึกเรียบร้อย!"; statusText.style.color = "#27ae60";
+                    setTimeout(() => { statusText.innerText = ""; }, 3000);
+                } else if (res.status === "error") throw new Error(res.message);
+            } catch (error) {
+                console.error("Save Error:", error);
+                if(statusText) { statusText.innerText = "บันทึกล้มเหลว!"; statusText.style.color = "red"; }
+            }
+        }
+
+        // ================= Inline Excel Edit (แก้สดผ่านตาราง) =================
+        function inlineEditHandler(dbIndex, field, cellElement, isNumber = false) {
+            let val = cellElement.innerText.trim();
+            if (isNumber) {
+                val = val.replace(/,/g, '').replace(/%/g, '');
+                val = (val === '' || val === '-') ? null : parseFloat(val);
+            }
+            projectData[dbIndex][field] = val;
+            saveDataToGAS();
+            
+            // ให้วาดตารางใหม่เฉพาะเมื่อแก้ฟิลด์ที่เป็นตัวเลข (ต้องการ format ลูกน้ำ) หรือช่องที่มีผลต่อเนื่อง
+            if(isNumber || field === 'description') renderTable();
+        }
+
+        // ================= Grid Edit (ช่องสัปดาห์ 1-7) =================
+        function cellEditHandler(dbIndex, weekGlobalIdx, rowType, cellElement) {
+            let newValue = cellElement.innerText.trim();
+            if (newValue === "" || (parseInt(newValue) >= 1 && parseInt(newValue) <= 7)) {
+                if (rowType === 'plan') projectData[dbIndex].weeksPlan[weekGlobalIdx] = newValue;
+                else projectData[dbIndex].weeksActual[weekGlobalIdx] = newValue;
+                
+                let weekArray = rowType === 'plan' ? projectData[dbIndex].weeksPlan : projectData[dbIndex].weeksActual;
+                let maxStep = 0;
+                weekArray.forEach(val => {
+                    let num = parseInt(val);
+                    if (!isNaN(num) && num > maxStep) maxStep = num;
+                });
+                
+                let autoProgress = Math.round((maxStep / 7) * 100);
+                if (rowType === 'plan') projectData[dbIndex].progressPlan = autoProgress;
+                else projectData[dbIndex].progressActual = autoProgress;
+
+                saveDataToGAS(); 
+                renderTable();
+            } else {
+                alert("กรุณากรอกเฉพาะตัวเลขกระบวนการ 1 ถึง 7 เท่านั้น");
+                cellElement.innerText = rowType === 'plan' ? projectData[dbIndex].weeksPlan[weekGlobalIdx] : projectData[dbIndex].weeksActual[weekGlobalIdx];
+            }
         }
 
         // ================= Tab Navigation =================
+        function toggleActionColumn() { document.getElementById('ganttTable').classList.toggle('show-actions'); }
         function openTab(evt, tabName) {
             let tabcontent = document.getElementsByClassName("tab-content");
             for (let i = 0; i < tabcontent.length; i++) tabcontent[i].classList.remove("active");
@@ -373,103 +354,38 @@
             if(tabName === 'MajorTab') renderMajorEngTable();
         }
 
-        // ================= Form & Dropdown Logic =================
         function toggleFormVisibility() {
-            const formWrapper = document.getElementById('formWrapper');
-            const toggleFormBtn = document.getElementById('toggleFormBtn');
-            if (formWrapper.style.display === 'none') {
-                formWrapper.style.display = 'block';
-                toggleFormBtn.innerHTML = '<i class="fa-solid fa-minus"></i> ซ่อนฟอร์มแผนงาน';
-                toggleFormBtn.style.backgroundColor = '#95a5a6';
-            } else {
-                formWrapper.style.display = 'none';
-                toggleFormBtn.innerHTML = '<i class="fa-solid fa-plus"></i> เพิ่มแผนงานใหม่';
-                toggleFormBtn.style.backgroundColor = '#34495e';
-            }
+            const formWrapper = document.getElementById('formWrapper'); const toggleFormBtn = document.getElementById('toggleFormBtn');
+            if (formWrapper.style.display === 'none') { formWrapper.style.display = 'block'; toggleFormBtn.innerHTML = '<i class="fa-solid fa-minus"></i> ซ่อนฟอร์มแผนงาน'; toggleFormBtn.style.backgroundColor = '#95a5a6'; } 
+            else { formWrapper.style.display = 'none'; toggleFormBtn.innerHTML = '<i class="fa-solid fa-plus"></i> เพิ่มแผนงานใหม่'; toggleFormBtn.style.backgroundColor = '#34495e'; }
         }
-        document.getElementById('toggleFormBtn').addEventListener('click', toggleFormVisibility);
-        document.getElementById('hideFormInsideBtn').addEventListener('click', toggleFormVisibility);
+        document.getElementById('toggleFormBtn').addEventListener('click', toggleFormVisibility); document.getElementById('hideFormInsideBtn').addEventListener('click', toggleFormVisibility);
 
-        function buildSelectOptions(selectElement) {
-            let html = '<option value="">- เลือก -</option>';
-            for (let m = 0; m < 12; m++) {
-                for (let w = 1; w <= 4; w++) {
-                    let globalIndex = (m * 4) + (w - 1);
-                    html += `<option value="${globalIndex}">${months[m]} W${w}</option>`;
-                }
-            }
-            selectElement.innerHTML = html;
-        }
-
-        function updateDropdownLimits() {
-            let lastPlanEnd = -1; let lastActualEnd = -1;
-            for (let i = 0; i < 7; i++) {
-                const pS = document.getElementById(`pS_${i}`); const pE = document.getElementById(`pE_${i}`);
-                const aS = document.getElementById(`aS_${i}`); const aE = document.getElementById(`aE_${i}`);
-
-                let currentPlanStart = pS.value !== "" ? parseInt(pS.value) : -1;
-                Array.from(pS.options).forEach(opt => { if(opt.value !== "") opt.disabled = parseInt(opt.value) < lastPlanEnd; });
-                Array.from(pE.options).forEach(opt => { if(opt.value !== "") opt.disabled = parseInt(opt.value) < currentPlanStart; });
-                if (pE.value !== "") lastPlanEnd = Math.max(lastPlanEnd, parseInt(pE.value));
-                else if (pS.value !== "") lastPlanEnd = Math.max(lastPlanEnd, parseInt(pS.value));
-
-                let currentActualStart = aS.value !== "" ? parseInt(aS.value) : -1;
-                Array.from(aS.options).forEach(opt => { if(opt.value !== "") opt.disabled = parseInt(opt.value) < lastActualEnd; });
-                Array.from(aE.options).forEach(opt => { if(opt.value !== "") opt.disabled = parseInt(opt.value) < currentActualStart; });
-                if (aE.value !== "") lastActualEnd = Math.max(lastActualEnd, parseInt(aE.value));
-                else if (aS.value !== "") lastActualEnd = Math.max(lastActualEnd, parseInt(aS.value));
-            }
-        }
-
-        function cellEditHandler(dbIndex, weekGlobalIdx, rowType, cellElement) {
-            let newValue = cellElement.innerText.trim();
-            if (newValue === "" || (parseInt(newValue) >= 1 && parseInt(newValue) <= 7)) {
-                if (rowType === 'plan') projectData[dbIndex].weeksPlan[weekGlobalIdx] = newValue;
-                else projectData[dbIndex].weeksActual[weekGlobalIdx] = newValue;
-                
-                if (newValue !== "") cellElement.className = `week-cell ${rowType === 'plan' ? 'plan-bar' : 'actual-bar'}`;
-                else cellElement.className = 'week-cell';
-                if (weekGlobalIdx === currentGlobalWeekCol) cellElement.classList.add('current-week-cell');
-                
-                let totalActualProgress = 0, activeTasksCount = 0;
-                projectData.forEach(row => { if (row.status === 'Normal') { totalActualProgress += Number(row.progressActual); activeTasksCount++; }});
-                let avgProgress = activeTasksCount > 0 ? Math.round(totalActualProgress / activeTasksCount) : 0;
-                document.getElementById('totalProgressSummary').innerText = avgProgress + '%';
-                document.getElementById('totalProgressCell').innerText = avgProgress + '%';
-                
-                renderMajorEngTable();
-            } else {
-                alert("กรุณากรอกเฉพาะตัวเลขกระบวนการ 1 ถึง 7 เท่านั้น");
-                cellElement.innerText = rowType === 'plan' ? projectData[dbIndex].weeksPlan[weekGlobalIdx] : projectData[dbIndex].weeksActual[weekGlobalIdx];
-            }
-        }
-
-        // ================= Tab 1 Render Table =================
+        // ================= Tab 1 Table Rendering =================
         function renderTable() {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
             
+            if (!projectData || projectData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="60" style="padding: 20px;">ไม่พบข้อมูลแผนงาน กรุณากดปุ่ม "เพิ่มแผนงานใหม่" ด้านบน</td></tr>';
+                document.getElementById('totalTasksCount').innerText = `0 งาน`;
+                return;
+            }
+
             const typeOrder = ["Major Improvement", "Improvement ENG", "Abnormal", "Support"];
             projectData.sort((a, b) => typeOrder.indexOf(a.type) - typeOrder.indexOf(b.type));
 
-            const typeCounts = {};
-            projectData.forEach(item => { typeCounts[item.type] = (typeCounts[item.type] || 0) + 1; });
-
+            const typeCounts = {}; projectData.forEach(item => { typeCounts[item.type] = (typeCounts[item.type] || 0) + 1; });
             let totalActualProgress = 0, activeTasksCount = 0;
             const typeRenderedTracker = {};
 
             projectData.forEach((row, dataIndex) => {
-                if(row.status === 'Normal') {
-                    totalActualProgress += Number(row.progressActual);
-                    activeTasksCount++;
-                }
+                if(row.status === 'Normal') { totalActualProgress += Number(row.progressActual); activeTasksCount++; }
                 
                 let budgetTextPlan = row.budgetPlan ? Number(row.budgetPlan).toLocaleString(undefined, {minimumFractionDigits: 2}) : '-';
                 let budgetTextActual = row.budgetActual ? Number(row.budgetActual).toLocaleString(undefined, {minimumFractionDigits: 2}) : '-';
-                
                 const splitAssignee = row.assignee.split('/');
-                const planAssignee = splitAssignee[0] || row.assignee;
-                const actualAssignee = splitAssignee[1] || planAssignee;
+                const planAssignee = splitAssignee[0] || row.assignee; const actualAssignee = splitAssignee[1] || planAssignee;
 
                 let typeCellHtml = '';
                 if (!typeRenderedTracker[row.type]) {
@@ -483,36 +399,37 @@
                 if(row.status === 'Hold') descriptionDisplay = `<span class="status-strike">${row.description}</span> <span class="status-badge badge-hold">HOLD</span>`;
                 else if(row.status === 'Canceled') descriptionDisplay = `<span class="status-strike">${row.description}</span> <span class="status-badge badge-canceled">CANCELED</span>`;
 
-                // แถว 1: Plan (เพิ่ม Type Budget)
                 let htmlRow1 = `<tr data-id="${row.id}">${typeCellHtml}
                     <td rowspan="2" style="font-weight: bold; background-color: #fafafa;">${dataIndex + 1}</td>
-                    <td rowspan="2" class="text-left" style="font-weight: 500;">${descriptionDisplay}</td>
+                    <td rowspan="2" class="text-left" style="font-weight: 500;">
+                        <span class="${row.status !== 'Normal' ? 'status-strike' : ''} editable-cell" contenteditable="true" onblur="inlineEditHandler(${dataIndex}, 'description', this)">${row.description}</span>
+                        ${row.status === 'Hold' ? ' <span class="status-badge badge-hold">HOLD</span>' : (row.status === 'Canceled' ? ' <span class="status-badge badge-canceled">CANCELED</span>' : '')}
+                    </td>
                     <td rowspan="2" style="font-weight: 600; color: #2c3e50; background-color: #f8fafc;">${row.typeBudget || '-'}</td>
                     <td class="sub-row">${planAssignee}</td>
                     <td style="font-weight: bold; color: var(--plan-color);">${row.progressPlan}%</td>
                     <td class="sub-row">Plan</td>
-                    <td style="font-weight: bold; color: var(--plan-color); background-color: #fafafa;">${budgetTextPlan}</td>`;
+                    <td style="font-weight: bold; color: var(--plan-color); background-color: #fafafa;" class="editable-cell" contenteditable="true" onblur="inlineEditHandler(${dataIndex}, 'budgetPlan', this, true)">${budgetTextPlan}</td>`;
 
                 for (let globalW = 0; globalW < 48; globalW++) {
-                    let isCurrentWeekCol = (globalW === currentGlobalWeekCol);
-                    let val = row.weeksPlan[globalW];
+                    let isCurrentWeekCol = (globalW === currentGlobalWeekCol); let val = row.weeksPlan[globalW] || "";
                     htmlRow1 += `<td contenteditable="true" class="week-cell ${val !== "" ? 'plan-bar' : ''} ${isCurrentWeekCol ? 'current-week-cell' : ''}" onblur="cellEditHandler(${dataIndex}, ${globalW}, 'plan', this)" onkeydown="if(event.keyCode===13){event.preventDefault(); this.blur();}">${val}</td>`;
                 }
                 
-                // คอลัมน์ Action ซ่อนด้วยคลาส .action-col
-                htmlRow1 += `<td rowspan="2" class="text-left" style="font-size: 11px; color: #e67e22; max-width: 150px; overflow-wrap: break-word;">${row.remark || ''}</td>
+                htmlRow1 += `<td rowspan="2" class="text-left editable-cell" style="font-size: 11px; color: #e67e22; max-width: 150px; overflow-wrap: break-word;" contenteditable="true" onblur="inlineEditHandler(${dataIndex}, 'remark', this)">${row.remark || ''}</td>
                     <td rowspan="2" class="action-col">
                         <div class="action-btns">
-                            <button type="button" class="btn-table btn-edit" onclick="editTask(${dataIndex})" title="แก้ไขแบบละเอียด"><i class="fa-solid fa-pen-to-square"></i></button>
-                            <button type="button" class="btn-table btn-delete" onclick="deleteTask(${dataIndex})" title="ลบ"><i class="fa-solid fa-trash-can"></i></button>
+                            <button type="button" class="btn-table btn-edit" onclick="editTask(${dataIndex})" title="แก้ไขข้อมูลผ่านฟอร์ม"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button type="button" class="btn-table btn-delete" onclick="deleteTask(${dataIndex})" title="ลบงาน"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
                     </td></tr>`;
 
-                // แถว 2: Actual
-                let htmlRow2 = `<tr data-id="${row.id}-act"><td class="sub-row">${actualAssignee}</td><td style="font-weight: bold; color: var(--actual-color);">${row.progressActual}%</td><td class="sub-row">Actual</td><td style="font-weight: bold; color: var(--actual-color); background-color: #fafafa;">${budgetTextActual}</td>`;
+                let htmlRow2 = `<tr data-id="${row.id}-act"><td class="sub-row">${actualAssignee}</td>
+                    <td style="font-weight: bold; color: var(--actual-color);">${row.progressActual}%</td>
+                    <td class="sub-row">Actual</td>
+                    <td style="font-weight: bold; color: var(--actual-color); background-color: #fafafa;" class="editable-cell" contenteditable="true" onblur="inlineEditHandler(${dataIndex}, 'budgetActual', this, true)">${budgetTextActual}</td>`;
                 for (let globalW = 0; globalW < 48; globalW++) {
-                    let isCurrentWeekCol = (globalW === currentGlobalWeekCol);
-                    let val = row.weeksActual[globalW];
+                    let isCurrentWeekCol = (globalW === currentGlobalWeekCol); let val = row.weeksActual[globalW] || "";
                     htmlRow2 += `<td contenteditable="true" class="week-cell ${val !== "" ? 'actual-bar' : ''} ${isCurrentWeekCol ? 'current-week-cell' : ''}" onblur="cellEditHandler(${dataIndex}, ${globalW}, 'actual', this)" onkeydown="if(event.keyCode===13){event.preventDefault(); this.blur();}">${val}</td>`;
                 }
                 htmlRow2 += `</tr>`;
@@ -528,35 +445,67 @@
             renderMajorEngTable(); 
         }
 
-        // ================= Tab 2 Render Table =================
+        // ================= Render Tab 2 =================
         function renderMajorEngTable() {
             const tbody = document.getElementById('majorEngTbody');
             tbody.innerHTML = '';
             const filteredData = projectData.filter(d => d.type === 'Major Improvement' || d.type === 'Improvement ENG');
 
             filteredData.forEach((task, index) => {
+                // ค้นหาตำแหน่งที่แท้จริงของ task ใน projectData array (เพื่อใช้กับ inlineEditHandler)
+                let dbIndex = projectData.findIndex(p => p.id === task.id);
+
                 let html = `<tr>
                     <td rowspan="8" class="rowspan-cell" style="text-align: center;">${index + 1}</td>
                     <td rowspan="8" class="text-left rowspan-cell" style="font-weight: 600;">${task.description}</td>
-                    <td rowspan="8" class="rowspan-cell"></td>
-                    <td rowspan="8" class="rowspan-cell"></td>
-                    <td></td>`;
-                for(let m=0; m<12; m++) html += `<td class="month-col"></td>`;
+                    
+                    <td rowspan="8" class="text-left rowspan-cell editable-cell" contenteditable="true" onblur="inlineEditHandler(${dbIndex}, 'background', this)">${task.background || ''}</td>
+                    <td rowspan="8" class="text-left rowspan-cell editable-cell" contenteditable="true" onblur="inlineEditHandler(${dbIndex}, 'benefits', this)">${task.benefits || ''}</td>
+                    
+                    <td class="text-left" style="padding-left: 10px; font-weight: 900; color: var(--primary-color);">สรุปภาพรวมโครงการ</td>`;
+
+                for(let w=0; w<48; w++) {
+                    let hasPlan = task.weeksPlan[w] && task.weeksPlan[w] !== "";
+                    let hasAct = task.weeksActual[w] && task.weeksActual[w] !== "";
+                    let c = "";
+                    if(hasPlan && hasAct) c = "bar-both";
+                    else if(hasPlan) c = "bar-plan";
+                    else if(hasAct) c = "bar-actual";
+                    
+                    let borderClass = (w % 4 === 3) ? "month-end" : "";
+                    html += `<td class="tab2-week ${c} ${borderClass}"></td>`;
+                }
+
                 html += `<td style="font-weight: bold; text-align: center;">Over all Progress</td>
                     <td><div class="progress-wrapper"><div class="progress-fill" style="width: ${task.progressActual}%;"></div><span class="progress-text">${task.progressActual}%</span></div></td>
-                    <td rowspan="8" class="text-left rowspan-cell" style="color: #444;">${task.remark}</td>
-                    <td rowspan="8" class="rowspan-cell"></td></tr>`;
+                    
+                    <td rowspan="8" class="text-left rowspan-cell editable-cell" contenteditable="true" onblur="inlineEditHandler(${dbIndex}, 'progressUpdate', this)">${task.progressUpdate || ''}</td>
+                    
+                    <td rowspan="8" class="text-left rowspan-cell editable-cell" style="color: #444;" contenteditable="true" onblur="inlineEditHandler(${dbIndex}, 'remark', this)">${task.remark || ''}</td>
+                    </tr>`;
 
                 for(let s = 0; s < 7; s++) {
                     let stepNumStr = (s + 1).toString();
                     let stepStatus = "On Progress"; let stepProg = 0;
                     
-                    if (task.weeksActual.includes(stepNumStr)) { stepStatus = "Finished"; stepProg = 100; } 
-                    else if (s > 0 && task.weeksActual.includes(s.toString()) && task.progressActual > 0) { stepStatus = "On Progress"; stepProg = Math.floor(Math.random() * 30) + 10; }
+                    if (task.weeksActual && task.weeksActual.includes(stepNumStr)) { stepStatus = "Finished"; stepProg = 100; } 
+                    else if (s > 0 && task.weeksActual && task.weeksActual.includes(s.toString()) && task.progressActual > 0) { stepStatus = "On Progress"; stepProg = Math.floor(Math.random() * 30) + 10; }
                     if (task.progressActual === 0) { stepStatus = "On Progress"; stepProg = 0; }
 
                     html += `<tr><td class="text-left" style="padding-left: 10px;">${processNamesTab2[s]}</td>`;
-                    for(let m=0; m<12; m++) html += `<td class="month-col"></td>`;
+                    
+                    for(let w=0; w<48; w++) {
+                        let isPlan = task.weeksPlan[w] === stepNumStr;
+                        let isAct = task.weeksActual[w] === stepNumStr;
+                        let c = "";
+                        if(isPlan && isAct) c = "bar-both";
+                        else if(isPlan) c = "bar-plan";
+                        else if(isAct) c = "bar-actual";
+
+                        let borderClass = (w % 4 === 3) ? "month-end" : "";
+                        html += `<td class="tab2-week ${c} ${borderClass}"></td>`;
+                    }
+
                     html += `<td style="text-align: center; color: ${stepStatus === 'Finished' ? '#444' : '#666'};">${stepStatus}</td>
                         <td><div class="progress-wrapper"><div class="progress-fill" style="width: ${stepProg}%;"></div><span class="progress-text">${stepProg}%</span></div></td></tr>`;
                 }
@@ -564,7 +513,7 @@
             });
         }
 
-        // ================= Form Submission & Actions =================
+        // ================= Form Submission =================
         document.getElementById('planForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const editIndex = parseInt(document.getElementById('editIndex').value);
@@ -573,140 +522,66 @@
 
             if (editIndex === -1) {
                 let taskData = {
-                    id: Date.now(), 
-                    year: parseInt(document.getElementById('taskYear').value),
-                    typeBudget: document.getElementById('typeBudget').value,
-                    type: document.getElementById('taskType').value, description: document.getElementById('description').value,
-                    status: document.getElementById('taskStatus').value, assignee: document.getElementById('assignee').value,
-                    progressPlan: parseInt(document.getElementById('progressPlan').value), progressActual: parseInt(document.getElementById('progressActual').value),
+                    id: 'ID_' + Date.now(), year: parseInt(document.getElementById('taskYear').value), typeBudget: document.getElementById('typeBudget').value,
+                    type: document.getElementById('taskType').value, description: document.getElementById('description').value, status: document.getElementById('taskStatus').value, assignee: document.getElementById('assignee').value,
+                    progressPlan: 0, progressActual: 0, 
                     budgetPlan: budgetPlanVal ? parseFloat(budgetPlanVal) : null, budgetActual: budgetActualVal ? parseFloat(budgetActualVal) : null,
-                    weeksPlan: Array(48).fill(""), weeksActual: Array(48).fill(""), remark: document.getElementById('remark').value
+                    weeksPlan: Array(48).fill(""), weeksActual: Array(48).fill(""), remark: document.getElementById('remark').value,
+                    background: "", benefits: "", progressUpdate: "" // สร้างคอลัมน์ใหม่ตอน Add
                 };
-
-                for (let i = 0; i < 7; i++) {
-                    let pS = document.getElementById(`pS_${i}`).value; let pE = document.getElementById(`pE_${i}`).value;
-                    let aS = document.getElementById(`aS_${i}`).value; let aE = document.getElementById(`aE_${i}`).value;
-                    if(pS !== "" && pE !== "") for(let w = parseInt(pS); w <= parseInt(pE); w++) taskData.weeksPlan[w] = (i + 1).toString();
-                    if(aS !== "" && aE !== "") for(let w = parseInt(aS); w <= parseInt(aE); w++) taskData.weeksActual[w] = (i + 1).toString();
-                }
                 projectData.push(taskData);
             } else {
                 let currentItem = projectData[editIndex];
-                currentItem.year = parseInt(document.getElementById('taskYear').value);
-                currentItem.typeBudget = document.getElementById('typeBudget').value;
+                currentItem.year = parseInt(document.getElementById('taskYear').value); currentItem.typeBudget = document.getElementById('typeBudget').value;
                 currentItem.type = document.getElementById('taskType').value; currentItem.description = document.getElementById('description').value;
                 currentItem.status = document.getElementById('taskStatus').value; currentItem.assignee = document.getElementById('assignee').value;
-                currentItem.progressPlan = parseInt(document.getElementById('progressPlan').value); currentItem.progressActual = parseInt(document.getElementById('progressActual').value);
                 currentItem.budgetPlan = budgetPlanVal ? parseFloat(budgetPlanVal) : null; currentItem.budgetActual = budgetActualVal ? parseFloat(budgetActualVal) : null;
                 currentItem.remark = document.getElementById('remark').value;
-                
-                currentItem.weeksPlan = Array(48).fill(""); currentItem.weeksActual = Array(48).fill("");
-                for (let i = 0; i < 7; i++) {
-                    let pS = document.getElementById(`pS_${i}`).value; let pE = document.getElementById(`pE_${i}`).value;
-                    let aS = document.getElementById(`aS_${i}`).value; let aE = document.getElementById(`aE_${i}`).value;
-                    if(pS !== "" && pE !== "") for(let w = parseInt(pS); w <= parseInt(pE); w++) currentItem.weeksPlan[w] = (i + 1).toString();
-                    if(aS !== "" && aE !== "") for(let w = parseInt(aS); w <= parseInt(aE); w++) currentItem.weeksActual[w] = (i + 1).toString();
-                }
-                resetForm();
             }
-            renderTable();
-            clearInputs();
+            saveDataToGAS(); renderTable(); resetForm();
         });
 
         window.editTask = function(index) {
             if(document.getElementById('formWrapper').style.display === 'none') toggleFormVisibility();
             const task = projectData[index];
-            document.getElementById('editIndex').value = index;
-            document.getElementById('taskYear').value = task.year || 2026;
-            document.getElementById('typeBudget').value = task.typeBudget || '-';
-            document.getElementById('taskType').value = task.type;
-            document.getElementById('description').value = task.description;
-            document.getElementById('taskStatus').value = task.status || 'Normal';
-            document.getElementById('assignee').value = task.assignee;
-            document.getElementById('budgetPlan').value = task.budgetPlan || '';
-            document.getElementById('budgetActual').value = task.budgetActual || '';
-            document.getElementById('progressPlan').value = task.progressPlan;
-            document.getElementById('progressActual').value = task.progressActual;
-            document.getElementById('remark').value = task.remark || '';
+            document.getElementById('editIndex').value = index; document.getElementById('taskYear').value = task.year || 2026; document.getElementById('typeBudget').value = task.typeBudget || '-';
+            document.getElementById('taskType').value = task.type; document.getElementById('description').value = task.description; document.getElementById('taskStatus').value = task.status || 'Normal';
+            document.getElementById('assignee').value = task.assignee; document.getElementById('budgetPlan').value = task.budgetPlan || ''; document.getElementById('budgetActual').value = task.budgetActual || '';
+            document.getElementById('progressPlan').value = task.progressPlan; document.getElementById('progressActual').value = task.progressActual; document.getElementById('remark').value = task.remark || '';
 
-            for (let i = 0; i < 7; i++) {
-                let stepStr = (i + 1).toString();
-                let pS = task.weeksPlan.indexOf(stepStr); let pE = task.weeksPlan.lastIndexOf(stepStr);
-                let aS = task.weeksActual.indexOf(stepStr); let aE = task.weeksActual.lastIndexOf(stepStr);
-                document.getElementById(`pS_${i}`).value = pS !== -1 ? pS : ''; document.getElementById(`pE_${i}`).value = pE !== -1 ? pE : '';
-                document.getElementById(`aS_${i}`).value = aS !== -1 ? aS : ''; document.getElementById(`aE_${i}`).value = aE !== -1 ? aE : '';
-            }
-            updateDropdownLimits();
-
-            document.getElementById('formWrapper').classList.add('editing');
-            document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-pen-to-square" style="color: #f39c12;"></i> <span>แก้ไขแผนงาน: ${task.description.substring(0, 30)}...</span>`;
-            document.getElementById('submitBtn').innerHTML = `<i class="fa-solid fa-square-check"></i> อัปเดตข้อมูลงาน`;
-            document.getElementById('submitBtn').style.backgroundColor = '#f39c12';
-            document.getElementById('cancelBtn').style.display = 'inline-flex';
+            document.getElementById('formWrapper').classList.add('editing'); document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-pen-to-square" style="color: #f39c12;"></i> <span>แก้ไขข้อมูลหลัก: ${task.description.substring(0, 30)}...</span>`;
+            document.getElementById('submitBtn').innerHTML = `<i class="fa-solid fa-square-check"></i> อัปเดตข้อมูลงาน`; document.getElementById('submitBtn').style.backgroundColor = '#f39c12'; document.getElementById('cancelBtn').style.display = 'inline-flex';
             document.getElementById('formWrapper').scrollIntoView({ behavior: 'smooth' });
         }
 
         window.deleteTask = function(index) {
-            if (confirm(`คุณต้องการลบงาน "${projectData[index].description}" ออกจากตารางใช่หรือไม่?`)) {
-                projectData.splice(index, 1);
-                if (parseInt(document.getElementById('editIndex').value) === index) resetForm();
-                renderTable();
-            }
+            if (confirm(`คุณต้องการลบงาน "${projectData[index].description}" ออกจากตารางใช่หรือไม่?`)) { projectData.splice(index, 1); if (parseInt(document.getElementById('editIndex').value) === index) resetForm(); saveDataToGAS(); renderTable(); }
         }
 
         function clearInputs() {
             document.getElementById('taskYear').value = 2026; document.getElementById('typeBudget').value = 'CAPEX';
             document.getElementById('description').value = ''; document.getElementById('taskStatus').value = 'Normal'; document.getElementById('assignee').value = '';
             document.getElementById('budgetPlan').value = ''; document.getElementById('budgetActual').value = '';
-            document.getElementById('progressPlan').value = '100'; document.getElementById('progressActual').value = '0'; document.getElementById('remark').value = '';
-            for (let i = 0; i < 7; i++) { document.getElementById(`pS_${i}`).value = ''; document.getElementById(`pE_${i}`).value = ''; document.getElementById(`aS_${i}`).value = ''; document.getElementById(`aE_${i}`).value = ''; }
-            updateDropdownLimits();
+            document.getElementById('progressPlan').value = '0'; document.getElementById('progressActual').value = '0'; document.getElementById('remark').value = '';
         }
 
         function resetForm() {
-            document.getElementById('editIndex').value = '-1';
-            document.getElementById('formWrapper').classList.remove('editing');
+            document.getElementById('editIndex').value = '-1'; document.getElementById('formWrapper').classList.remove('editing');
             document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-circle-plus" style="color: var(--primary-color);"></i> <span>ฟอร์มจัดการแผนงาน</span>`;
-            document.getElementById('submitBtn').innerHTML = `<i class="fa-solid fa-floppy-disk"></i> บันทึกลงตาราง`;
-            document.getElementById('submitBtn').style.backgroundColor = 'var(--primary-color)';
-            document.getElementById('cancelBtn').style.display = 'none';
+            document.getElementById('submitBtn').innerHTML = `<i class="fa-solid fa-floppy-disk"></i> บันทึกลงตาราง`; document.getElementById('submitBtn').style.backgroundColor = 'var(--primary-color)'; document.getElementById('cancelBtn').style.display = 'none';
             clearInputs();
         }
         document.getElementById('cancelBtn').addEventListener('click', resetForm);
 
-        // ================= Initialize App =================
         function initApp() {
             const weeksHeader = document.getElementById('weeksHeaderRow');
-            const processTbody = document.getElementById('processTbody');
             document.getElementById('currentDateStr').innerText = `${months[currentMonthIndex]}-26 (สัปดาห์ที่ ${currentWeekOfIndex})`;
-
             let weeksHtml = ''; let colIndex = 0;
-            for (let m = 0; m < 12; m++) {
-                for (let w = 1; w <= 4; w++) {
-                    const isToday = (colIndex === currentGlobalWeekCol);
-                    weeksHtml += `<td class="week-cell ${isToday ? 'current-week-header' : ''}" title="${months[m]}-26 Week ${w}">${w}</td>`;
-                    colIndex++;
-                }
-            }
+            for (let m = 0; m < 12; m++) { for (let w = 1; w <= 4; w++) { weeksHtml += `<td class="week-cell ${colIndex === currentGlobalWeekCol ? 'current-week-header' : ''}" title="${months[m]}-26 Week ${w}">${w}</td>`; colIndex++; } }
             weeksHeader.innerHTML = weeksHtml;
-
-            const activeMonthHeader = document.getElementById(`month-${currentMonthIndex}`);
-            if (activeMonthHeader) { activeMonthHeader.style.backgroundColor = '#e74c3c'; activeMonthHeader.style.color = '#ffffff'; activeMonthHeader.style.borderBottom = '2px solid #c0392b'; }
-
-            let processRows = '';
-            for (let i = 0; i < 7; i++) { processRows += `<tr><td class="process-name">${processNamesOriginal[i]}</td><td><select id="pS_${i}"></select></td><td><select id="pE_${i}"></select></td><td><select id="aS_${i}"></select></td><td><select id="aE_${i}"></select></td></tr>`; }
-            processTbody.innerHTML = processRows;
-
-            for (let i = 0; i < 7; i++) {
-                buildSelectOptions(document.getElementById(`pS_${i}`)); buildSelectOptions(document.getElementById(`pE_${i}`)); buildSelectOptions(document.getElementById(`aS_${i}`)); buildSelectOptions(document.getElementById(`aE_${i}`));
-                document.getElementById(`pS_${i}`).addEventListener('change', updateDropdownLimits); document.getElementById(`pE_${i}`).addEventListener('change', updateDropdownLimits); document.getElementById(`aS_${i}`).addEventListener('change', updateDropdownLimits); document.getElementById(`aE_${i}`).addEventListener('change', updateDropdownLimits);
-            }
         }
 
-        window.onload = function() {
-            initApp();
-            renderTable();
-        };
+        window.onload = function() { initApp(); loadDataFromGAS(); };
     </script>
 </body>
 </html>
