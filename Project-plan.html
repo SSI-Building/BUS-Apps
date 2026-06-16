@@ -186,6 +186,33 @@
         .l-act { background-color: var(--actual-color); }
         
         .carry-over-note { color: #e74c3c; font-size: 11px; display: block; margin-top: 4px; font-weight: normal; }
+
+/* ================= Presentation Highlight ================= */
+/* ใช้สีเทาอ่อนเพื่อให้ตัวหนังสืออ่านง่าย */
+.highlight-row td {
+    background-color: #e2e8f0; 
+    transition: background-color 0.3s ease;
+}
+
+/* ป้องกันไม่ให้สีเทาไปทับแถบสี Progress ใน Tab 2 */
+.highlight-row td.bar-plan { background: linear-gradient(to bottom, var(--plan-color) 50%, transparent 50%) !important; }
+.highlight-row td.bar-actual { background: linear-gradient(to bottom, transparent 50%, var(--actual-color) 50%) !important; }
+.highlight-row td.bar-both { background: linear-gradient(to bottom, var(--plan-color) 50%, var(--actual-color) 50%) !important; }
+
+/* ป้องกันไม่ให้สีเทาไปทับคอลัมน์ Type (แนวตั้ง) ใน Tab 1 */
+.highlight-row td.type-vertical-cell {
+    background-color: #f1f5f9 !important;
+}
+
+/* เอฟเฟกต์ตอนเอาเมาส์ชี้ที่เลข Item */
+.item-clickable {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.item-clickable:hover {
+    background-color: #cbd5e1 !important; /* สีเทาเข้มขึ้นนิดหน่อยตอนเอาเมาส์ชี้ */
+    color: #000;
+}
     </style>
 </head>
 <body>
@@ -508,6 +535,36 @@
         }
         document.getElementById('toggleFormBtn').addEventListener('click', toggleFormVisibility); document.getElementById('hideFormInsideBtn').addEventListener('click', toggleFormVisibility);
 
+        // ================= Presentation Highlight Logic =================
+        let currentHighlightedId = null;
+
+        window.toggleHighlight = function(taskId) {
+            // 1. ลบไฮไลต์เก่าออกทั้งหมด
+            document.querySelectorAll('.highlight-row').forEach(el => {
+                el.classList.remove('highlight-row');
+            });
+
+            // 2. ถ้าคลิกซ้ำบรรทัดเดิมที่กำลังไฮไลต์อยู่ (คือต้องการปิดไฮไลต์) ให้เคลียร์ค่าแล้วจบการทำงาน
+            if (currentHighlightedId === taskId) {
+                currentHighlightedId = null;
+                return;
+            }
+
+            // 3. ใส่ไฮไลต์ให้ Tab 1 (แถว Plan และ Actual)
+            let rowPlan = document.querySelector(`tr[data-id="${taskId}"]`);
+            let rowAct = document.querySelector(`tr[data-id="${taskId}-act"]`);
+            if (rowPlan) rowPlan.classList.add('highlight-row');
+            if (rowAct) rowAct.classList.add('highlight-row');
+
+            // 4. ใส่ไฮไลต์ให้ Tab 2 (ทั้ง 8 แถวของโปรเจกต์นั้น)
+            document.querySelectorAll(`.task-group-${taskId}`).forEach(row => {
+                row.classList.add('highlight-row');
+            });
+
+            // อัปเดตไอดีที่กำลังถูกไฮไลต์
+            currentHighlightedId = taskId;
+        }
+
         function changeViewingYear() {
             viewingYear = parseInt(document.getElementById('filterYear').value);
             updateMonthHeaders();
@@ -613,7 +670,7 @@
                 else if(currentTask.status === 'Canceled') descriptionDisplay += ` <span class="status-badge badge-canceled">CANCELED</span>`;
 
                 let htmlRow1 = `<tr data-id="${currentTask.id}">${typeCellHtml}
-                    <td rowspan="2" style="font-weight: bold; background-color: #fafafa;">${viewIndex + 1}</td>
+                    <td rowspan="2" class="item-clickable" style="font-weight: bold; background-color: #fafafa;" onclick="toggleHighlight('${currentTask.id}')" title="คลิกเพื่อไฮไลต์/ยกเลิกไฮไลต์ แถวนี้">${viewIndex + 1}</td>
                     <td rowspan="2" class="text-left" style="font-weight: 500;">${descriptionDisplay}</td>
                     <td rowspan="2" style="font-weight: 600; color: #2c3e50; background-color: #f8fafc;">${currentTask.typeBudget || '-'}</td>
                     <td class="sub-row">${planAssignee}</td>
@@ -669,8 +726,8 @@
                 let descDisplay = task.description;
                 if(task.year < viewingYear) descDisplay += `<div class="carry-over-note">(งานยกยอดปี ${task.year})</div>`;
 
-                let html = `<tr>
-                    <td rowspan="8" class="rowspan-cell" style="text-align: center;">${viewIndex + 1}</td>
+                let html = `<tr class="task-group-${task.id}">
+                    <td rowspan="8" class="rowspan-cell item-clickable" style="text-align: center;" onclick="toggleHighlight('${task.id}')" title="คลิกเพื่อไฮไลต์/ยกเลิกไฮไลต์ งานนี้">${viewIndex + 1}</td>
                     <td rowspan="8" class="text-left rowspan-cell" style="font-weight: 600;">${descDisplay}</td>
                     <td rowspan="8" class="text-left rowspan-cell editable-cell" contenteditable="true" onblur="inlineEditHandler(${dbIndex}, 'background', this)">${task.background || ''}</td>
                     <td rowspan="8" class="text-left rowspan-cell editable-cell" contenteditable="true" onblur="inlineEditHandler(${dbIndex}, 'benefits', this)">${task.benefits || ''}</td>
@@ -742,7 +799,7 @@
                         stepStatus = "On Progress";
                     }
 
-                    html += `<tr><td class="text-left" style="padding-left: 10px;">${processNamesTab2[s]}</td>`;
+                    html += `<tr class="task-group-${task.id}"><td class="text-left" style="padding-left: 10px;">${processNamesTab2[s]}</td>`;
                     
                     for(let w=0; w<48; w++) {
                         let isPlan = task.weeksPlan[viewingYear][w] === stepNumStr;
