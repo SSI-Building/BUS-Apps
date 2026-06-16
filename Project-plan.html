@@ -61,7 +61,7 @@
         .process-item { font-size: 12px; color: #34495e; background: #f1f5f9; padding: 5px 10px; border-radius: 4px; white-space: nowrap; display: inline-flex; align-items: center; }
         .process-item span { font-weight: bold; color: var(--plan-color); margin-right: 5px; font-size: 13px; }
 
-        /* ================= ตรึงหัวตาราง (Sticky Headers) ================= */
+        /* ================= ตรึงหัวตาราง (Sticky Headers) แก้ไขใหม่ ================= */
         .table-responsive { 
             max-height: calc(100vh - 240px); /* ความสูงหน้าจอ ลบด้วยส่วนหัว เพื่อให้ Scroll ได้ */
             overflow-y: auto; 
@@ -71,15 +71,21 @@
         table { border-collapse: collapse; width: 100%; min-width: 1700px; text-align: center; }
         th, td { border: 1px solid #cbd5e1; padding: 6px 4px; height: 24px; }
         
-        /* CSS สำหรับตรึง Tab 1 */
-        #ganttTable thead th {
-            position: sticky;
-            z-index: 10;
-            background-color: #c5eff7;
-            box-shadow: inset 0 -1px 0 #94a3b8, inset 0 1px 0 #94a3b8;
-        }
-        #ganttTable thead tr:nth-child(1) th { top: 0; }
-        #ganttTable thead tr:nth-child(2) th { top: 36px; } /* บรรทัดที่สองต่อจากบรรทัดแรก */
+        /* CSS สำหรับตรึง Tab 1 ให้ติดหนึบ */
+                #ganttTable thead th,
+                #ganttTable thead td { 
+                    position: sticky;
+                    z-index: 10;
+                    background-color: #c5eff7;
+                    /* เพิ่ม background-clip และ box-shadow เพื่ออุดรอยรั่วสีขาวของตาราง */
+                    background-clip: padding-box;
+                    box-shadow: inset 0 -1px 0 #cbd5e1, 0 1px 0 #cbd5e1;
+                }
+                /* ล็อคความสูงของแถวแรกให้เป็น 45px */
+                #ganttTable thead tr:nth-child(1) th { top: 0; height: 45px; box-sizing: border-box; }
+                
+                /* ขยับ top ขึ้นมา 1px (เป็น 44px) เพื่อให้เกยปิดรูรั่วรอยต่อของเส้นขอบพอดี */
+                #ganttTable thead tr:nth-child(2) td { top: 44px; height: 28px; box-sizing: border-box; }
 
         /* CSS สำหรับตรึง Tab 2 */
         #majorEngTable thead th {
@@ -103,16 +109,41 @@
         .editable-cell:hover { background-color: #f1f5f9; box-shadow: inset 0 0 0 1px #94a3b8; }
         .editable-cell:focus { background-color: #fffde7; box-shadow: inset 0 0 0 1.5px var(--primary-color); }
 
-        .plan-bar { background-color: var(--plan-color) !important; color: white !important; font-weight: bold; font-size: 11px !important; }
-        .actual-bar { background-color: var(--actual-color) !important; color: white !important; font-weight: bold; font-size: 11px !important; }
+        /* ============ ปรับขอบของแถบสีให้เนียน และจัดข้อความกึ่งกลาง ============ */
+        .plan-bar { 
+            background-color: var(--plan-color) !important; 
+            border-color: var(--plan-color) !important; 
+            color: white !important; 
+            font-weight: bold; 
+            font-size: 11px !important; 
+        }
+        .actual-bar { 
+            background-color: var(--actual-color) !important; 
+            border-color: var(--actual-color) !important; 
+            color: white !important; 
+            font-weight: bold; 
+            font-size: 11px !important; 
+        }
         
-        .week-cell { width: 16px; font-size: 11px; padding: 0; color: #64748b; cursor: cell; outline: none; transition: background-color 0.1s; }
+        .week-cell { 
+            width: 16px; 
+            font-size: 11px; 
+            padding: 0; 
+            color: #64748b; 
+            cursor: cell; 
+            outline: none; 
+            transition: background-color 0.1s; 
+            text-align: center; 
+            vertical-align: middle; 
+            line-height: 24px; 
+        }
         .week-cell:focus { background-color: #fffde7 !important; box-shadow: inset 0 0 4px rgba(0,0,0,0.2); color: #000 !important; }
 
         .month-header { font-size: 11px; font-weight: bold; border-bottom: 2px solid #94a3b8; }
         .sub-row { font-size: 11px; color: #64748b; background-color: #f8fafc; }
 
-        .current-week-header { background-color: var(--today-color) !important; color: white !important; font-weight: bold !important; position: relative; animation: pulse-header 2.5s infinite; }
+        /* Current Week Tracker */
+        .current-week-header { background-color: var(--today-color) !important; color: white !important; font-weight: bold !important; position: sticky !important; animation: pulse-header 2.5s infinite; }
         .current-week-cell { position: relative; }
         .current-week-cell::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255, 77, 77, 0.08); border-left: 1.5px dashed var(--today-color); border-right: 1.5px dashed var(--today-color); pointer-events: none; z-index: 5; }
         @keyframes pulse-header { 0% { background-color: var(--today-color); } 50% { background-color: #ff1a1a; box-shadow: 0 0 8px rgba(255, 77, 77, 0.6); } 100% { background-color: var(--today-color); } }
@@ -485,10 +516,33 @@
 
         function updateMonthHeaders() {
             const shortYear = viewingYear.toString().slice(-2);
+            let weeksHtml = '';
             for(let m=0; m<12; m++) {
                 const el = document.getElementById(`month-${m}`);
-                if(el) el.innerText = `${months[m]}-${shortYear}`;
+                if(el) {
+                    el.innerText = `${months[m]}-${shortYear}`;
+                    
+                    // เพิ่มการไฮไลต์สีแดงให้เดือนปัจจุบัน (หากปีและเดือนตรงกับปัจจุบัน)
+                    if (m === currentMonthIndex && viewingYear === targetDate.getFullYear()) {
+                        el.style.backgroundColor = '#e74c3c';
+                        el.style.color = '#ffffff';
+                        el.style.borderBottom = '2px solid #c0392b';
+                    } else {
+                        // ล้างสีออกถ้าไม่ใช่เดือนปัจจุบัน
+                        el.style.backgroundColor = '';
+                        el.style.color = '';
+                        el.style.borderBottom = '';
+                    }
+                }
+
+                // อัปเดตเลขสัปดาห์ 1-4 ให้สีแดงถูกต้องตามปี
+                for (let w = 1; w <= 4; w++) {
+                    let globalIndex = (m * 4) + (w - 1);
+                    const isToday = (globalIndex === currentGlobalWeekCol && viewingYear === targetDate.getFullYear());
+                    weeksHtml += `<td class="week-cell ${isToday ? 'current-week-header' : ''}" title="${months[m]}-${shortYear} Week ${w}">${w}</td>`;
+                }
             }
+            document.getElementById('weeksHeaderRow').innerHTML = weeksHtml;
             const hdr2 = document.querySelectorAll('.month-hdr-2');
             hdr2.forEach((el, idx) => { el.innerText = `${months[idx % 12]}-${shortYear}`; });
             document.getElementById('currentDateStr').innerText = `ดูข้อมูลปี ${viewingYear}`;
