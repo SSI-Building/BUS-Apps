@@ -599,7 +599,7 @@
             document.getElementById('weeksHeaderRow').innerHTML = weeksHtml;
             const hdr2 = document.querySelectorAll('.month-hdr-2');
             hdr2.forEach((el, idx) => { el.innerText = `${months[idx % 12]}-${shortYear}`; });
-            document.getElementById('currentDateStr').innerText = `ดูข้อมูลปี ${viewingYear}`;
+            document.getElementById('currentDateStr').innerText = `ข้อมูลปี ${viewingYear}`;
         }
 
         function getDisplayTasks() {
