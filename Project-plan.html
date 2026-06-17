@@ -172,9 +172,12 @@
 
         .tab2-week { padding: 0 !important; width: 8px; border-right: 1px dotted #cbd5e1; }
         .month-end { border-right: 1px solid #94a3b8 !important; }
-        .bar-plan { background: linear-gradient(to bottom, var(--plan-color) 50%, transparent 50%); }
-        .bar-actual { background: linear-gradient(to bottom, transparent 50%, var(--actual-color) 50%); }
-        .bar-both { background: linear-gradient(to bottom, var(--plan-color) 50%, var(--actual-color) 50%); }
+  
+        /* สไตล์ใหม่: แยกแถวบน (Plan) / แถวล่าง (Actual) พร้อมตัวเลขสีขาว */
+        .plan-bar-solid { background-color: var(--plan-color) !important; color: white !important; font-size: 10px; font-weight: bold; text-align: center; }
+        .actual-bar-solid { background-color: var(--actual-color) !important; color: white !important; font-size: 10px; font-weight: bold; text-align: center; }
+        .tab2-row-top { border-bottom: none !important; height: 13px !important; line-height: 12px; }
+        .tab2-row-bottom { border-top: none !important; height: 13px !important; line-height: 12px; }
 
         .legend-tab2 { display: flex; gap: 15px; margin-bottom: 10px; font-size: 12px; font-weight: bold; color: #333; }
         .legend-box { width: 15px; height: 15px; border-radius: 3px; display: inline-block; vertical-align: middle; }
@@ -191,10 +194,8 @@
         .highlight-row > td.plan-bar { background-color: var(--plan-color) !important; color: white !important; }
         .highlight-row > td.actual-bar { background-color: var(--actual-color) !important; color: white !important; }
 
-        /* ป้องกันไม่ให้สีเทาไปทับแถบสี Progress ใน Tab 2 */
-        .highlight-row td.bar-plan { background: linear-gradient(to bottom, var(--plan-color) 50%, transparent 50%) !important; }
-        .highlight-row td.bar-actual { background: linear-gradient(to bottom, transparent 50%, var(--actual-color) 50%) !important; }
-        .highlight-row td.bar-both { background: linear-gradient(to bottom, var(--plan-color) 50%, var(--actual-color) 50%) !important; }
+        .highlight-row td.plan-bar-solid { background-color: var(--plan-color) !important; }
+        .highlight-row td.actual-bar-solid { background-color: var(--actual-color) !important; }
 
         /* เอฟเฟกต์ตอนเอาเมาส์ชี้ที่เลข Item */
         .item-clickable { cursor: pointer; transition: all 0.2s; }
@@ -939,72 +940,144 @@ document.getElementById('planForm').addEventListener('submit', function(e) {
         document.getElementById('cancelBtn').addEventListener('click', resetForm);
 
 
+// ================= Tab 2 Render (EVM Step Logic) ใส่เลข 1-7 ลงตาราง =================
+        function renderMajorEngTable() {
+            const tbody = document.getElementById('majorEngTbody');
+            tbody.innerHTML = '';
+            
+            let displayTasks = getDisplayTasks().filter(d => d.type === 'Major Improvement' || d.type === 'Improvement ENG');
 
-        
-// ================= Export to Excel (With Styles) =================
+            displayTasks.forEach((row, viewIndex) => {
+                let dbIndex = projectData.findIndex(p => p.id === row.id);
+                let task = projectData[dbIndex];
+                ensureYearArrays(task, viewingYear);
+
+                let descDisplay = task.description;
+                if(task.year < viewingYear) descDisplay += `<div class="carry-over-note">(งานยกยอดปี ${task.year})</div>`;
+
+                let html = `<tr class="task-group-${task.id}">
+                    <td rowspan="16" class="rowspan-cell item-clickable" style="text-align: center;" onclick="toggleHighlight('${task.id}')" title="คลิกเพื่อไฮไลต์/ยกเลิกไฮไลต์ งานนี้">${viewIndex + 1}</td>
+                    <td rowspan="16" class="text-left rowspan-cell" style="font-weight: 600;">${descDisplay}</td>
+                    <td rowspan="16" class="text-left rowspan-cell editable-cell" contenteditable="true" onblur="inlineEditHandler(${dbIndex}, 'background', this)">${task.background || ''}</td>
+                    <td rowspan="16" class="text-left rowspan-cell editable-cell" contenteditable="true" onblur="inlineEditHandler(${dbIndex}, 'benefits', this)">${task.benefits || ''}</td>
+                    <td rowspan="2" class="text-left" style="padding-left: 10px; font-weight: 900; color: var(--primary-color);">ภาพรวมโครงการ</td>`;
+
+                // ภาพรวม Plan (ดึงค่าทุกเลขมาแสดง)
+                for(let w=0; w<48; w++) {
+                    let val = task.weeksPlan[viewingYear][w] || "";
+                    let c = val !== "" ? "plan-bar-solid" : "";
+                    let borderClass = (w % 4 === 3) ? "month-end" : "";
+                    html += `<td class="tab2-week tab2-row-top ${c} ${borderClass}">${val}</td>`;
+                }
+
+                html += `<td rowspan="2" style="font-weight: bold; text-align: center;">Over all Progress</td>
+                    <td rowspan="2"><div class="progress-wrapper"><div class="progress-fill" style="width: ${task.progressActual}%;"></div><span class="progress-text">${task.progressActual}%</span></div></td>
+                    <td rowspan="16" class="text-left rowspan-cell editable-cell" contenteditable="true" onblur="inlineEditHandler(${dbIndex}, 'progressUpdate', this)">${task.progressUpdate || ''}</td>
+                    <td rowspan="16" class="text-left rowspan-cell editable-cell" style="color: #444;" contenteditable="true" onblur="inlineEditHandler(${dbIndex}, 'remark', this)">${task.remark || ''}</td>
+                    </tr>`;
+
+                // ภาพรวม Actual (ดึงค่าทุกเลขมาแสดง)
+                html += `<tr class="task-group-${task.id}">`;
+                for(let w=0; w<48; w++) {
+                    let val = task.weeksActual[viewingYear][w] || "";
+                    let c = val !== "" ? "actual-bar-solid" : "";
+                    let borderClass = (w % 4 === 3) ? "month-end" : "";
+                    html += `<td class="tab2-week tab2-row-bottom ${c} ${borderClass}">${val}</td>`;
+                }
+                html += `</tr>`;
+
+                // Loop สร้างแต่ละขั้นตอน 1-7 แยกตามแถว
+                for(let s = 0; s < 7; s++) {
+                    let stepNum = s + 1;
+                    let stepNumStr = stepNum.toString();
+                    let stepStatus = "On Progress"; 
+                    let stepProg = 0;
+                    
+                    let planCount = 0; let actCount = 0; let maxActEver = 0;
+                    if (task.weeksPlan) { Object.values(task.weeksPlan).forEach(arr => { arr.forEach(v => { if (v === stepNumStr) planCount++; }); }); }
+                    if (task.weeksActual) {
+                        Object.values(task.weeksActual).forEach(arr => {
+                            arr.forEach(v => {
+                                let num = parseInt(v);
+                                if (!isNaN(num)) {
+                                    if (num > maxActEver) maxActEver = num;
+                                    if (v === stepNumStr) actCount++;
+                                }
+                            });
+                        });
+                    }
+
+                    if (maxActEver > stepNum) { stepStatus = "Finished"; stepProg = 100; } 
+                    else if (maxActEver === stepNum) {
+                        if (planCount > 0) { stepProg = Math.min(100, Math.round((actCount / planCount) * 100)); if (stepProg === 100 || actCount >= planCount) stepStatus = "Finished"; } 
+                        else { if (actCount > 0) { stepStatus = "Finished"; stepProg = 100; } }
+                    }
+
+                    // ขั้นตอน Plan (กรองเฉพาะเลขที่ตรงกับขั้นตอน)
+                    html += `<tr class="task-group-${task.id}"><td rowspan="2" class="text-left" style="padding-left: 10px;">${processNamesTab2[s]}</td>`;
+                    for(let w=0; w<48; w++) {
+                        let isPlan = task.weeksPlan[viewingYear][w] === stepNumStr;
+                        let val = isPlan ? stepNumStr : "";
+                        let c = isPlan ? "plan-bar-solid" : "";
+                        let borderClass = (w % 4 === 3) ? "month-end" : "";
+                        html += `<td class="tab2-week tab2-row-top ${c} ${borderClass}">${val}</td>`;
+                    }
+                    html += `<td rowspan="2" style="text-align: center; color: ${stepStatus === 'Finished' ? '#444' : '#666'};">${stepStatus}</td>
+                        <td rowspan="2"><div class="progress-wrapper"><div class="progress-fill" style="width: ${stepProg}%;"></div><span class="progress-text">${stepProg}%</span></div></td></tr>`;
+
+                    // ขั้นตอน Actual (กรองเฉพาะเลขที่ตรงกับขั้นตอน)
+                    html += `<tr class="task-group-${task.id}">`;
+                    for(let w=0; w<48; w++) {
+                        let isAct = task.weeksActual[viewingYear][w] === stepNumStr;
+                        let val = isAct ? stepNumStr : "";
+                        let c = isAct ? "actual-bar-solid" : "";
+                        let borderClass = (w % 4 === 3) ? "month-end" : "";
+                        html += `<td class="tab2-week tab2-row-bottom ${c} ${borderClass}">${val}</td>`;
+                    }
+                    html += `</tr>`;
+                }
+                tbody.innerHTML += html;
+            });
+        }
+
+        // ================= Export to Excel (With Styles) =================
         function getExcelCol(colIndex) {
             let letter = '';
-            while (colIndex >= 0) {
-                letter = String.fromCharCode((colIndex % 26) + 65) + letter;
-                colIndex = Math.floor(colIndex / 26) - 1;
-            }
+            while (colIndex >= 0) { letter = String.fromCharCode((colIndex % 26) + 65) + letter; colIndex = Math.floor(colIndex / 26) - 1; }
             return letter;
         }
 
         function exportToExcel() {
-            // บังคับโหลดข้อมูล Tab 2 ให้เต็มก่อน Export เสมอ
             renderMajorEngTable(); 
-
             let statusText = document.getElementById('saveStatus');
             if(statusText) { statusText.innerText = "กำลังสร้างไฟล์ Excel พร้อมจัดรูปแบบ..."; statusText.style.color = "#f39c12"; }
 
             setTimeout(() => {
                 var wb = XLSX.utils.book_new();
 
-                // --------------------------------------------------------
                 // 1. จัดการ Tab 1 (Main Plan)
-                // --------------------------------------------------------
                 var table1 = document.getElementById("ganttTable").cloneNode(true);
                 table1.querySelectorAll('.action-col').forEach(el => el.remove());
                 table1.querySelectorAll('.btn-toggle-action').forEach(el => el.remove());
-                
                 var ws1 = XLSX.utils.table_to_sheet(table1, { raw: true });
 
                 for (let i in ws1) {
                     if (i[0] === '!') continue;
                     let cell = ws1[i];
                     let rowNum = parseInt(i.replace(/\D/g, ''));
-                    
-                    cell.s = {
-                        font: { name: "Sarabun", sz: 10 },
-                        border: { top: {style: "thin", color: {rgb: "CBD5E1"}}, bottom: {style: "thin", color: {rgb: "CBD5E1"}}, left: {style: "thin", color: {rgb: "CBD5E1"}}, right: {style: "thin", color: {rgb: "CBD5E1"}} },
-                        alignment: { vertical: "center", horizontal: "center", wrapText: true }
-                    };
+                    cell.s = { font: { name: "Sarabun", sz: 10 }, border: { top: {style: "thin", color: {rgb: "CBD5E1"}}, bottom: {style: "thin", color: {rgb: "CBD5E1"}}, left: {style: "thin", color: {rgb: "CBD5E1"}}, right: {style: "thin", color: {rgb: "CBD5E1"}} }, alignment: { vertical: "center", horizontal: "center", wrapText: true } };
 
-                    if (rowNum <= 2) {
-                        cell.s.fill = { patternType: "solid", fgColor: { rgb: "C5EFF7" } };
-                        cell.s.font.bold = true;
-                    } else {
-                        if (cell.v && /^[1-7]$/.test(cell.v.toString())) {
-                            let rowTypeCell = ws1['G' + rowNum];
-                            if (rowTypeCell && rowTypeCell.v === 'Plan') {
-                                cell.s.fill = { patternType: "solid", fgColor: { rgb: "00A2E8" } };
-                                cell.s.font.color = { rgb: "FFFFFF" };
-                                cell.s.font.bold = true;
-                            } else if (rowTypeCell && rowTypeCell.v === 'Actual') {
-                                cell.s.fill = { patternType: "solid", fgColor: { rgb: "8CBD40" } };
-                                cell.s.font.color = { rgb: "FFFFFF" };
-                                cell.s.font.bold = true;
-                            }
-                        }
+                    if (rowNum <= 2) { cell.s.fill = { patternType: "solid", fgColor: { rgb: "C5EFF7" } }; cell.s.font.bold = true; } 
+                    else if (cell.v && /^[1-7]$/.test(cell.v.toString())) {
+                        let rowTypeCell = ws1['G' + rowNum];
+                        if (rowTypeCell && rowTypeCell.v === 'Plan') { cell.s.fill = { patternType: "solid", fgColor: { rgb: "00A2E8" } }; cell.s.font.color = { rgb: "FFFFFF" }; cell.s.font.bold = true; } 
+                        else if (rowTypeCell && rowTypeCell.v === 'Actual') { cell.s.fill = { patternType: "solid", fgColor: { rgb: "8CBD40" } }; cell.s.font.color = { rgb: "FFFFFF" }; cell.s.font.bold = true; }
                     }
                 }
                 ws1['!cols'] = [{wch: 15}, {wch: 5}, {wch: 35}, {wch: 12}, {wch: 15}, {wch: 10}, {wch: 10}, {wch: 12}];
                 for(let w=0; w<48; w++) ws1['!cols'].push({wch: 3}); 
 
-                // --------------------------------------------------------
                 // 2. จัดการ Tab 2 (Major/ENG Summary)
-                // --------------------------------------------------------
                 var table2 = document.getElementById("majorEngTable").cloneNode(true);
                 var ws2 = XLSX.utils.table_to_sheet(table2, { raw: true });
 
@@ -1012,64 +1085,54 @@ document.getElementById('planForm').addEventListener('submit', function(e) {
                     if (i[0] === '!') continue;
                     let cell = ws2[i];
                     let rowNum = parseInt(i.replace(/\D/g, ''));
-                    
-                    cell.s = {
-                        font: { name: "Sarabun", sz: 10 },
-                        border: { top: {style: "thin", color: {rgb: "94A3B8"}}, bottom: {style: "thin", color: {rgb: "94A3B8"}}, left: {style: "thin", color: {rgb: "94A3B8"}}, right: {style: "thin", color: {rgb: "94A3B8"}} },
-                        alignment: { vertical: "center", horizontal: "center", wrapText: true }
-                    };
-                    if (rowNum === 1) {
-                        cell.s.fill = { patternType: "solid", fgColor: { rgb: "C5E0B4" } };
-                        cell.s.font.bold = true;
-                    }
+                    cell.s = { font: { name: "Sarabun", sz: 10 }, border: { top: {style: "thin", color: {rgb: "94A3B8"}}, bottom: {style: "thin", color: {rgb: "94A3B8"}}, left: {style: "thin", color: {rgb: "94A3B8"}}, right: {style: "thin", color: {rgb: "94A3B8"}} }, alignment: { vertical: "center", horizontal: "center", wrapText: true } };
+                    if (rowNum === 1) { cell.s.fill = { patternType: "solid", fgColor: { rgb: "C5E0B4" } }; cell.s.font.bold = true; }
                 }
 
-                // สาดสี Plan/Actual โดยอ่านตำแหน่งตรงๆ จากหน้าเว็บ (แม่นยำ 100%)
-                let tbodyRows = document.getElementById("majorEngTable").querySelectorAll("tbody tr");
-                tbodyRows.forEach((tr, rIdx) => {
-                    let rowNum = rIdx + 2; 
-                    let tds = tr.querySelectorAll("td");
-                    
-                    // 1. จำลองหลอด Progress Bar ในคอลัมน์ BC (ลำดับที่ 54)
-                    let progCellRef = 'BC' + rowNum;
-                    if (ws2[progCellRef] && ws2[progCellRef].v) {
-                        let textVal = ws2[progCellRef].v.toString().trim();
-                        if(textVal.endsWith('%')) {
-                            let progVal = parseInt(textVal.replace('%', ''));
-                            if (!isNaN(progVal)) {
-                                let filled = Math.round(progVal / 10);
-                                let bar = '█'.repeat(filled) + '░'.repeat(10 - filled);
-                                ws2[progCellRef].v = bar + '  ' + progVal + '%';
-                                ws2[progCellRef].s = ws2[progCellRef].s || {};
-                                ws2[progCellRef].s.font = { name: "Sarabun", sz: 10, color: { rgb: progVal >= 100 ? "00B050" : (progVal > 0 ? "00A2E8" : "95A5A6") } };
-                                ws2[progCellRef].s.alignment = { vertical: "center", horizontal: "left" };
-                            }
-                        }
-                    }
+                ws2['!rows'] = ws2['!rows'] || [];
+                ws2['!rows'][0] = { hpx: 25 }; 
 
-                    // 2. ทาสีตาราง แถบสี Plan/Actual จาก DOM
-                    let weekStartIndex = -1;
-                    if (rIdx % 8 === 0 && tds.length >= 53) weekStartIndex = 5;
-                    else if (rIdx % 8 !== 0 && tds.length >= 49) weekStartIndex = 1;
+                let majorTasks = getDisplayTasks().filter(d => d.type === 'Major Improvement' || d.type === 'Improvement ENG');
+                majorTasks.forEach((task, tIndex) => {
+                    let baseRow = 2 + (tIndex * 16); 
+                    for(let rOff = 0; rOff < 16; rOff++) {
+                        let rowNum = baseRow + rOff;
+                        ws2['!rows'][rowNum - 1] = { hpx: 14 }; 
 
-                    if (weekStartIndex !== -1) {
-                        for (let w = 0; w < 48; w++) {
-                            let td = tds[weekStartIndex + w];
-                            let colStr = getExcelCol(5 + w); // Excel column F คือ index 5
+                        let isPlanRow = (rOff % 2 === 0);
+                        
+                        // เทสี Plan/Actual จากตัวเลขที่มีในตารางแล้ว 100% ตรงปก!
+                        for(let w = 0; w < 48; w++) {
+                            let colStr = getExcelCol(5 + w); 
                             let cellRef = colStr + rowNum;
                             
-                            if (td && td.classList) {
-                                let isPlan = td.classList.contains('bar-plan') || td.classList.contains('bar-both');
-                                let isAct = td.classList.contains('bar-actual') || td.classList.contains('bar-both');
-                                
-                                if (isPlan || isAct) {
-                                    if (!ws2[cellRef]) ws2[cellRef] = { t: 's', v: ' ' };
+                            // ถ้าตรวจเจอตัวเลข 1-7 ในช่อง Excel สั่งเปลี่ยนสีทันที
+                            if (ws2[cellRef] && ws2[cellRef].v) {
+                                let val = ws2[cellRef].v.toString().trim();
+                                if (/^[1-7]$/.test(val)) {
                                     ws2[cellRef].s = ws2[cellRef].s || { border: {} };
-                                    
-                                    // บังคับสาดสี Solid
-                                    if (isPlan && isAct) ws2[cellRef].s.fill = { patternType: "solid", fgColor: { rgb: "008080" } };
-                                    else if (isPlan) ws2[cellRef].s.fill = { patternType: "solid", fgColor: { rgb: "00A2E8" } };
-                                    else if (isAct) ws2[cellRef].s.fill = { patternType: "solid", fgColor: { rgb: "8CBD40" } };
+                                    ws2[cellRef].s.fill = { patternType: "solid", fgColor: { rgb: isPlanRow ? "00A2E8" : "8CBD40" } };
+                                    ws2[cellRef].s.font = { name: "Sarabun", sz: 9, color: { rgb: "FFFFFF" }, bold: true };
+                                    ws2[cellRef].s.alignment = { vertical: "center", horizontal: "center" };
+                                }
+                            }
+                        }
+                        
+                        // แทรกหลอด % Progress คอลัมน์ BC (แถว Plan)
+                        if (isPlanRow) {
+                            let progCellRef = 'BC' + rowNum;
+                            if (ws2[progCellRef] && ws2[progCellRef].v) {
+                                let textVal = ws2[progCellRef].v.toString().trim();
+                                if(textVal.endsWith('%')) {
+                                    let progVal = parseInt(textVal.replace('%', ''));
+                                    if (!isNaN(progVal)) {
+                                        let filled = Math.round(progVal / 10);
+                                        let bar = '█'.repeat(filled) + '░'.repeat(10 - filled);
+                                        ws2[progCellRef].v = bar + '  ' + progVal + '%';
+                                        ws2[progCellRef].s = ws2[progCellRef].s || {};
+                                        ws2[progCellRef].s.font = { name: "Sarabun", sz: 10, color: { rgb: progVal >= 100 ? "00B050" : (progVal > 0 ? "00A2E8" : "95A5A6") } };
+                                        ws2[progCellRef].s.alignment = { vertical: "center", horizontal: "left" };
+                                    }
                                 }
                             }
                         }
@@ -1077,15 +1140,12 @@ document.getElementById('planForm').addEventListener('submit', function(e) {
                 });
 
                 ws2['!cols'] = [{wch: 5}, {wch: 35}, {wch: 25}, {wch: 25}, {wch: 20}];
-                for(let w=0; w<48; w++) ws2['!cols'].push({wch: 2}); 
-                ws2['!cols'].push({wch: 15}); // Status
-                ws2['!cols'].push({wch: 20}); // ความคืบหน้า (Progress Bar)
-                ws2['!cols'].push({wch: 20}); // ข้อความความคืบหน้า
-                ws2['!cols'].push({wch: 20}); // Remark
+                for(let w=0; w<48; w++) ws2['!cols'].push({wch: 3}); // ปรับความกว้างให้เห็นตัวเลขชัดๆ
+                ws2['!cols'].push({wch: 15}); 
+                ws2['!cols'].push({wch: 20}); 
+                ws2['!cols'].push({wch: 20}); 
+                ws2['!cols'].push({wch: 20}); 
 
-                // --------------------------------------------------------
-                // 3. แพ็คข้อมูลลงสมุดงานและดาวน์โหลด
-                // --------------------------------------------------------
                 XLSX.utils.book_append_sheet(wb, ws1, "Main Plan");
                 XLSX.utils.book_append_sheet(wb, ws2, "Major_ENG Summary");
 
@@ -1098,7 +1158,7 @@ document.getElementById('planForm').addEventListener('submit', function(e) {
                 }
             }, 100);
         }
-   
+
         // ================= Initialization =================
         function initApp() {
             // 1. สร้าง Option ปีงบประมาณอัตโนมัติ (จาก 2025 ถึงปีปัจจุบัน)
