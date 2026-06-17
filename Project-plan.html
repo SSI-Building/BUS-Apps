@@ -893,6 +893,10 @@
             });
         }
 
+
+        //-------- Excel Export Logic --------//
+
+        // ================= Export to Excel (With Styles) =================
         function getExcelCol(colIndex) {
             let letter = '';
             while (colIndex >= 0) { letter = String.fromCharCode((colIndex % 26) + 65) + letter; colIndex = Math.floor(colIndex / 26) - 1; }
@@ -907,6 +911,10 @@
             setTimeout(() => {
                 var wb = XLSX.utils.book_new();
 
+                // --------------------------------------------------------
+                // 1. จัดการ Tab 1 (Main Plan)
+                // --------------------------------------------------------
+// 1. จัดการ Tab 1 (Main Plan)
                 var table1 = document.getElementById("ganttTable").cloneNode(true);
                 table1.querySelectorAll('.action-col').forEach(el => el.remove());
                 table1.querySelectorAll('.btn-toggle-action').forEach(el => el.remove());
@@ -915,19 +923,46 @@
                 for (let i in ws1) {
                     if (i[0] === '!') continue;
                     let cell = ws1[i];
-                    let rowNum = parseInt(i.replace(/\D/g, ''));
+                    let cellRef = XLSX.utils.decode_cell(i); 
+                    let rowNum = cellRef.r + 1;
+                    
                     cell.s = { font: { name: "Sarabun", sz: 10 }, border: { top: {style: "thin", color: {rgb: "CBD5E1"}}, bottom: {style: "thin", color: {rgb: "CBD5E1"}}, left: {style: "thin", color: {rgb: "CBD5E1"}}, right: {style: "thin", color: {rgb: "CBD5E1"}} }, alignment: { vertical: "center", horizontal: "center", wrapText: true } };
 
-                    if (rowNum <= 2) { cell.s.fill = { patternType: "solid", fgColor: { rgb: "C5EFF7" } }; cell.s.font.bold = true; } 
-                    else if (cell.v && /^[1-7]$/.test(cell.v.toString())) {
-                        let rowTypeCell = ws1['G' + rowNum];
-                        if (rowTypeCell && rowTypeCell.v === 'Plan') { cell.s.fill = { patternType: "solid", fgColor: { rgb: "00A2E8" } }; cell.s.font.color = { rgb: "FFFFFF" }; cell.s.font.bold = true; } 
-                        else if (rowTypeCell && rowTypeCell.v === 'Actual') { cell.s.fill = { patternType: "solid", fgColor: { rgb: "8CBD40" } }; cell.s.font.color = { rgb: "FFFFFF" }; cell.s.font.bold = true; }
+                    if (rowNum <= 2) { 
+                        cell.s.fill = { patternType: "solid", fgColor: { rgb: "C5EFF7" } }; 
+                        cell.s.font.bold = true; 
+                    } 
+                    else {
+                        // --- แก้ไขตรงนี้: หมุนเฉพาะคอลัมน์แรก (Type) และต้องอยู่ใน tbody เท่านั้น ---
+                        let isInsideTbody = table1.querySelector('tbody').contains(table1.rows[cellRef.r]);
+                        if (cellRef.c === 0 && isInsideTbody) {
+                            cell.s.alignment.textRotation = 90;
+                        }
+
+                        // เทสีโซนปฏิทิน
+                        if (cellRef.c >= 8 && cell.v && /^[1-7]$/.test(cell.v.toString())) {
+                            let rowTypeCell = ws1['G' + rowNum];
+                            if (rowTypeCell && rowTypeCell.v === 'Plan') { 
+                                cell.s.fill = { patternType: "solid", fgColor: { rgb: "00A2E8" } }; 
+                                cell.s.font.color = { rgb: "FFFFFF" }; 
+                                cell.s.font.bold = true; 
+                            } 
+                            else if (rowTypeCell && rowTypeCell.v === 'Actual') { 
+                                cell.s.fill = { patternType: "solid", fgColor: { rgb: "8CBD40" } }; 
+                                cell.s.font.color = { rgb: "FFFFFF" }; 
+                                cell.s.font.bold = true; 
+                            }
+                        }
                     }
                 }
-                ws1['!cols'] = [{wch: 15}, {wch: 5}, {wch: 35}, {wch: 12}, {wch: 15}, {wch: 10}, {wch: 10}, {wch: 12}];
+                
+                // ปรับความกว้างคอลัมน์ Type ให้แคบลงรับกับตัวอักษรแนวตั้ง
+                ws1['!cols'] = [{wch: 5}, {wch: 5}, {wch: 35}, {wch: 12}, {wch: 15}, {wch: 10}, {wch: 10}, {wch: 12}];
                 for(let w=0; w<48; w++) ws1['!cols'].push({wch: 3}); 
 
+                // --------------------------------------------------------
+                // 2. จัดการ Tab 2 (Major/ENG Summary)
+                // --------------------------------------------------------
                 var table2 = document.getElementById("majorEngTable").cloneNode(true);
                 var ws2 = XLSX.utils.table_to_sheet(table2, { raw: true });
 
@@ -953,7 +988,6 @@
                         let stepIndex = Math.floor(rOff / 2); 
                         let stepNumStr = stepIndex.toString();
                         
-                        // เทสี Plan/Actual จากตัวเลขที่มีในตารางแล้ว 100% ตรงปก!
                         for(let w = 0; w < 48; w++) {
                             let colStr = getExcelCol(5 + w); 
                             let cellRef = colStr + rowNum;
@@ -1021,6 +1055,10 @@
                 }
             }, 100);
         }
+
+        //-------- End Excel Export Logic --------//
+
+        
 
         function initApp() {
             const yearSelect = document.getElementById('filterYear');
