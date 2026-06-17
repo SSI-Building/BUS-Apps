@@ -14,11 +14,40 @@
         * { box-sizing: border-box; }
         body { font-family: 'Sarabun', sans-serif; margin: 0; background-color: #f4f6f9; color: #333; font-size: 13px; padding-bottom: 50px; }
         
-        /* Header & Year Filter */
-        .page-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px 0 20px; }
-        .page-header h2 { margin: 0; color: #1a252f; font-weight: 700; display: flex; align-items: center; gap: 10px; font-size: 22px; }
-        .year-filter { display: flex; align-items: center; gap: 10px; background: #fff; padding: 5px 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid var(--primary-color); }
-        .year-filter select { font-family: 'Sarabun'; font-size: 16px; font-weight: bold; border: none; outline: none; color: var(--primary-color); cursor: pointer; background: transparent; }
+        /* ================= Unified Control Panel (Flat Design) ================= */
+        .control-panel { 
+            background: #fff; 
+            border-radius: 8px; 
+            border: 1px solid #cbd5e1; /* เปลี่ยนเป็นเส้นขอบบางๆ สีเทาแทนเงาและขอบสีหนา */
+            margin: 20px; 
+            overflow: hidden; 
+        }
+        .cp-top { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 15px 20px; border-bottom: 1px solid #f1f5f9; flex-wrap: wrap; gap: 15px; 
+        }
+        .cp-top h2 { margin: 0; color: #1e293b; font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .cp-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        
+        .year-filter { display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 8px 15px; border-radius: 6px; border: 1px solid #e2e8f0; }
+        .year-filter label { font-weight: bold; color: #475569; margin: 0; font-size: 13px; }
+        .year-filter select { font-family: 'Sarabun'; font-size: 15px; font-weight: bold; border: none; outline: none; color: var(--primary-color); background: transparent; cursor: pointer; }
+        
+        .btn-export { background-color: #27ae60 !important; color: white; margin-bottom: 0 !important; }
+        .btn-export:hover { background-color: #219653 !important; }
+        .cp-actions .btn-toggle { margin-bottom: 0 !important; }
+
+        .cp-bottom { display: flex; flex-wrap: wrap; padding: 12px 20px; background: #fafcff; gap: 15px; }
+        .metric-item { display: flex; align-items: center; gap: 15px; flex: 1; min-width: 220px; border-right: 1px solid #e2e8f0; }
+        .metric-item:last-child { border-right: none; }
+        .metric-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        
+        .today .metric-icon { background: rgba(255, 77, 77, 0.1); color: var(--today-color); }
+        .total .metric-icon { background: rgba(0, 188, 212, 0.1); color: var(--primary-color); }
+        .progress .metric-icon { background: rgba(140, 189, 64, 0.1); color: var(--actual-color); }
+        
+        .metric-info h4 { margin: 0; color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .metric-info p { margin: 2px 0 0 0; font-size: 18px; font-weight: 800; color: #1e293b; }
 
         /* TAB System */
         .tab-content { display: none; padding: 0 20px 20px 20px; animation: fadeEffect 0.3s; }
@@ -29,47 +58,13 @@
         .excel-tab-btn:hover { background-color: #eaeaea; }
         .excel-tab-btn.active { background-color: #fff; border-top: 3px solid var(--primary-color); color: #000; font-weight: bold; height: 35px; }
 
-/* Dashboard Cards - Compact Ribbon Style */
-        .status-board { 
-            display: flex; 
-            flex-wrap: wrap;
-            gap: 15px; 
-            margin-bottom: 15px; 
-            margin-top: 10px; 
-            background: #fff;
-            padding: 10px 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            border: 1px solid #cbd5e1;
-            border-left: 4px solid var(--primary-color);
+        /* Form (Flat Design) */
+        .form-container { 
+            background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; 
+            border: 1px solid #cbd5e1; /* ลบเงาและขอบสีออก ใช้เส้นบางๆ แทน */
+            transition: border-color 0.3s; 
         }
-        .status-card { 
-            display: flex; 
-            align-items: center; 
-            gap: 10px; 
-            flex: 1;
-            min-width: 220px;
-            border-right: 1px solid #e2e8f0;
-        }
-        .status-card:last-child { border-right: none; }
-        
-        .status-icon-box { 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 18px; 
-        }
-        .status-card.today .status-icon-box { color: var(--today-color); }
-        .status-card:not(.today):not(.progress) .status-icon-box { color: var(--primary-color); }
-        .status-card.progress .status-icon-box { color: var(--actual-color); }
-        
-        .status-card-info { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .status-card-info h4 { margin: 0; color: #64748b; font-size: 12px; font-weight: 600; white-space: nowrap; }
-        .status-card-info p { margin: 0; font-size: 16px; font-weight: 800; color: #1e293b; background: #f8fafc; padding: 2px 8px; border-radius: 4px; }
-
-        /* Form */
-        .form-container { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 3px 6px rgba(0,0,0,0.08); margin-bottom: 20px; border-top: 4px solid var(--primary-color); transition: border-color 0.3s; }
-        .form-container.editing { border-top-color: #f39c12; }
+        .form-container.editing { border-color: #f39c12; }
         .form-container h3 { margin-top: 0; margin-bottom: 15px; font-size: 16px; color: #2c3e50; display: flex; align-items: center; gap: 8px; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
         .form-group { display: flex; flex-direction: column; }
@@ -86,41 +81,42 @@
         .btn-hide-inside { background-color: #7f8c8d; color: white; }
         .btn-cancel { background-color: #95a5a6; color: white; }
 
-        /* Legend */
-        .process-legend { background: #fff; padding: 12px 20px; border-radius: 8px; border-left: 4px solid #f39c12; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 12px; }
+        /* Legend (Flat Design) */
+        .process-legend { 
+            background: #fff; padding: 12px 20px; border-radius: 8px; 
+            border: 1px solid #cbd5e1; /* ลบขอบส้มและเงาออก ใช้เส้นบางเหมือนฟอร์ม */
+            margin-bottom: 15px; 
+            display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 12px; 
+        }
         .process-legend strong { color: #2c3e50; font-size: 13px; white-space: nowrap; margin-right: 5px; }
         .process-item { font-size: 12px; color: #34495e; background: #f1f5f9; padding: 5px 10px; border-radius: 4px; white-space: nowrap; display: inline-flex; align-items: center; }
         .process-item span { font-weight: bold; color: var(--plan-color); margin-right: 5px; font-size: 13px; }
 
-        /* ================= ตรึงหัวตาราง (Sticky Headers) แก้ไขใหม่ ================= */
+        /* ================= ตรึงหัวตาราง (Sticky Headers) ================= */
         .table-responsive { 
             max-height: calc(100vh - 240px);
             overflow-y: auto; overflow-x: auto; 
-            background: #fff; box-shadow: 0 3px 6px rgba(0,0,0,0.08); border-radius: 8px; border: 1px solid #e2e8f0; 
+            background: #fff; border-radius: 8px; border: 1px solid #e2e8f0; 
         }
-        /* แก้ไขรอยรั่วของตารางและจัดระเบียบเส้นขอบ */
         table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1700px; text-align: center; }
         th, td { border-bottom: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 6px 4px; height: 24px; background-color: #fff; }
         th:first-child, td:first-child { border-left: 1px solid #cbd5e1; }
         tr:first-child th { border-top: 1px solid #cbd5e1; }
         
-        /* CSS สำหรับตรึง Tab 1 ให้ติดหนึบไร้รอยต่อ */
         #ganttTable thead th, #ganttTable thead td { 
             position: sticky; z-index: 10; background-color: #c5eff7; 
-            background-clip: padding-box; /* ป้องกันการเหลื่อมล้ำของ Background กับ Border */
+            background-clip: padding-box; 
         }
-        /* กำหนดความสูงแถวแรกให้แม่นยำ และต่อแถวสองให้แนบสนิท */
         #ganttTable thead tr:nth-child(1) th { top: 0; height: 45px; z-index: 12; }
         #ganttTable thead tr:nth-child(2) td { top: 44px; height: 28px; z-index: 11; }
 
-        /* CSS สำหรับตรึง Tab 2 */
         #majorEngTable thead th { position: sticky; top: 0; z-index: 10; background-color: #c5e0b4; }
 
         .bg-cyan { background-color: #c5eff7 !important; color: #1e293b; font-weight: bold; }
         .bg-total { background-color: #f8fafc !important; font-weight: bold; }
         .text-left { text-align: left; padding-left: 10px; }
 
-        /* ================= UI Elements (ตารางสีขาว) ================= */
+        /* ================= UI Elements ================= */
         .type-vertical-cell { background-color: #fff !important; border-right: 2px solid #94a3b8; padding: 0; width: 50px; min-width: 50px; position: relative; }
         .type-vertical-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .type-text-wrapper { writing-mode: vertical-lr; transform: rotate(180deg); font-weight: bold; color: #475569; font-size: 12px; letter-spacing: 1px; white-space: nowrap; }
@@ -138,7 +134,6 @@
         .month-header { font-size: 11px; font-weight: bold; border-bottom: 2px solid #94a3b8 !important; }
         .sub-row { font-size: 11px; color: #64748b; background-color: #fff !important; }
 
-        /* Current Week Tracker (จัด Z-index ให้แสดงผลทับได้ถูกต้อง) */
         .current-week-header { background-color: var(--today-color) !important; color: white !important; font-weight: bold !important; z-index: 13 !important; position: sticky !important; animation: pulse-header 2.5s infinite; }
         .current-week-cell { position: relative; }
         .current-week-cell::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255, 77, 77, 0.08); border-left: 1.5px dashed var(--today-color); border-right: 1.5px dashed var(--today-color); pointer-events: none; z-index: 5; }
@@ -172,41 +167,30 @@
 
         .tab2-week { padding: 0 !important; width: 8px; border-right: 1px dotted #cbd5e1; }
         .month-end { border-right: 1px solid #94a3b8 !important; }
-  
-        /* สไตล์ใหม่: แยกแถวบน (Plan) / แถวล่าง (Actual) และซ่อนตัวเลขเฉพาะบนหน้าเว็บ */
+
+        /* แยกแถวบน/ล่าง (Tab 2) แบบซ่อนตัวเลขเฉพาะหน้าเว็บ */
         .plan-bar-solid { background-color: var(--plan-color) !important; color: transparent !important; font-size: 0px !important; text-align: center; }
         .actual-bar-solid { background-color: var(--actual-color) !important; color: transparent !important; font-size: 0px !important; text-align: center; }
         .tab2-row-top { border-bottom: none !important; height: 13px !important; line-height: 12px; }
         .tab2-row-bottom { border-top: none !important; height: 13px !important; line-height: 12px; }
 
-        .legend-tab2 { display: flex; gap: 15px; margin-bottom: 10px; font-size: 12px; font-weight: bold; color: #333; }
         .legend-box { width: 15px; height: 15px; border-radius: 3px; display: inline-block; vertical-align: middle; }
         .l-plan { background-color: var(--plan-color); }
         .l-act { background-color: var(--actual-color); }
         
         .carry-over-note { color: #e74c3c; font-size: 11px; display: block; margin-top: 4px; font-weight: normal; }
 
-/* ================= Presentation Highlight ================= */
-        /* บังคับ !important เพื่อให้ไฮไลต์ทะลุทุกช่องในแถว (รวมถึงช่องแนวตั้ง) */
+        /* ================= Presentation Highlight ================= */
         .highlight-row > td { background-color: #e2e8f0 !important; transition: background-color 0.3s ease; }
-
-        /* --- เพิ่มส่วนนี้: ป้องกันไม่ให้สีไฮไลต์ไปทับสี Progress ใน Tab 1 --- */
         .highlight-row > td.plan-bar { background-color: var(--plan-color) !important; color: white !important; }
         .highlight-row > td.actual-bar { background-color: var(--actual-color) !important; color: white !important; }
-
         .highlight-row td.plan-bar-solid { background-color: var(--plan-color) !important; }
         .highlight-row td.actual-bar-solid { background-color: var(--actual-color) !important; }
 
-        /* เอฟเฟกต์ตอนเอาเมาส์ชี้ที่เลข Item */
         .item-clickable { cursor: pointer; transition: all 0.2s; }
         .item-clickable:hover { background-color: #cbd5e1 !important; color: #000; }
 
-        /* อนิเมชั่นกระพริบสำหรับ Row ที่เพิ่งเพิ่มใหม่ */
-        @keyframes flashRow {
-            0% { background-color: #fffde7; }
-            50% { background-color: #fef08a; }
-            100% { background-color: #ffffff; }
-        }
+        @keyframes flashRow { 0% { background-color: #fffde7; } 50% { background-color: #fef08a; } 100% { background-color: #ffffff; } }
         .flash-new-row > td { animation: flashRow 1.5s ease-in-out 2 !important; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -214,46 +198,45 @@
 
 <body>
 
-    <div class="page-header">
-        <h2><i class="fa-solid fa-calendar-days" style="color: var(--primary-color);"></i> ระบบจัดการและอัปเดตแผนงาน</h2>
-        <div class="year-filter">
-            <label><i class="fa-solid fa-filter"></i> เลือกปีงบประมาณ:</label>
-            <select id="filterYear" onchange="changeViewingYear()">
-            </select>
+    <div class="control-panel">
+        <div class="cp-top">
+            <h2><i class="fa-solid fa-calendar-days" style="color: var(--primary-color);"></i> ระบบจัดการและอัปเดตแผนงาน</h2>
+            <div class="cp-actions">
+                <div class="year-filter">
+                    <label><i class="fa-solid fa-filter"></i> เลือกปีงบประมาณ:</label>
+                    <select id="filterYear" onchange="changeViewingYear()"></select>
+                </div>
+                <button class="btn btn-toggle" id="toggleFormBtn"><i class="fa-solid fa-plus"></i> เพิ่มแผนงานใหม่</button>
+                <button class="btn btn-export" onclick="exportToExcel()"><i class="fa-solid fa-file-excel"></i> Export to Excel</button>
+            </div>
+        </div>
+        
+        <div class="cp-bottom">
+            <div class="metric-item today">
+                <div class="metric-icon"><i class="fa-solid fa-location-dot"></i></div>
+                <div class="metric-info">
+                    <h4>สัปดาห์ปัจจุบัน (Current)</h4>
+                    <p id="currentDateStr">กำลังคำนวณ...</p>
+                </div>
+            </div>
+            <div class="metric-item total">
+                <div class="metric-icon"><i class="fa-solid fa-list-check"></i></div>
+                <div class="metric-info">
+                    <h4>จำนวนแผนงานทั้งหมด</h4>
+                    <p id="totalTasksCount">กำลังโหลด...</p>
+                </div>
+            </div>
+            <div class="metric-item progress">
+                <div class="metric-icon"><i class="fa-solid fa-chart-line"></i></div>
+                <div class="metric-info">
+                    <h4>ความคืบหน้าภาพรวม</h4>
+                    <p id="totalProgressSummary">0%</p>
+                </div>
+            </div>
         </div>
     </div>
 
     <div id="MainGanttTab" class="tab-content active">
-                <div class="status-board">
-                    <div class="status-card today">
-                        <div class="status-icon-box"><i class="fa-solid fa-location-dot"></i></div>
-                        <div class="status-card-info">
-                            <h4>สัปดาห์ปัจจุบัน (Current)</h4>
-                            <p id="currentDateStr">กำลังคำนวณ...</p>
-                        </div>
-                    </div>
-                    <div class="status-card">
-                        <div class="status-icon-box"><i class="fa-solid fa-list-check"></i></div>
-                        <div class="status-card-info">
-                            <h4>จำนวนแผนงานทั้งหมด</h4>
-                            <p id="totalTasksCount">กำลังโหลด...</p>
-                        </div>
-                    </div>
-                    <div class="status-card progress">
-                        <div class="status-icon-box"><i class="fa-solid fa-chart-line"></i></div>
-                        <div class="status-card-info">
-                            <h4>ความคืบหน้าภาพรวม</h4>
-                            <p id="totalProgressSummary">0%</p>
-                        </div>
-                    </div>
-                </div>
-
-        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-            <button class="btn btn-toggle" id="toggleFormBtn" style="margin-bottom: 0;"><i class="fa-solid fa-plus"></i> เพิ่มแผนงานใหม่</button>
-            <button class="btn" style="background-color: #27ae60; color: white; border: none; border-radius: 6px;" onclick="exportToExcel()">
-                <i class="fa-solid fa-file-excel"></i> Export to Excel
-            </button>
-        </div>
 
         <div class="form-container" id="formWrapper" style="display: none;">
             <h3 id="formTitle"><i class="fa-solid fa-circle-plus" style="color: var(--primary-color);"></i> <span>ฟอร์มจัดการแผนงาน</span></h3>
@@ -348,12 +331,14 @@
         </div>
     </div>
 
-    <div id="MajorTab" class="tab-content" style="padding-top: 20px;">
-        <h2 style="margin-bottom: 5px; padding: 0;"><i class="fa-solid fa-list-check" style="color: #27ae60;"></i> สรุปแผนงานปรับปรุง (Major Improvement & Improvement ENG)</h2>
+    <div id="MajorTab" class="tab-content">
         
-        <div class="legend-tab2">
-            <div><span class="legend-box l-plan"></span> แผนงาน (Plan)</div>
-            <div><span class="legend-box l-act"></span> การทำจริง (Actual)</div>
+        <div class="process-legend">
+            <strong style="color: #27ae60; font-size: 14px;"><i class="fa-solid fa-list-check"></i> สรุปแผนงานปรับปรุง (Major Improvement & Improvement ENG)</strong>
+            <div style="display: flex; gap: 15px; margin-left: 10px; font-size: 12px; font-weight: bold; color: #333; align-items: center;">
+                <div><span class="legend-box l-plan"></span> แผนงาน (Plan)</div>
+                <div><span class="legend-box l-act"></span> การทำจริง (Actual)</div>
+            </div>
         </div>
 
         <div class="table-responsive">
@@ -380,7 +365,6 @@
         const processNamesTab2 = ["ออกแบบ จัดทำเงื่อนไขและข้อกำหนด", "PR (Purchase Requisition)", "ขั้นตอนต่อรองและสรุปราคา", "PO (Purchase Order)", "อยู่ระหว่างดำเนินการ", "ขั้นตอนตรวจรับงาน", "ส่งมอบงาน"];
 
         let projectData = []; 
-        // ให้ค่าเริ่มต้นการดูตารางเป็นปีปัจจุบันเสมอ
         let viewingYear = new Date().getFullYear();
 
         const targetDate = new Date();
@@ -407,7 +391,7 @@
                         let obj = {}; obj[task.year] = task.weeksActual;
                         task.weeksActual = obj;
                     }
-                    calculateOverallProgress(task); // คำนวณ % ใหม่ตอนโหลด
+                    calculateOverallProgress(task);
                     return task;
                 });
 
@@ -445,11 +429,9 @@
             if (!task.weeksActual[year]) task.weeksActual[year] = Array(48).fill("");
         }
 
-        // ================= ตรรกะคำนวณ % แบบลึกซึ้ง (EVM Concept) =================
         function calculateOverallProgress(task) {
             let maxActStep = 0; let actCount = 0;
             
-            // หาขั้น Actual ที่มากที่สุด และนับว่ากรอกไปกี่ช่อง
             if (task.weeksActual) {
                 Object.values(task.weeksActual).forEach(arr => {
                     arr.forEach(v => {
@@ -462,7 +444,6 @@
                 });
             }
 
-            // หาขั้น Plan ที่มากที่สุด และนับว่า Plan ตั้งเป้าขั้น maxAct ไว้กี่ช่อง
             let maxPlanStep = 0; let planCountForMaxAct = 0;
             if (task.weeksPlan) {
                 Object.values(task.weeksPlan).forEach(arr => {
@@ -476,19 +457,17 @@
                 });
             }
 
-            // --- คำนวณ Actual Progress ---
             if (maxActStep > 0) {
                 let baseProgress = (maxActStep - 1) / 7;
-                let stepRatio = 1; // ค่า Default คือเต็ม 100% ของสเต็ป
+                let stepRatio = 1; 
                 if (planCountForMaxAct > 0) {
-                    stepRatio = Math.min(1, actCount / planCountForMaxAct); // เทียบสัดส่วนที่ทำได้กับ Plan
+                    stepRatio = Math.min(1, actCount / planCountForMaxAct); 
                 }
                 task.progressActual = Math.round((baseProgress + (stepRatio / 7)) * 100);
             } else {
                 task.progressActual = 0;
             }
 
-            // --- คำนวณ Plan Progress ---
             if (maxPlanStep > 0) {
                 task.progressPlan = Math.round((maxPlanStep / 7) * 100);
             } else {
@@ -496,7 +475,6 @@
             }
         }
 
-        // ================= Inline Excel Edit =================
         function inlineEditHandler(dbIndex, field, cellElement, isNumber = false) {
             let val = cellElement.innerText.trim();
             if (isNumber) {
@@ -518,7 +496,6 @@
                 
                 calculateOverallProgress(projectData[dbIndex]);
                 
-                // อัปเดตในฟอร์มถ้าเปิดอยู่
                 if (parseInt(document.getElementById('editIndex').value) === dbIndex) {
                     document.getElementById('progressPlan').value = projectData[dbIndex].progressPlan;
                     document.getElementById('progressActual').value = projectData[dbIndex].progressActual;
@@ -533,8 +510,8 @@
             }
         }
 
-        // ================= Tab & UI =================
         function toggleActionColumn() { document.getElementById('ganttTable').classList.toggle('show-actions'); }
+        
         function openTab(evt, tabName) {
             let tabcontent = document.getElementsByClassName("tab-content");
             for (let i = 0; i < tabcontent.length; i++) tabcontent[i].classList.remove("active");
@@ -546,39 +523,47 @@
         }
 
         function toggleFormVisibility() {
-            const formWrapper = document.getElementById('formWrapper'); const toggleFormBtn = document.getElementById('toggleFormBtn');
-            if (formWrapper.style.display === 'none') { formWrapper.style.display = 'block'; toggleFormBtn.innerHTML = '<i class="fa-solid fa-minus"></i> ซ่อนฟอร์มแผนงาน'; toggleFormBtn.style.backgroundColor = '#95a5a6'; } 
-            else { formWrapper.style.display = 'none'; toggleFormBtn.innerHTML = '<i class="fa-solid fa-plus"></i> เพิ่มแผนงานใหม่'; toggleFormBtn.style.backgroundColor = '#34495e'; }
+            let ganttTab = document.getElementById('MainGanttTab');
+            if (!ganttTab.classList.contains('active')) {
+                document.querySelector('.excel-tab-btn').click(); 
+            }
+
+            const formWrapper = document.getElementById('formWrapper'); 
+            const toggleFormBtn = document.getElementById('toggleFormBtn');
+            if (formWrapper.style.display === 'none') { 
+                formWrapper.style.display = 'block'; 
+                toggleFormBtn.innerHTML = '<i class="fa-solid fa-minus"></i> ซ่อนฟอร์มแผนงาน'; 
+                toggleFormBtn.style.backgroundColor = '#95a5a6'; 
+            } 
+            else { 
+                formWrapper.style.display = 'none'; 
+                toggleFormBtn.innerHTML = '<i class="fa-solid fa-plus"></i> เพิ่มแผนงานใหม่'; 
+                toggleFormBtn.style.backgroundColor = '#34495e'; 
+            }
         }
-        document.getElementById('toggleFormBtn').addEventListener('click', toggleFormVisibility); document.getElementById('hideFormInsideBtn').addEventListener('click', toggleFormVisibility);
+        document.getElementById('toggleFormBtn').addEventListener('click', toggleFormVisibility); 
+        document.getElementById('hideFormInsideBtn').addEventListener('click', toggleFormVisibility);
 
-        // ================= Presentation Highlight Logic =================
         let currentHighlightedId = null;
-
         window.toggleHighlight = function(taskId) {
-            // 1. ลบไฮไลต์เก่าออกทั้งหมด
             document.querySelectorAll('.highlight-row').forEach(el => {
                 el.classList.remove('highlight-row');
             });
 
-            // 2. ถ้าคลิกซ้ำบรรทัดเดิมที่กำลังไฮไลต์อยู่ (คือต้องการปิดไฮไลต์) ให้เคลียร์ค่าแล้วจบการทำงาน
             if (currentHighlightedId === taskId) {
                 currentHighlightedId = null;
                 return;
             }
 
-            // 3. ใส่ไฮไลต์ให้ Tab 1 (แถว Plan และ Actual)
             let rowPlan = document.querySelector(`tr[data-id="${taskId}"]`);
             let rowAct = document.querySelector(`tr[data-id="${taskId}-act"]`);
             if (rowPlan) rowPlan.classList.add('highlight-row');
             if (rowAct) rowAct.classList.add('highlight-row');
 
-            // 4. ใส่ไฮไลต์ให้ Tab 2 (ทั้ง 8 แถวของโปรเจกต์นั้น)
             document.querySelectorAll(`.task-group-${taskId}`).forEach(row => {
                 row.classList.add('highlight-row');
             });
 
-            // อัปเดตไอดีที่กำลังถูกไฮไลต์
             currentHighlightedId = taskId;
         }
 
@@ -595,21 +580,16 @@
                 const el = document.getElementById(`month-${m}`);
                 if(el) {
                     el.innerText = `${months[m]}-${shortYear}`;
-                    
-                    // เพิ่มการไฮไลต์สีแดงให้เดือนปัจจุบัน (หากปีและเดือนตรงกับปัจจุบัน)
                     if (m === currentMonthIndex && viewingYear === targetDate.getFullYear()) {
                         el.style.backgroundColor = '#e74c3c';
                         el.style.color = '#ffffff';
                         el.style.borderBottom = '2px solid #c0392b';
                     } else {
-                        // ล้างสีออกถ้าไม่ใช่เดือนปัจจุบัน
                         el.style.backgroundColor = '';
                         el.style.color = '';
                         el.style.borderBottom = '';
                     }
                 }
-
-                // อัปเดตเลขสัปดาห์ 1-4 ให้สีแดงถูกต้องตามปี
                 for (let w = 1; w <= 4; w++) {
                     let globalIndex = (m * 4) + (w - 1);
                     const isToday = (globalIndex === currentGlobalWeekCol && viewingYear === targetDate.getFullYear());
@@ -622,16 +602,13 @@
             document.getElementById('currentDateStr').innerText = `ดูข้อมูลปี ${viewingYear}`;
         }
 
-        // ================= Filter Logic =================
         function getDisplayTasks() {
             return projectData.filter(t => {
                 if (t.year === viewingYear) return true; 
                 if (t.year < viewingYear) {
-                    // ดึงงานยกยอดที่ Actual ยังไม่เต็ม 100% หรือมีข้อมูลถูกทำต่อในปีปัจจุบัน
                     let hasDataCurrentYear = false;
                     if (t.weeksActual && t.weeksActual[viewingYear]) hasDataCurrentYear = t.weeksActual[viewingYear].some(v => v !== "");
                     if (t.weeksPlan && t.weeksPlan[viewingYear]) hasDataCurrentYear = hasDataCurrentYear || t.weeksPlan[viewingYear].some(v => v !== "");
-                    
                     if (hasDataCurrentYear) return true; 
                     if (t.progressActual < 100 && t.status !== 'Canceled') return true; 
                 }
@@ -639,7 +616,6 @@
             });
         }
 
-        // ================= Tab 1 Render =================
         function renderTable() {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
@@ -729,117 +705,7 @@
             if(document.getElementById('MajorTab').classList.contains('active')) renderMajorEngTable(); 
         }
 
-// ================= Tab 2 Render (EVM Step Logic) =================
-        function renderMajorEngTable() {
-            const tbody = document.getElementById('majorEngTbody');
-            tbody.innerHTML = '';
-            
-            let displayTasks = getDisplayTasks().filter(d => d.type === 'Major Improvement' || d.type === 'Improvement ENG');
-
-            displayTasks.forEach((row, viewIndex) => {
-                let dbIndex = projectData.findIndex(p => p.id === row.id);
-                let task = projectData[dbIndex];
-                ensureYearArrays(task, viewingYear);
-
-                let descDisplay = task.description;
-                if(task.year < viewingYear) descDisplay += `<div class="carry-over-note">(งานยกยอดปี ${task.year})</div>`;
-
-                let html = `<tr class="task-group-${task.id}">
-                    <td rowspan="8" class="rowspan-cell item-clickable" style="text-align: center;" onclick="toggleHighlight('${task.id}')" title="คลิกเพื่อไฮไลต์/ยกเลิกไฮไลต์ งานนี้">${viewIndex + 1}</td>
-                    <td rowspan="8" class="text-left rowspan-cell" style="font-weight: 600;">${descDisplay}</td>
-                    <td rowspan="8" class="text-left rowspan-cell editable-cell" contenteditable="true" onblur="inlineEditHandler(${dbIndex}, 'background', this)">${task.background || ''}</td>
-                    <td rowspan="8" class="text-left rowspan-cell editable-cell" contenteditable="true" onblur="inlineEditHandler(${dbIndex}, 'benefits', this)">${task.benefits || ''}</td>
-                    <td class="text-left" style="padding-left: 10px; font-weight: 900; color: var(--primary-color);">ภาพรวมโครงการ</td>`;
-
-                for(let w=0; w<48; w++) {
-                    let hasPlan = task.weeksPlan[viewingYear][w] && task.weeksPlan[viewingYear][w] !== "";
-                    let hasAct = task.weeksActual[viewingYear][w] && task.weeksActual[viewingYear][w] !== "";
-                    let c = "";
-                    if(hasPlan && hasAct) c = "bar-both";
-                    else if(hasPlan) c = "bar-plan";
-                    else if(hasAct) c = "bar-actual";
-                    
-                    let borderClass = (w % 4 === 3) ? "month-end" : "";
-                    html += `<td class="tab2-week ${c} ${borderClass}"></td>`;
-                }
-
-                html += `<td style="font-weight: bold; text-align: center;">Over all Progress</td>
-                    <td><div class="progress-wrapper"><div class="progress-fill" style="width: ${task.progressActual}%;"></div><span class="progress-text">${task.progressActual}%</span></div></td>
-                    <td rowspan="8" class="text-left rowspan-cell editable-cell" contenteditable="true" onblur="inlineEditHandler(${dbIndex}, 'progressUpdate', this)">${task.progressUpdate || ''}</td>
-                    <td rowspan="8" class="text-left rowspan-cell editable-cell" style="color: #444;" contenteditable="true" onblur="inlineEditHandler(${dbIndex}, 'remark', this)">${task.remark || ''}</td>
-                    </tr>`;
-
-                // Loop สร้างแต่ละขั้นตอน 1-7
-                for(let s = 0; s < 7; s++) {
-                    let stepNum = s + 1;
-                    let stepNumStr = stepNum.toString();
-                    let stepStatus = "On Progress"; 
-                    let stepProg = 0;
-                    
-                    let planCount = 0;
-                    let actCount = 0;
-                    let maxActEver = 0;
-
-                    // นับจำนวนช่อง Plan และ Actual ของสเต็ปนี้ (ทุกปี)
-                    if (task.weeksPlan) {
-                        Object.values(task.weeksPlan).forEach(arr => {
-                            arr.forEach(v => { if (v === stepNumStr) planCount++; });
-                        });
-                    }
-                    if (task.weeksActual) {
-                        Object.values(task.weeksActual).forEach(arr => {
-                            arr.forEach(v => {
-                                let num = parseInt(v);
-                                if (!isNaN(num)) {
-                                    if (num > maxActEver) maxActEver = num; // หาว่าไปถึงสเต็ปไหนแล้ว
-                                    if (v === stepNumStr) actCount++;
-                                }
-                            });
-                        });
-                    }
-
-                    // ตรรกะคำนวณเปอร์เซ็นต์ย่อย
-                    if (maxActEver > stepNum) {
-                        // โดนสเต็ปที่เยอะกว่าแซงไปแล้ว แปลว่าสเต็ปนี้เสร็จแล้ว 100%
-                        stepStatus = "Finished";
-                        stepProg = 100;
-                    } else if (maxActEver === stepNum) {
-                        // กำลังทำสเต็ปนี้อยู่ ให้เทียบจำนวนช่อง Actual / Plan
-                        if (planCount > 0) {
-                            stepProg = Math.min(100, Math.round((actCount / planCount) * 100));
-                            if (stepProg === 100 || actCount >= planCount) stepStatus = "Finished";
-                        } else {
-                            if (actCount > 0) { stepStatus = "Finished"; stepProg = 100; }
-                        }
-                    } else {
-                        // ยังทำไม่ถึงสเต็ปนี้
-                        stepProg = 0;
-                        stepStatus = "On Progress";
-                    }
-
-                    html += `<tr class="task-group-${task.id}"><td class="text-left" style="padding-left: 10px;">${processNamesTab2[s]}</td>`;
-                    
-                    for(let w=0; w<48; w++) {
-                        let isPlan = task.weeksPlan[viewingYear][w] === stepNumStr;
-                        let isAct = task.weeksActual[viewingYear][w] === stepNumStr;
-                        let c = "";
-                        if(isPlan && isAct) c = "bar-both";
-                        else if(isPlan) c = "bar-plan";
-                        else if(isAct) c = "bar-actual";
-
-                        let borderClass = (w % 4 === 3) ? "month-end" : "";
-                        html += `<td class="tab2-week ${c} ${borderClass}"></td>`;
-                    }
-
-                    html += `<td style="text-align: center; color: ${stepStatus === 'Finished' ? '#444' : '#666'};">${stepStatus}</td>
-                        <td><div class="progress-wrapper"><div class="progress-fill" style="width: ${stepProg}%;"></div><span class="progress-text">${stepProg}%</span></div></td></tr>`;
-                }
-                tbody.innerHTML += html;
-            });
-        }
-
-        // ================= Form Actions =================
-document.getElementById('planForm').addEventListener('submit', function(e) {
+        document.getElementById('planForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const editIndex = parseInt(document.getElementById('editIndex').value);
             const budgetPlanVal = document.getElementById('budgetPlan').value;
@@ -875,24 +741,18 @@ document.getElementById('planForm').addEventListener('submit', function(e) {
             if (viewingYear !== tYear) { document.getElementById('filterYear').value = tYear; changeViewingYear(); }
             else { saveDataToGAS(); renderTable(); }
             
-            // --- 1. สั่งซ่อนฟอร์มทันทีที่บันทึก ---
             const formWrapper = document.getElementById('formWrapper');
-            if(formWrapper.style.display !== 'none') {
-                toggleFormVisibility();
-            }
+            if(formWrapper.style.display !== 'none') { toggleFormVisibility(); }
 
-            // --- 2. เลื่อนหน้าจอไปหา Row ที่เพิ่งเพิ่ม/แก้ไข พร้อมเอฟเฟกต์กระพริบ และไฮไลต์ ---
             setTimeout(() => {
                 let newRow = document.querySelector(`tr[data-id="${targetIdToHighlight}"]`);
                 if(newRow) {
                     newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     
-                    // หากยังไม่ได้ถูกไฮไลต์ให้สั่งไฮไลต์
                     if(currentHighlightedId !== targetIdToHighlight) {
                         window.toggleHighlight(targetIdToHighlight);
                     }
                     
-                    // เพิ่มคลาสกระพริบให้เห็นชัดเจน
                     newRow.classList.add('flash-new-row');
                     let actRow = document.querySelector(`tr[data-id="${targetIdToHighlight}-act"]`);
                     if(actRow) actRow.classList.add('flash-new-row');
@@ -900,9 +760,9 @@ document.getElementById('planForm').addEventListener('submit', function(e) {
                     setTimeout(() => {
                         newRow.classList.remove('flash-new-row');
                         if(actRow) actRow.classList.remove('flash-new-row');
-                    }, 3000); // เอาเอฟเฟกต์กระพริบออกหลังจาก 3 วินาที
+                    }, 3000);
                 }
-            }, 300); // หน่วง 300ms เพื่อรอให้ฟังก์ชัน renderTable() สร้าง DOM เสร็จสมบูรณ์
+            }, 300);
 
             resetForm();
         });
@@ -939,8 +799,6 @@ document.getElementById('planForm').addEventListener('submit', function(e) {
         }
         document.getElementById('cancelBtn').addEventListener('click', resetForm);
 
-
-// ================= Tab 2 Render (EVM Step Logic) ใส่เลข 1-7 ลงตาราง =================
         function renderMajorEngTable() {
             const tbody = document.getElementById('majorEngTbody');
             tbody.innerHTML = '';
@@ -962,7 +820,6 @@ document.getElementById('planForm').addEventListener('submit', function(e) {
                     <td rowspan="16" class="text-left rowspan-cell editable-cell" contenteditable="true" onblur="inlineEditHandler(${dbIndex}, 'benefits', this)">${task.benefits || ''}</td>
                     <td rowspan="2" class="text-left" style="padding-left: 10px; font-weight: 900; color: var(--primary-color);">ภาพรวมโครงการ</td>`;
 
-                // ภาพรวม Plan (ดึงค่าทุกเลขมาแสดง)
                 for(let w=0; w<48; w++) {
                     let val = task.weeksPlan[viewingYear][w] || "";
                     let c = val !== "" ? "plan-bar-solid" : "";
@@ -976,7 +833,6 @@ document.getElementById('planForm').addEventListener('submit', function(e) {
                     <td rowspan="16" class="text-left rowspan-cell editable-cell" style="color: #444;" contenteditable="true" onblur="inlineEditHandler(${dbIndex}, 'remark', this)">${task.remark || ''}</td>
                     </tr>`;
 
-                // ภาพรวม Actual (ดึงค่าทุกเลขมาแสดง)
                 html += `<tr class="task-group-${task.id}">`;
                 for(let w=0; w<48; w++) {
                     let val = task.weeksActual[viewingYear][w] || "";
@@ -986,7 +842,6 @@ document.getElementById('planForm').addEventListener('submit', function(e) {
                 }
                 html += `</tr>`;
 
-                // Loop สร้างแต่ละขั้นตอน 1-7 แยกตามแถว
                 for(let s = 0; s < 7; s++) {
                     let stepNum = s + 1;
                     let stepNumStr = stepNum.toString();
@@ -1013,7 +868,6 @@ document.getElementById('planForm').addEventListener('submit', function(e) {
                         else { if (actCount > 0) { stepStatus = "Finished"; stepProg = 100; } }
                     }
 
-                    // ขั้นตอน Plan (กรองเฉพาะเลขที่ตรงกับขั้นตอน)
                     html += `<tr class="task-group-${task.id}"><td rowspan="2" class="text-left" style="padding-left: 10px;">${processNamesTab2[s]}</td>`;
                     for(let w=0; w<48; w++) {
                         let isPlan = task.weeksPlan[viewingYear][w] === stepNumStr;
@@ -1025,7 +879,6 @@ document.getElementById('planForm').addEventListener('submit', function(e) {
                     html += `<td rowspan="2" style="text-align: center; color: ${stepStatus === 'Finished' ? '#444' : '#666'};">${stepStatus}</td>
                         <td rowspan="2"><div class="progress-wrapper"><div class="progress-fill" style="width: ${stepProg}%;"></div><span class="progress-text">${stepProg}%</span></div></td></tr>`;
 
-                    // ขั้นตอน Actual (กรองเฉพาะเลขที่ตรงกับขั้นตอน)
                     html += `<tr class="task-group-${task.id}">`;
                     for(let w=0; w<48; w++) {
                         let isAct = task.weeksActual[viewingYear][w] === stepNumStr;
@@ -1040,7 +893,6 @@ document.getElementById('planForm').addEventListener('submit', function(e) {
             });
         }
 
-        // ================= Export to Excel (With Styles) =================
         function getExcelCol(colIndex) {
             let letter = '';
             while (colIndex >= 0) { letter = String.fromCharCode((colIndex % 26) + 65) + letter; colIndex = Math.floor(colIndex / 26) - 1; }
@@ -1055,7 +907,6 @@ document.getElementById('planForm').addEventListener('submit', function(e) {
             setTimeout(() => {
                 var wb = XLSX.utils.book_new();
 
-                // 1. จัดการ Tab 1 (Main Plan)
                 var table1 = document.getElementById("ganttTable").cloneNode(true);
                 table1.querySelectorAll('.action-col').forEach(el => el.remove());
                 table1.querySelectorAll('.btn-toggle-action').forEach(el => el.remove());
@@ -1077,7 +928,6 @@ document.getElementById('planForm').addEventListener('submit', function(e) {
                 ws1['!cols'] = [{wch: 15}, {wch: 5}, {wch: 35}, {wch: 12}, {wch: 15}, {wch: 10}, {wch: 10}, {wch: 12}];
                 for(let w=0; w<48; w++) ws1['!cols'].push({wch: 3}); 
 
-                // 2. จัดการ Tab 2 (Major/ENG Summary)
                 var table2 = document.getElementById("majorEngTable").cloneNode(true);
                 var ws2 = XLSX.utils.table_to_sheet(table2, { raw: true });
 
@@ -1100,25 +950,38 @@ document.getElementById('planForm').addEventListener('submit', function(e) {
                         ws2['!rows'][rowNum - 1] = { hpx: 14 }; 
 
                         let isPlanRow = (rOff % 2 === 0);
+                        let stepIndex = Math.floor(rOff / 2); 
+                        let stepNumStr = stepIndex.toString();
                         
                         // เทสี Plan/Actual จากตัวเลขที่มีในตารางแล้ว 100% ตรงปก!
                         for(let w = 0; w < 48; w++) {
                             let colStr = getExcelCol(5 + w); 
                             let cellRef = colStr + rowNum;
+                            let cellValue = "";
+                            let hasColor = false;
                             
-                            // ถ้าตรวจเจอตัวเลข 1-7 ในช่อง Excel สั่งเปลี่ยนสีทันที
-                            if (ws2[cellRef] && ws2[cellRef].v) {
-                                let val = ws2[cellRef].v.toString().trim();
-                                if (/^[1-7]$/.test(val)) {
-                                    ws2[cellRef].s = ws2[cellRef].s || { border: {} };
-                                    ws2[cellRef].s.fill = { patternType: "solid", fgColor: { rgb: isPlanRow ? "00A2E8" : "8CBD40" } };
-                                    ws2[cellRef].s.font = { name: "Sarabun", sz: 9, color: { rgb: "FFFFFF" }, bold: true };
-                                    ws2[cellRef].s.alignment = { vertical: "center", horizontal: "center" };
+                            if (stepIndex === 0) { 
+                                cellValue = isPlanRow ? (task.weeksPlan[viewingYear][w] || "") : (task.weeksActual[viewingYear][w] || "");
+                                hasColor = cellValue !== "";
+                            } else { 
+                                let actualVal = isPlanRow ? (task.weeksPlan[viewingYear][w] || "") : (task.weeksActual[viewingYear][w] || "");
+                                if (actualVal === stepNumStr) {
+                                    hasColor = true;
+                                    cellValue = stepNumStr;
                                 }
+                            }
+                            
+                            if (hasColor) {
+                                if (!ws2[cellRef]) ws2[cellRef] = { t: 's', v: cellValue };
+                                else ws2[cellRef].v = cellValue;
+                                
+                                ws2[cellRef].s = ws2[cellRef].s || { border: {} };
+                                ws2[cellRef].s.fill = { patternType: "solid", fgColor: { rgb: isPlanRow ? "00A2E8" : "8CBD40" } };
+                                ws2[cellRef].s.font = { name: "Sarabun", sz: 9, color: { rgb: "FFFFFF" }, bold: true };
+                                ws2[cellRef].s.alignment = { vertical: "center", horizontal: "center" };
                             }
                         }
                         
-                        // แทรกหลอด % Progress คอลัมน์ BC (แถว Plan)
                         if (isPlanRow) {
                             let progCellRef = 'BC' + rowNum;
                             if (ws2[progCellRef] && ws2[progCellRef].v) {
@@ -1140,7 +1003,7 @@ document.getElementById('planForm').addEventListener('submit', function(e) {
                 });
 
                 ws2['!cols'] = [{wch: 5}, {wch: 35}, {wch: 25}, {wch: 25}, {wch: 20}];
-                for(let w=0; w<48; w++) ws2['!cols'].push({wch: 3}); // ปรับความกว้างให้เห็นตัวเลขชัดๆ
+                for(let w=0; w<48; w++) ws2['!cols'].push({wch: 3}); 
                 ws2['!cols'].push({wch: 15}); 
                 ws2['!cols'].push({wch: 20}); 
                 ws2['!cols'].push({wch: 20}); 
@@ -1159,27 +1022,23 @@ document.getElementById('planForm').addEventListener('submit', function(e) {
             }, 100);
         }
 
-        // ================= Initialization =================
         function initApp() {
-            // 1. สร้าง Option ปีงบประมาณอัตโนมัติ (จาก 2025 ถึงปีปัจจุบัน)
             const yearSelect = document.getElementById('filterYear');
             const currentYear = new Date().getFullYear();
-            const startYear = 2025; // ล็อคปีเริ่มต้นไว้ที่ 2025
+            const startYear = 2025; 
             
-            yearSelect.innerHTML = ''; // ล้างค่าเผื่อไว้
+            yearSelect.innerHTML = ''; 
             
             for (let y = startYear; y <= currentYear; y++) {
                 let opt = document.createElement('option');
                 opt.value = y;
                 opt.text = y;
-                // ถ้าลูปมาถึงปีปัจจุบัน ให้ตั้งเป็นค่า Default ที่ถูกเลือก
                 if (y === currentYear) {
                     opt.selected = true;
                 }
                 yearSelect.appendChild(opt);
             }
 
-            // 2. อัปเดตหัวตาราง
             updateMonthHeaders();
         }
 
