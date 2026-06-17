@@ -896,7 +896,9 @@
                 let task = projectData[dbIndex];
                 ensureYearArrays(task, viewingYear);
 
-                let descDisplay = task.description;
+                // เอา status-strike มาครอบชื่อโปรเจค ถ้าสถานะไม่ปกติ
+                let descDisplay = `<span class="${task.status !== 'Normal' ? 'status-strike' : ''}">${task.description}</span>`;
+                
                 if(task.year < viewingYear) descDisplay += `<div class="carry-over-note">(งานยกยอดปี ${task.year})</div>`;
                 if(task.status === 'Hold') descDisplay += ` <span class="status-badge badge-hold">HOLD</span>`;
                 else if(task.status === 'Canceled') descDisplay += ` <span class="status-badge badge-canceled">CANCELED</span>`;
