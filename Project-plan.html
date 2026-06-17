@@ -208,7 +208,9 @@
         }
         .flash-new-row > td { animation: flashRow 1.5s ease-in-out 2 !important; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </head>
+
 <body>
 
     <div class="page-header">
@@ -245,7 +247,12 @@
                     </div>
                 </div>
 
-        <button class="btn btn-toggle" id="toggleFormBtn"><i class="fa-solid fa-plus"></i> เพิ่มแผนงานใหม่</button>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button class="btn btn-toggle" id="toggleFormBtn" style="margin-bottom: 0;"><i class="fa-solid fa-plus"></i> เพิ่มแผนงานใหม่</button>
+            <button class="btn" style="background-color: #27ae60; color: white; border: none; border-radius: 6px;" onclick="exportToExcel()">
+                <i class="fa-solid fa-file-excel"></i> Export to Excel
+            </button>
+        </div>
 
         <div class="form-container" id="formWrapper" style="display: none;">
             <h3 id="formTitle"><i class="fa-solid fa-circle-plus" style="color: var(--primary-color);"></i> <span>ฟอร์มจัดการแผนงาน</span></h3>
@@ -931,6 +938,166 @@ document.getElementById('planForm').addEventListener('submit', function(e) {
         }
         document.getElementById('cancelBtn').addEventListener('click', resetForm);
 
+
+
+        
+// ================= Export to Excel (With Styles) =================
+        function getExcelCol(colIndex) {
+            let letter = '';
+            while (colIndex >= 0) {
+                letter = String.fromCharCode((colIndex % 26) + 65) + letter;
+                colIndex = Math.floor(colIndex / 26) - 1;
+            }
+            return letter;
+        }
+
+        function exportToExcel() {
+            // บังคับโหลดข้อมูล Tab 2 ให้เต็มก่อน Export เสมอ
+            renderMajorEngTable(); 
+
+            let statusText = document.getElementById('saveStatus');
+            if(statusText) { statusText.innerText = "กำลังสร้างไฟล์ Excel พร้อมจัดรูปแบบ..."; statusText.style.color = "#f39c12"; }
+
+            setTimeout(() => {
+                var wb = XLSX.utils.book_new();
+
+                // --------------------------------------------------------
+                // 1. จัดการ Tab 1 (Main Plan)
+                // --------------------------------------------------------
+                var table1 = document.getElementById("ganttTable").cloneNode(true);
+                table1.querySelectorAll('.action-col').forEach(el => el.remove());
+                table1.querySelectorAll('.btn-toggle-action').forEach(el => el.remove());
+                
+                var ws1 = XLSX.utils.table_to_sheet(table1, { raw: true });
+
+                for (let i in ws1) {
+                    if (i[0] === '!') continue;
+                    let cell = ws1[i];
+                    let rowNum = parseInt(i.replace(/\D/g, ''));
+                    
+                    cell.s = {
+                        font: { name: "Sarabun", sz: 10 },
+                        border: { top: {style: "thin", color: {rgb: "CBD5E1"}}, bottom: {style: "thin", color: {rgb: "CBD5E1"}}, left: {style: "thin", color: {rgb: "CBD5E1"}}, right: {style: "thin", color: {rgb: "CBD5E1"}} },
+                        alignment: { vertical: "center", horizontal: "center", wrapText: true }
+                    };
+
+                    if (rowNum <= 2) {
+                        cell.s.fill = { patternType: "solid", fgColor: { rgb: "C5EFF7" } };
+                        cell.s.font.bold = true;
+                    } else {
+                        if (cell.v && /^[1-7]$/.test(cell.v.toString())) {
+                            let rowTypeCell = ws1['G' + rowNum];
+                            if (rowTypeCell && rowTypeCell.v === 'Plan') {
+                                cell.s.fill = { patternType: "solid", fgColor: { rgb: "00A2E8" } };
+                                cell.s.font.color = { rgb: "FFFFFF" };
+                                cell.s.font.bold = true;
+                            } else if (rowTypeCell && rowTypeCell.v === 'Actual') {
+                                cell.s.fill = { patternType: "solid", fgColor: { rgb: "8CBD40" } };
+                                cell.s.font.color = { rgb: "FFFFFF" };
+                                cell.s.font.bold = true;
+                            }
+                        }
+                    }
+                }
+                ws1['!cols'] = [{wch: 15}, {wch: 5}, {wch: 35}, {wch: 12}, {wch: 15}, {wch: 10}, {wch: 10}, {wch: 12}];
+                for(let w=0; w<48; w++) ws1['!cols'].push({wch: 3}); 
+
+                // --------------------------------------------------------
+                // 2. จัดการ Tab 2 (Major/ENG Summary)
+                // --------------------------------------------------------
+                var table2 = document.getElementById("majorEngTable").cloneNode(true);
+                var ws2 = XLSX.utils.table_to_sheet(table2, { raw: true });
+
+                for (let i in ws2) {
+                    if (i[0] === '!') continue;
+                    let cell = ws2[i];
+                    let rowNum = parseInt(i.replace(/\D/g, ''));
+                    
+                    cell.s = {
+                        font: { name: "Sarabun", sz: 10 },
+                        border: { top: {style: "thin", color: {rgb: "94A3B8"}}, bottom: {style: "thin", color: {rgb: "94A3B8"}}, left: {style: "thin", color: {rgb: "94A3B8"}}, right: {style: "thin", color: {rgb: "94A3B8"}} },
+                        alignment: { vertical: "center", horizontal: "center", wrapText: true }
+                    };
+                    if (rowNum === 1) {
+                        cell.s.fill = { patternType: "solid", fgColor: { rgb: "C5E0B4" } };
+                        cell.s.font.bold = true;
+                    }
+                }
+
+                // สาดสี Plan/Actual โดยอ่านตำแหน่งตรงๆ จากหน้าเว็บ (แม่นยำ 100%)
+                let tbodyRows = document.getElementById("majorEngTable").querySelectorAll("tbody tr");
+                tbodyRows.forEach((tr, rIdx) => {
+                    let rowNum = rIdx + 2; 
+                    let tds = tr.querySelectorAll("td");
+                    
+                    // 1. จำลองหลอด Progress Bar ในคอลัมน์ BC (ลำดับที่ 54)
+                    let progCellRef = 'BC' + rowNum;
+                    if (ws2[progCellRef] && ws2[progCellRef].v) {
+                        let textVal = ws2[progCellRef].v.toString().trim();
+                        if(textVal.endsWith('%')) {
+                            let progVal = parseInt(textVal.replace('%', ''));
+                            if (!isNaN(progVal)) {
+                                let filled = Math.round(progVal / 10);
+                                let bar = '█'.repeat(filled) + '░'.repeat(10 - filled);
+                                ws2[progCellRef].v = bar + '  ' + progVal + '%';
+                                ws2[progCellRef].s = ws2[progCellRef].s || {};
+                                ws2[progCellRef].s.font = { name: "Sarabun", sz: 10, color: { rgb: progVal >= 100 ? "00B050" : (progVal > 0 ? "00A2E8" : "95A5A6") } };
+                                ws2[progCellRef].s.alignment = { vertical: "center", horizontal: "left" };
+                            }
+                        }
+                    }
+
+                    // 2. ทาสีตาราง แถบสี Plan/Actual จาก DOM
+                    let weekStartIndex = -1;
+                    if (rIdx % 8 === 0 && tds.length >= 53) weekStartIndex = 5;
+                    else if (rIdx % 8 !== 0 && tds.length >= 49) weekStartIndex = 1;
+
+                    if (weekStartIndex !== -1) {
+                        for (let w = 0; w < 48; w++) {
+                            let td = tds[weekStartIndex + w];
+                            let colStr = getExcelCol(5 + w); // Excel column F คือ index 5
+                            let cellRef = colStr + rowNum;
+                            
+                            if (td && td.classList) {
+                                let isPlan = td.classList.contains('bar-plan') || td.classList.contains('bar-both');
+                                let isAct = td.classList.contains('bar-actual') || td.classList.contains('bar-both');
+                                
+                                if (isPlan || isAct) {
+                                    if (!ws2[cellRef]) ws2[cellRef] = { t: 's', v: ' ' };
+                                    ws2[cellRef].s = ws2[cellRef].s || { border: {} };
+                                    
+                                    // บังคับสาดสี Solid
+                                    if (isPlan && isAct) ws2[cellRef].s.fill = { patternType: "solid", fgColor: { rgb: "008080" } };
+                                    else if (isPlan) ws2[cellRef].s.fill = { patternType: "solid", fgColor: { rgb: "00A2E8" } };
+                                    else if (isAct) ws2[cellRef].s.fill = { patternType: "solid", fgColor: { rgb: "8CBD40" } };
+                                }
+                            }
+                        }
+                    }
+                });
+
+                ws2['!cols'] = [{wch: 5}, {wch: 35}, {wch: 25}, {wch: 25}, {wch: 20}];
+                for(let w=0; w<48; w++) ws2['!cols'].push({wch: 2}); 
+                ws2['!cols'].push({wch: 15}); // Status
+                ws2['!cols'].push({wch: 20}); // ความคืบหน้า (Progress Bar)
+                ws2['!cols'].push({wch: 20}); // ข้อความความคืบหน้า
+                ws2['!cols'].push({wch: 20}); // Remark
+
+                // --------------------------------------------------------
+                // 3. แพ็คข้อมูลลงสมุดงานและดาวน์โหลด
+                // --------------------------------------------------------
+                XLSX.utils.book_append_sheet(wb, ws1, "Main Plan");
+                XLSX.utils.book_append_sheet(wb, ws2, "Major_ENG Summary");
+
+                let currentYearForFile = document.getElementById('filterYear').value;
+                XLSX.writeFile(wb, "Plan_Update_" + currentYearForFile + ".xlsx");
+
+                if(statusText) {
+                    statusText.innerText = "โหลดไฟล์ Excel สำเร็จ!"; statusText.style.color = "#27ae60";
+                    setTimeout(() => { statusText.innerText = ""; }, 3000);
+                }
+            }, 100);
+        }
    
         // ================= Initialization =================
         function initApp() {
