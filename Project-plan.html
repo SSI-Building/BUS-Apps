@@ -527,6 +527,16 @@
         document.addEventListener('mouseup', function() { isDragging = false; });
 
         document.addEventListener('keydown', function(e) {
+            // --- ฟังชั่นใหม่: กด Esc เพื่อยกเลิกกากบาท (Crosshair) และไฮไลต์แถว (Highlight Row) ---
+            if (e.key === 'Escape') {
+                deactivateCrosshair();
+                clearSelection();
+                if (window.toggleHighlight && currentHighlightedId) {
+                    window.toggleHighlight(currentHighlightedId); // เรียกซ้ำเพื่อปิดไฮไลต์
+                }
+                return; // หยุดการทำงานอื่นๆ ต่อ
+            }
+
             let selectedCells = document.querySelectorAll('.selected-cell');
             if (selectedCells.length === 0) return;
 
