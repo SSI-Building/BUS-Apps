@@ -215,6 +215,9 @@
         /* ทำให้แถบสีหม่นลงเล็กน้อยเวลาไม้กางเขนพาดผ่าน จะได้มองเห็นตาราง */
         .crosshair-row > td.plan-bar, .crosshair-col.plan-bar { background-color: var(--plan-color) !important; filter: brightness(0.95); }
         .crosshair-row > td.actual-bar, .crosshair-col.actual-bar { background-color: var(--actual-color) !important; filter: brightness(0.95); }
+        /* เพิ่มคลาสสำหรับไฮไลต์ช่อง Type ที่ใช้ Rowspan */
+        .type-vertical-cell.crosshair-active { background-color: #e2e8f0 !important; }
+        .type-vertical-cell.highlight-active { background-color: #cbd5e1 !important; transition: background-color 0.3s ease; }
 
     </style>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -457,17 +460,33 @@
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJfqMTFvpUEHl07hyNUddV4-vgwA_R-miJrsip5lBLu5BqlwwFqIxeXgyFPGpAto--EA/exec";
 
         // ================= ระบบไฮไลต์ Crosshair =================
+        // ========================== ระบบจัดการ Crosshair ==========================
         function activateCrosshair(weekGlobalIdx, cellElement) {
-            deactivateCrosshair(); 
-            const row = cellElement.closest('tr');
-            if (row) row.classList.add('crosshair-row');
-            const colCells = document.querySelectorAll(`[data-week="${weekGlobalIdx}"]`);
-            colCells.forEach(el => el.classList.add('crosshair-col'));
-        }
-        function deactivateCrosshair() {
-            document.querySelectorAll('.crosshair-row').forEach(el => el.classList.remove('crosshair-row'));
-            document.querySelectorAll('.crosshair-col').forEach(el => el.classList.remove('crosshair-col'));
-        }
+                    deactivateCrosshair();
+                    
+                    const row = cellElement.closest('tr');
+                    if (row) {
+                        // ดึง ID หลักของงานนี้ (ตัด -act ออกถ้าชี้ที่แถวล่าง)
+                        let taskId = row.getAttribute('data-id').replace('-act', '');
+                        
+                        // สั่งไฮไลต์ทั้งแถวบน (Plan) และแถวล่าง (Actual) คู่กันเสมอ
+                        let planRow = document.querySelector(`tr[data-id="${taskId}"]`);
+                        let actRow = document.querySelector(`tr[data-id="${taskId}-act"]`);
+                        
+                        if (planRow) planRow.classList.add('crosshair-row');
+                        if (actRow) actRow.classList.add('crosshair-row');
+                    }
+
+                    const colCells = document.querySelectorAll(`[data-week="${weekGlobalIdx}"]`);
+                    colCells.forEach(el => el.classList.add('crosshair-col'));
+                }
+
+                function deactivateCrosshair() {
+                    document.querySelectorAll('.crosshair-row').forEach(el => el.classList.remove('crosshair-row'));
+                    document.querySelectorAll('.crosshair-col').forEach(el => el.classList.remove('crosshair-col'));
+                    // เคลียร์ไฮไลต์ช่อง Type
+                    document.querySelectorAll('.crosshair-active').forEach(el => el.classList.remove('crosshair-active'));
+                }
 
         // ================= ระบบ Drag & Drop Excel Style =================
         let isDragging = false;
@@ -742,6 +761,10 @@
             document.querySelectorAll('.highlight-row').forEach(el => {
                 el.classList.remove('highlight-row');
             });
+            // เคลียร์ไฮไลต์ Type ของเก่า
+            document.querySelectorAll('.highlight-active').forEach(el => {
+                el.classList.remove('highlight-active');
+            });
 
             if (currentHighlightedId === taskId) {
                 currentHighlightedId = null;
@@ -750,7 +773,21 @@
 
             let rowPlan = document.querySelector(`tr[data-id="${taskId}"]`);
             let rowAct = document.querySelector(`tr[data-id="${taskId}-act"]`);
-            if (rowPlan) rowPlan.classList.add('highlight-row');
+            
+            if (rowPlan) {
+                rowPlan.classList.add('highlight-row');
+                
+                // --- เพิ่มโค้ดส่วนนี้: สั่งไฮไลต์ช่อง Type ตอนกดคลิก ---
+                let prev = rowPlan;
+                while (prev) {
+                    let typeCell = prev.querySelector('.type-vertical-cell');
+                    if (typeCell) {
+                        typeCell.classList.add('highlight-active');
+                        break;
+                    }
+                    prev = prev.previousElementSibling;
+                }
+            }
             if (rowAct) rowAct.classList.add('highlight-row');
 
             document.querySelectorAll(`.task-group-${taskId}`).forEach(row => {
