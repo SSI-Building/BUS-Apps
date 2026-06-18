@@ -1131,7 +1131,17 @@
                 XLSX.utils.book_append_sheet(wb, ws2, "Major_ENG Summary");
 
                 let currentYearForFile = document.getElementById('filterYear').value;
-                XLSX.writeFile(wb, "Plan_Update_" + currentYearForFile + ".xlsx");
+                
+                // ดึงวันและเวลาปัจจุบันตอนที่กดโหลดไฟล์
+                let now = new Date();
+                let yyyy = now.getFullYear(); // ปี ค.ศ. ปัจจุบัน
+                let mm = String(now.getMonth() + 1).padStart(2, '0'); // เดือน 01-12
+                let dd = String(now.getDate()).padStart(2, '0'); // วันที่ 01-31
+                let hh = String(now.getHours()).padStart(2, '0'); // ชั่วโมง 00-23
+                let mins = String(now.getMinutes()).padStart(2, '0'); // นาที 00-59
+                let fileName = `BUS_Plan_Update_${yyyy}-${mm}-${dd}_${hh}-${mins}.xlsx`;
+                // สั่งเซฟไฟล์
+                XLSX.writeFile(wb, fileName);
 
                 if(statusText) {
                     statusText.innerText = "โหลดไฟล์ Excel สำเร็จ!"; statusText.style.color = "#27ae60";
