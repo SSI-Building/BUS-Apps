@@ -195,6 +195,27 @@
 
         @keyframes flashRow { 0% { background-color: #fffde7; } 50% { background-color: #fef08a; } 100% { background-color: #ffffff; } }
         .flash-new-row > td { animation: flashRow 1.5s ease-in-out 2 !important; }
+
+        /*เพิ่มแถบลาก*/
+        /* ================= ฟีเจอร์ Excel Drag & Crosshair ================= */
+        /* ป้องกันการคลุม Text สีน้ำเงินปกติของเบราว์เซอร์เวลาลากเมาส์ */
+        .week-cell { user-select: none; }
+        
+        /* สไตล์ช่องที่ถูกไฮไลต์ (Drag Selection) */
+        .week-cell.selected-cell {
+            background-color: #e3f2fd !important;
+            box-shadow: inset 0 0 0 1px #1976d2 !important;
+            color: #000 !important;
+        }
+
+        /* ไฮไลต์แนวนอน (Row) และแนวตั้ง (Column) */
+        .crosshair-row > td { background-color: #f1f5f9 !important; } 
+        .crosshair-col { background-color: #f1f5f9 !important; } 
+        
+        /* ทำให้แถบสีหม่นลงเล็กน้อยเวลาไม้กางเขนพาดผ่าน จะได้มองเห็นตาราง */
+        .crosshair-row > td.plan-bar, .crosshair-col.plan-bar { background-color: var(--plan-color) !important; filter: brightness(0.95); }
+        .crosshair-row > td.actual-bar, .crosshair-col.actual-bar { background-color: var(--actual-color) !important; filter: brightness(0.95); }
+
     </style>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </head>
@@ -435,6 +456,118 @@
 
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJfqMTFvpUEHl07hyNUddV4-vgwA_R-miJrsip5lBLu5BqlwwFqIxeXgyFPGpAto--EA/exec";
 
+        // ================= ระบบไฮไลต์ Crosshair =================
+        function activateCrosshair(weekGlobalIdx, cellElement) {
+            deactivateCrosshair(); 
+            const row = cellElement.closest('tr');
+            if (row) row.classList.add('crosshair-row');
+            const colCells = document.querySelectorAll(`[data-week="${weekGlobalIdx}"]`);
+            colCells.forEach(el => el.classList.add('crosshair-col'));
+        }
+        function deactivateCrosshair() {
+            document.querySelectorAll('.crosshair-row').forEach(el => el.classList.remove('crosshair-row'));
+            document.querySelectorAll('.crosshair-col').forEach(el => el.classList.remove('crosshair-col'));
+        }
+
+        // ================= ระบบ Drag & Drop Excel Style =================
+        let isDragging = false;
+        let startCell = null;
+        let currentSelectedType = null;
+        
+        document.addEventListener('mousedown', function(e) {
+            if(e.target.classList.contains('week-cell')) {
+                isDragging = true;
+                startCell = e.target;
+                currentSelectedType = e.target.closest('tr').getAttribute('data-id').includes('-act') ? 'act' : 'plan';
+                clearSelection();
+                selectCell(e.target);
+            } else {
+                clearSelection();
+            }
+        });
+
+        document.addEventListener('mouseover', function(e) {
+            if(e.target.classList.contains('week-cell')) {
+                // ระบบ Crosshair ทำงานเมื่อเมาส์ชี้
+                let weekIdx = e.target.getAttribute('data-week');
+                if(weekIdx) activateCrosshair(weekIdx, e.target);
+
+                // ระบบลากคลุม
+                if(isDragging) {
+                    let targetType = e.target.closest('tr').getAttribute('data-id').includes('-act') ? 'act' : 'plan';
+                    if (e.target.parentElement === startCell.parentElement && targetType === currentSelectedType) {
+                        clearSelection();
+                        selectRange(startCell, e.target);
+                    }
+                }
+            } else {
+                deactivateCrosshair();
+            }
+        });
+
+        document.addEventListener('mouseup', function() { isDragging = false; });
+
+        document.addEventListener('keydown', function(e) {
+            let selectedCells = document.querySelectorAll('.selected-cell');
+            if (selectedCells.length === 0) return;
+
+            if (!(e.ctrlKey || e.metaKey)) {
+                if (e.key.length === 1 && !/^[1-7]$/.test(e.key)) { e.preventDefault(); }
+            }
+            if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); updateSelectedCells(""); } 
+            else if (/^[1-7]$/.test(e.key)) { e.preventDefault(); updateSelectedCells(e.key); }
+        });
+
+        document.addEventListener('paste', function(e) {
+            let selectedCells = document.querySelectorAll('.selected-cell');
+            if (selectedCells.length === 0) return;
+            e.preventDefault();
+            let pasteData = (e.clipboardData || window.clipboardData).getData('text').trim();
+            if (/^[1-7]$/.test(pasteData)) { updateSelectedCells(pasteData); clearSelection(); } 
+            else { alert("วางได้เฉพาะตัวเลข 1-7 เท่านั้นครับ!"); }
+        });
+
+        function clearSelection() { document.querySelectorAll('.selected-cell').forEach(c => c.classList.remove('selected-cell')); }
+        function selectCell(cell) { cell.classList.add('selected-cell'); }
+        function selectRange(cell1, cell2) {
+            let row = cell1.parentElement;
+            let cells = Array.from(row.querySelectorAll('.week-cell'));
+            let startIdx = Math.min(cells.indexOf(cell1), cells.indexOf(cell2));
+            let endIdx = Math.max(cells.indexOf(cell1), cells.indexOf(cell2));
+            for (let i = startIdx; i <= endIdx; i++) cells[i].classList.add('selected-cell');
+        }
+
+        function updateSelectedCells(newValue) {
+            let selectedCells = document.querySelectorAll('.selected-cell');
+            let updatedDbIndexes = new Set();
+
+            selectedCells.forEach(cellElement => {
+                let rowTr = cellElement.closest('tr');
+                let rowType = rowTr.hasAttribute('data-id') && rowTr.getAttribute('data-id').includes('-act') ? 'actual' : 'plan';
+                let rawId = rowTr.getAttribute('data-id').replace('-act', '');
+                let dbIndex = projectData.findIndex(p => p.id.toString() === rawId.toString());
+                let weekGlobalIdx = cellElement.getAttribute('data-week');
+
+                if (dbIndex !== -1 && weekGlobalIdx !== null) {
+                    ensureYearArrays(projectData[dbIndex], viewingYear);
+                    if (rowType === 'plan') projectData[dbIndex].weeksPlan[viewingYear][weekGlobalIdx] = newValue;
+                    else projectData[dbIndex].weeksActual[viewingYear][weekGlobalIdx] = newValue;
+                    
+                    updatedDbIndexes.add(dbIndex);
+                    cellElement.innerText = newValue;
+                    if (newValue !== "") {
+                        cellElement.classList.remove('plan-bar', 'actual-bar');
+                        cellElement.classList.add(rowType === 'plan' ? 'plan-bar' : 'actual-bar');
+                    } else { cellElement.classList.remove('plan-bar', 'actual-bar'); }
+                }
+            });
+
+            updatedDbIndexes.forEach(idx => calculateOverallProgress(projectData[idx]));
+            saveDataToGAS();
+            setTimeout(() => { renderTable(); }, 100); 
+        }
+        // ================= สิ้นสุดระบบ Excel =================
+
         async function loadDataFromGAS() {
             document.getElementById('totalTasksCount').innerText = 'กำลังโหลดข้อมูล...';
             try {
@@ -546,6 +679,7 @@
         }
 
         function cellEditHandler(dbIndex, weekGlobalIdx, rowType, cellElement) {
+            if (cellElement.classList.contains('selected-cell')) return; // แทรกบรรทัดนี้
             let newValue = cellElement.innerText.trim();
             if (newValue === "" || (parseInt(newValue) >= 1 && parseInt(newValue) <= 7)) {
                 ensureYearArrays(projectData[dbIndex], viewingYear);
@@ -652,7 +786,7 @@
                 for (let w = 1; w <= 4; w++) {
                     let globalIndex = (m * 4) + (w - 1);
                     const isToday = (globalIndex === currentGlobalWeekCol && viewingYear === targetDate.getFullYear());
-                    weeksHtml += `<td class="week-cell ${isToday ? 'current-week-header' : ''}" title="${months[m]}-${shortYear} Week ${w}">${w}</td>`;
+                    weeksHtml += `<td data-week="${globalIndex}" class="week-cell ${isToday ? 'current-week-header' : ''}" title="${months[m]}-${shortYear} Week ${w}">${w}</td>`;
                 }
             }
             document.getElementById('weeksHeaderRow').innerHTML = weeksHtml;
@@ -767,7 +901,7 @@
                 for (let globalW = 0; globalW < 48; globalW++) {
                     let val = currentTask.weeksPlan[viewingYear][globalW] || "";
                     let isCurrentWeekCol = (globalW === currentGlobalWeekCol && viewingYear === targetDate.getFullYear());
-                    htmlRow1 += `<td contenteditable="true" class="week-cell ${val !== "" ? 'plan-bar' : ''} ${isCurrentWeekCol ? 'current-week-cell' : ''}" onblur="cellEditHandler(${dbIndex}, ${globalW}, 'plan', this)" onkeydown="if(event.keyCode===13){event.preventDefault(); this.blur();}">${val}</td>`;
+                    htmlRow1 += `<td contenteditable="true" data-week="${globalW}" class="week-cell ${val !== "" ? 'plan-bar' : ''} ${isCurrentWeekCol ? 'current-week-cell' : ''}" onblur="cellEditHandler(${dbIndex}, ${globalW}, 'plan', this)" onkeydown="if(event.keyCode===13){event.preventDefault(); this.blur();}">${val}</td>`;
                 }
                 
                 htmlRow1 += `<td rowspan="2" class="text-left editable-cell" style="font-size: 11px; color: #e67e22; max-width: 150px; overflow-wrap: break-word;" contenteditable="true" onblur="inlineEditHandler(${dbIndex}, 'remark', this)">${currentTask.remark || ''}</td>
@@ -783,8 +917,7 @@
                 for (let globalW = 0; globalW < 48; globalW++) {
                     let val = currentTask.weeksActual[viewingYear][globalW] || "";
                     let isCurrentWeekCol = (globalW === currentGlobalWeekCol && viewingYear === targetDate.getFullYear());
-                    htmlRow2 += `<td contenteditable="true" class="week-cell ${val !== "" ? 'actual-bar' : ''} ${isCurrentWeekCol ? 'current-week-cell' : ''}" onblur="cellEditHandler(${dbIndex}, ${globalW}, 'actual', this)" onkeydown="if(event.keyCode===13){event.preventDefault(); this.blur();}">${val}</td>`;
-                }
+                    htmlRow2 += `<td contenteditable="true" data-week="${globalW}" class="week-cell ${val !== "" ? 'actual-bar' : ''} ${isCurrentWeekCol ? 'current-week-cell' : ''}" onblur="cellEditHandler(${dbIndex}, ${globalW}, 'actual', this)" onkeydown="if(event.keyCode===13){event.preventDefault(); this.blur();}">${val}</td>`;                }
                 htmlRow2 += `</tr>`;
 
                 tbody.innerHTML += htmlRow1 + htmlRow2;
