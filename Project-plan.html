@@ -524,13 +524,36 @@
         document.addEventListener('mouseup', function() { isDragging = false; });
 
         document.addEventListener('keydown', function(e) {
-            // --- ฟังชั่นใหม่: กด Esc เพื่อยกเลิกกากบาท (Crosshair) และไฮไลต์แถว (Highlight Row) ---
+            // --- ฟังชั่นใหม่: กด Esc เพื่อยกเลิกทุกอย่าง (Crosshair, Highlight, การพิมพ์, และปิดฟอร์ม) ---
             if (e.key === 'Escape') {
+                // 1. ปิดกากบาท (Crosshair) และเคลียร์กรอบสีฟ้าที่ลากคลุมไว้
                 deactivateCrosshair();
                 clearSelection();
+                
+                // 2. ยกเลิกการคลิกไฮไลต์แถว
                 if (window.toggleHighlight && currentHighlightedId) {
-                    window.toggleHighlight(currentHighlightedId); // เรียกซ้ำเพื่อปิดไฮไลต์
+                    window.toggleHighlight(currentHighlightedId); 
                 }
+                
+                // 3. เด้งเคอร์เซอร์ออกจากการพิมพ์ (ออกจากช่อง Input หรือ Cell ที่กำลังพิมพ์อยู่)
+                if (document.activeElement) {
+                    document.activeElement.blur();
+                }
+                
+                // 4. เคลียร์การคลุมดำตัวหนังสือ (ถ้าผู้ใช้เผลอคลุม Text ไว้)
+                if (window.getSelection) {
+                    window.getSelection().removeAllRanges();
+                }
+
+                // 5. ปิดแท็บฟอร์มเพิ่มแผนงาน (ตรวจสอบว่าถ้าฟอร์มเปิดอยู่ ให้สั่งปิดและรีเซ็ตค่า)
+                const formWrapper = document.getElementById('formWrapper');
+                if (formWrapper && formWrapper.style.display !== 'none') {
+                    toggleFormVisibility(); // สั่งพับฟอร์มเก็บ
+                    if (typeof resetForm === "function") {
+                        resetForm(); // เคลียร์ข้อความในช่องกรอกข้อมูลให้กลับเป็นค่าเริ่มต้น
+                    }
+                }
+
                 return; // หยุดการทำงานอื่นๆ ต่อ
             }
 
