@@ -209,7 +209,7 @@
         }
 
         /* ไฮไลต์แนวนอน (Row) และแนวตั้ง (Column) */
-        .crosshair-row > td { background-color: #f1f5f9 !important; } 
+        .crosshair-row > td:not(.type-vertical-cell) { background-color: #f1f5f9 !important; }
         .crosshair-col { background-color: #f1f5f9 !important; } 
         
         /* ทำให้แถบสีหม่นลงเล็กน้อยเวลาไม้กางเขนพาดผ่าน จะได้มองเห็นตาราง */
@@ -459,9 +459,8 @@
 
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJfqMTFvpUEHl07hyNUddV4-vgwA_R-miJrsip5lBLu5BqlwwFqIxeXgyFPGpAto--EA/exec";
 
-        // ================= ระบบไฮไลต์ Crosshair =================
         // ========================== ระบบจัดการ Crosshair ==========================
-        function activateCrosshair(weekGlobalIdx, cellElement) {
+                function activateCrosshair(weekGlobalIdx, cellElement) {
                     deactivateCrosshair();
                     
                     const row = cellElement.closest('tr');
@@ -484,26 +483,24 @@
                 function deactivateCrosshair() {
                     document.querySelectorAll('.crosshair-row').forEach(el => el.classList.remove('crosshair-row'));
                     document.querySelectorAll('.crosshair-col').forEach(el => el.classList.remove('crosshair-col'));
-                    // เคลียร์ไฮไลต์ช่อง Type
-                    document.querySelectorAll('.crosshair-active').forEach(el => el.classList.remove('crosshair-active'));
                 }
 
-        // ================= ระบบ Drag & Drop Excel Style =================
-        let isDragging = false;
-        let startCell = null;
-        let currentSelectedType = null;
-        
-        document.addEventListener('mousedown', function(e) {
-            if(e.target.classList.contains('week-cell')) {
-                isDragging = true;
-                startCell = e.target;
-                currentSelectedType = e.target.closest('tr').getAttribute('data-id').includes('-act') ? 'act' : 'plan';
-                clearSelection();
-                selectCell(e.target);
-            } else {
-                clearSelection();
-            }
-        });
+                // ================= ระบบ Drag & Drop Excel Style =================
+                let isDragging = false;
+                let startCell = null;
+                let currentSelectedType = null;
+                
+                document.addEventListener('mousedown', function(e) {
+                    if(e.target.classList.contains('week-cell')) {
+                        isDragging = true;
+                        startCell = e.target;
+                        currentSelectedType = e.target.closest('tr').getAttribute('data-id').includes('-act') ? 'act' : 'plan';
+                        clearSelection();
+                        selectCell(e.target);
+                    } else {
+                        clearSelection();
+                    }
+                });
 
         document.addEventListener('mouseover', function(e) {
             if(e.target.classList.contains('week-cell')) {
