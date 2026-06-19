@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional PDF Tools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <header class="bg-blue-600 text-white shadow-md py-4">
+        <div class="container mx-auto px-4 flex items-center justify-center">
+            <i class="fa-solid fa-file-pdf text-3xl mr-3"></i>
+            <h1 class="text-2xl font-bold">PDF Master Tools</h1>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 flex-grow max-w-4xl">
+        
+        <div class="flex border-b border-gray-200 mb-6">
+            <button id="tab-merge" class="py-2 px-6 text-center border-b-2 font-medium text-blue-600 border-blue-600 transition-colors focus:outline-none" onclick="switchTab('merge')">
+                <i class="fa-solid fa-layer-group mr-2"></i>รวมไฟล์ PDF (Merge)
+            </button>
+            <button id="tab-split" class="py-2 px-6 text-center border-b-2 font-medium text-gray-500 border-transparent hover:text-gray-700 transition-colors focus:outline-none" onclick="switchTab('split')">
+                <i class="fa-solid fa-scissors mr-2"></i>แยกไฟล์ PDF (Split)
+            </button>
+        </div>
+
+        <div id="section-merge" class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <h2 class="text-xl font-semibold mb-4 text-gray-700">รวมหลายไฟล์เป็นไฟล์เดียว</h2>
+            
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:bg-gray-50 transition-colors relative">
+                <input type="file" id="merge-input" multiple accept="application/pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                <i class="fa-solid fa-cloud-arrow-up text-4xl text-blue-400 mb-3"></i>
+                <p class="text-gray-600 font-medium">ลากไฟล์ PDF มาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์</p>
+                <p class="text-sm text-gray-400 mt-1">สามารถเลือกได้หลายไฟล์พร้อมกัน</p>
+            </div>
+
+            <div class="mt-4">
+                <p id="drag-hint" class="text-xs text-gray-500 mb-2 hidden">
+                    <i class="fa-solid fa-circle-info mr-1"></i>คลิกค้างตรงไหนของแถวก็ได้เพื่อลากสลับตำแหน่ง หรือใช้ปุ่มลูกศรเพื่อย้ายตำแหน่งอย่างรวดเร็ว
+                </p>
+                <div id="merge-file-list" class="space-y-2 max-h-[450px] overflow-y-auto pb-2"></div>
+            </div>
+
+            <button id="btn-merge" class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed" disabled onclick="processMerge()">
+                <i class="fa-solid fa-compress mr-2"></i>รวมไฟล์ PDF
+            </button>
+        </div>
+
+        <div id="section-split" class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hidden">
+            <h2 class="text-xl font-semibold mb-4 text-gray-700">ดึงหน้า PDF ออกมาเป็นไฟล์ใหม่</h2>
+            
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:bg-gray-50 transition-colors relative mb-4">
+                <input type="file" id="split-input" accept="application/pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                <i class="fa-solid fa-file-circle-minus text-4xl text-green-400 mb-3"></i>
+                <p class="text-gray-600 font-medium" id="split-file-name">คลิกเพื่อเลือกไฟล์ PDF 1 ไฟล์</p>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="page-range">
+                    ระบุหน้าต้องการแยก (เช่น 1, 3, 5-10)
+                </label>
+                <input class="shadow-sm appearance-none border border-gray-300 rounded w-full py-3 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" id="page-range" type="text" placeholder="ตัวอย่าง: 1, 2, 5-8">
+            </div>
+
+            <button id="btn-split" class="w-full mt-2 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed" disabled onclick="processSplit()">
+                <i class="fa-solid fa-scissors mr-2"></i>แยกไฟล์ PDF
+            </button>
+        </div>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white text-center py-4 mt-auto">
+        <p class="text-sm">Client-side PDF Processing. ปลอดภัย 100% เพราะประมวลผลบนเครื่องของคุณ</p>
+    </footer>
+
+    <script>
+        const { PDFDocument } = PDFLib;
+
+        // --- ระบบสลับ Tab ---
+        function switchTab(tab) {
+            const btnMerge = document.getElementById('tab-merge');
+            const btnSplit = document.getElementById('tab-split');
+            const secMerge = document.getElementById('section-merge');
+            const secSplit = document.getElementById('section-split');
+
+            if (tab === 'merge') {
+                secMerge.classList.remove('hidden');
+                secSplit.classList.add('hidden');
+                btnMerge.classList.add('text-blue-600', 'border-blue-600');
+                btnMerge.classList.remove('text-gray-500', 'border-transparent');
+                btnSplit.classList.add('text-gray-500', 'border-transparent');
+                btnSplit.classList.remove('text-blue-600', 'border-blue-600');
+            } else {
+                secSplit.classList.remove('hidden');
+                secMerge.classList.add('hidden');
+                btnSplit.classList.add('text-blue-600', 'border-blue-600');
+                btnSplit.classList.remove('text-gray-500', 'border-transparent');
+                btnMerge.classList.add('text-gray-500', 'border-transparent');
+                btnMerge.classList.remove('text-blue-600', 'border-blue-600');
+            }
+        }
+
+        // --- ฟังก์ชันช่วยเหลือ ---
+        function downloadFile(uint8Array, fileName) {
+            const blob = new Blob([uint8Array], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        // --- ระบบ Merge (รวมไฟล์) ---
+        let mergeFilesArray = [];
+        const mergeInput = document.getElementById('merge-input');
+        const mergeList = document.getElementById('merge-file-list');
+        const btnMerge = document.getElementById('btn-merge');
+        const dragHint = document.getElementById('drag-hint');
+        let sortableInstance = null;
+
+        mergeInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            mergeFilesArray = mergeFilesArray.concat(files);
+            renderMergeList();
+            mergeInput.value = ''; 
+        });
+
+        function renderMergeList() {
+            mergeList.innerHTML = '';
+            
+            if (mergeFilesArray.length > 0) {
+                btnMerge.disabled = false;
+                dragHint.classList.remove('hidden');
+                
+                mergeFilesArray.forEach((file, index) => {
+                    const item = document.createElement('div');
+                    // ปรับ cursor-move ให้ทั้งแถวสามารถจับลากได้
+                    item.className = 'flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-50 p-3 rounded border border-gray-200 cursor-move hover:bg-gray-100 transition-colors shadow-sm select-none';
+                    item.setAttribute('data-index', index);
+                    
+                    item.innerHTML = `
+                        <div class="flex items-center overflow-hidden w-full sm:w-auto pointer-events-none">
+                            <i class="fa-solid fa-grip-vertical text-gray-400 mr-3"></i>
+                            <i class="fa-solid fa-file-pdf text-red-500 mr-2 flex-shrink-0"></i>
+                            <span class="truncate font-medium text-sm text-gray-700">${file.name}</span>
+                            <span class="ml-2 text-xs text-gray-400 whitespace-nowrap">(${formatBytes(file.size)})</span>
+                        </div>
+                        
+                        <div class="flex items-center space-x-1 mt-2 sm:mt-0 w-full sm:w-auto justify-end bg-gray-100 sm:bg-transparent p-1 sm:p-0 rounded">
+                            <button onclick="moveFile(${index}, 'top')" class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer" title="ย้ายไปบนสุด">
+                                <i class="fa-solid fa-angles-up text-xs"></i>
+                            </button>
+                            <button onclick="moveFile(${index}, 'up')" class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer" title="ย้ายขึ้น">
+                                <i class="fa-solid fa-angle-up text-xs"></i>
+                            </button>
+                            <button onclick="moveFile(${index}, 'down')" class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer" title="ย้ายลง">
+                                <i class="fa-solid fa-angle-down text-xs"></i>
+                            </button>
+                            <button onclick="moveFile(${index}, 'bottom')" class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer" title="ย้ายไปล่างสุด">
+                                <i class="fa-solid fa-angles-down text-xs"></i>
+                            </button>
+                            <div class="h-4 w-px bg-gray-300 mx-1"></div>
+                            <button onclick="removeMergeFile(${index})" class="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer" title="ลบไฟล์นี้">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </div>
+                    `;
+                    mergeList.appendChild(item);
+                });
+
+                initSortable();
+            } else {
+                btnMerge.disabled = true;
+                dragHint.classList.add('hidden');
+                if(sortableInstance) sortableInstance.destroy();
+            }
+        }
+
+        // ระบบลากวางแบบจับตรงไหนก็ได้ของแถว
+        function initSortable() {
+            if(sortableInstance) {
+                sortableInstance.destroy();
+            }
+            sortableInstance = new Sortable(mergeList, {
+                animation: 180,
+                ghostClass: 'bg-blue-50',
+                chosenClass: 'border-blue-400',
+                // ลบข้อจำกัด handle ออก เพื่อให้ลากตรงไหนก็ได้ยกเว้นโซนปุ่มกด
+                filter: 'button, .cursor-pointer',
+                preventOnFilter: false, 
+                onEnd: function (evt) {
+                    if (evt.oldIndex === evt.newIndex) return;
+                    const movedItem = mergeFilesArray.splice(evt.oldIndex, 1)[0];
+                    mergeFilesArray.splice(evt.newIndex, 0, movedItem);
+                    renderMergeList(); // สั่งรีเซ็ต Index ปลุกปุ่มให้ทำงานถูกตำแหน่ง
+                }
+            });
+        }
+
+        // ฟังก์ชันสั่งย้ายตําแหน่งด่วนผ่านปุ่มกด
+        function moveFile(index, direction) {
+            if (mergeFilesArray.length <= 1) return;
+            
+            const targetItem = mergeFilesArray.splice(index, 1)[0];
+            
+            if (direction === 'top') {
+                mergeFilesArray.unshift(targetItem); // แทรกไปหน้าสุด
+            } else if (direction === 'bottom') {
+                mergeFilesArray.push(targetItem); // แทรกไปท้ายสุด
+            } else if (direction === 'up') {
+                const newIndex = Math.max(0, index - 1);
+                mergeFilesArray.splice(newIndex, 0, targetItem);
+            } else if (direction === 'down') {
+                const newIndex = Math.min(mergeFilesArray.length, index + 1);
+                mergeFilesArray.splice(newIndex, 0, targetItem);
+            }
+            
+            renderMergeList();
+        }
+
+        function removeMergeFile(index) {
+            mergeFilesArray.splice(index, 1);
+            renderMergeList();
+        }
+
+        async function processMerge() {
+            if (mergeFilesArray.length < 2) {
+                Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกไฟล์อย่างน้อย 2 ไฟล์ขึ้นไปเพื่อทำการรวม', 'warning');
+                return;
+            }
+            Swal.fire({ title: 'กำลังประมวลผล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                const mergedPdf = await PDFDocument.create();
+                for (const file of mergeFilesArray) {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await PDFDocument.load(arrayBuffer);
+                    const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+                    copiedPages.forEach((page) => mergedPdf.addPage(page));
+                }
+                const pdfBytes = await mergedPdf.save();
+                downloadFile(pdfBytes, 'Merged_Document.pdf');
+                Swal.fire('สำเร็จ!', 'รวมไฟล์ PDF เรียบร้อยแล้ว', 'success');
+            } catch (error) {
+                console.error(error);
+                Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถรวมไฟล์ได้: ' + error.message, 'error');
+            }
+        }
+
+        // --- ระบบ Split (แยกไฟล์) ---
+        let splitFile = null;
+        const splitInput = document.getElementById('split-input');
+        const splitFileNameDisplay = document.getElementById('split-file-name');
+        const btnSplit = document.getElementById('btn-split');
+        const pageRangeInput = document.getElementById('page-range');
+
+        splitInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                splitFile = e.target.files[0];
+                splitFileNameDisplay.innerHTML = `<span class="text-blue-600 font-bold">${splitFile.name}</span> <br><span class="text-sm text-gray-500">ขนาด: ${formatBytes(splitFile.size)}</span>`;
+                btnSplit.disabled = false;
+            }
+        });
+
+        function parsePageRange(rangeStr, maxPages) {
+            let pagesToExtract = new Set();
+            const parts = rangeStr.split(',');
+            for (let part of parts) {
+                part = part.trim();
+                if (!part) continue;
+                if (part.includes('-')) {
+                    const [startStr, endStr] = part.split('-');
+                    const start = parseInt(startStr);
+                    const end = parseInt(endStr);
+                    if (start > 0 && end >= start && start <= maxPages && end <= maxPages) {
+                        for (let i = start; i <= end; i++) {
+                            pagesToExtract.add(i - 1);
+                        }
+                    }
+                } else {
+                    const num = parseInt(part);
+                    if (num > 0 && num <= maxPages) {
+                        pagesToExtract.add(num - 1);
+                    }
+                }
+            }
+            return Array.from(pagesToExtract).sort((a, b) => a - b);
+        }
+
+        async function processSplit() {
+            const rangeStr = pageRangeInput.value.trim();
+            if (!splitFile) {
+                Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกไฟล์ PDF ก่อน', 'warning');
+                return;
+            }
+            if (!rangeStr) {
+                Swal.fire('ข้อผิดพลาด', 'กรุณาระบุหน้าต้องการแยก', 'warning');
+                return;
+            }
+            Swal.fire({ title: 'กำลังประมวลผล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                const arrayBuffer = await splitFile.arrayBuffer();
+                const sourcePdf = await PDFDocument.load(arrayBuffer);
+                const totalPages = sourcePdf.getPageCount();
+                const pagesToExtract = parsePageRange(rangeStr, totalPages);
+                if (pagesToExtract.length === 0) {
+                    Swal.fire('ข้อผิดพลาด', 'รูปแบบหน้าไม่ถูกต้อง หรือเกินจำนวนหน้าที่มี (' + totalPages + ' หน้า)', 'error');
+                    return;
+                }
+                const newPdf = await PDFDocument.create();
+                const copiedPages = await newPdf.copyPages(sourcePdf, pagesToExtract);
+                copiedPages.forEach((page) => newPdf.addPage(page));
+                const pdfBytes = await newPdf.save();
+                downloadFile(pdfBytes, 'Split_Document.pdf');
+                Swal.fire('สำเร็จ!', 'ดึงหน้า PDF ออกมาเป็นไฟล์ใหม่เรียบร้อยแล้ว', 'success');
+            } catch (error) {
+                console.error(error);
+                Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถแยกไฟล์ได้: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
