@@ -36,7 +36,7 @@
             cursor: pointer;
             background-color: #f8fafc;
             transition: all 0.3s;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         .upload-box:hover {
             border-color: #3b82f6;
@@ -50,6 +50,29 @@
             color: #64748b;
             margin-bottom: 10px;
         }
+        
+        /* 🛠️ เพิ่มแถบควบคุม (ปุ่มเคลียร์ข้อมูลทั้งหมด) */
+        .control-bar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+        .btn-clear {
+            background-color: #fff5f5;
+            border: 1px solid #feb2b2;
+            color: #e53e3e;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: none; /* เริ่มต้นจะซ่อนไว้ จะแสดงเมื่อมีไฟล์ที่แปลงเสร็จแล้วเท่านั้น */
+        }
+        .btn-clear:hover {
+            background-color: #fed7d7;
+        }
+
         /* ส่วนแสดงรายการไฟล์ที่แปลงแล้ว */
         .file-list {
             display: grid;
@@ -113,19 +136,21 @@
         <input type="file" id="fileInput" accept=".jfif, .jpeg, .jpg" multiple>
     </div>
 
+    <div class="control-bar">
+        <button id="btnClearAll" class="btn-clear" onclick="clearAllFiles()">🗑️ ล้างรายการทั้งหมด</button>
+    </div>
+
     <div class="file-list" id="fileList"></div>
 </div>
 
 <script>
     const fileInput = document.getElementById('fileInput');
     const fileList = document.getElementById('fileList');
+    const btnClearAll = document.getElementById('btnClearAll');
 
     fileInput.addEventListener('change', function(e) {
         const files = e.target.files;
         if (files.length === 0) return;
-
-        // ล้างรายการเก่าออกก่อน ถ้าอยากให้สะสมรูปไปเรื่อยๆ ให้ลบไลนนี้ออกครับ
-        fileList.innerHTML = ''; 
 
         // วนลูปจัดการทีละไฟล์
         Array.from(files).forEach(file => {
@@ -152,6 +177,9 @@
 
                     // สร้างการ์ดแสดงผล (UI Card)
                     createFileCard(jpgUrl, newFileName);
+                    
+                    // แสดงปุ่มเคลียร์ข้อมูล
+                    btnClearAll.style.display = 'block';
                 }
                 
                 img.src = event.target.result;
@@ -159,6 +187,9 @@
             
             reader.readAsDataURL(file);
         });
+        
+        // รีเซ็ตค่าอินพุตเพื่อให้อัปโหลดไฟล์ซ้ำเดิมได้
+        fileInput.value = '';
     });
 
     // ฟังก์ชันสำหรับสร้าง HTML Card ของแต่ละรูป
@@ -173,6 +204,14 @@
         `;
 
         fileList.appendChild(card);
+    }
+
+    // 🗑️ ฟังก์ชันสำหรับเคลียร์รูปภาพที่แปลงเสร็จแล้วทั้งหมดออกจากหน้าจอ
+    function clearAllFiles() {
+        if (confirm("คุณต้องการล้างรายการรูปภาพที่แปลงแล้วทั้งหมดใช่หรือไม่?")) {
+            fileList.innerHTML = ''; // ล้างการ์ดรูปภาพทั้งหมด
+            btnClearAll.style.display = 'none'; // ซ่อนปุ่มเคลียร์กลับไปเหมือนเดิม
+        }
     }
 </script>
 
