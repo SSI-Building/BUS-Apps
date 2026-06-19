@@ -219,6 +219,22 @@
         .type-vertical-cell.crosshair-active { background-color: #e2e8f0 !important; }
         .type-vertical-cell.highlight-active { background-color: #cbd5e1 !important; transition: background-color 0.3s ease; }
 
+        /* ================= โหมดขาวดำ สำหรับงานที่เสร็จแล้ว 100% ================= */
+        .task-completed td, 
+        .task-completed span,
+        .task-completed div {
+            color: #94a3b8 !important; /* ดรอปสีตัวอักษรทั้งหมดให้เป็นสีเทา */
+        }
+
+        /* ทำให้แถบ Plan/Actual และ Badge สถานะ กลายเป็นสีเทา (Grayscale) */
+        .task-completed .plan-bar, 
+        .task-completed .actual-bar,
+        .task-completed .status-badge,
+        .task-completed .type-vertical-container {
+            filter: grayscale(100%);
+            opacity: 0.6;
+        }
+
     </style>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </head>
@@ -956,7 +972,11 @@
                 if(currentTask.status === 'Hold') descriptionDisplay += ` <span class="status-badge badge-hold">HOLD</span>`;
                 else if(currentTask.status === 'Canceled') descriptionDisplay += ` <span class="status-badge badge-canceled">CANCELED</span>`;
 
-                let htmlRow1 = `<tr data-id="${currentTask.id}">${typeCellHtml}
+                    // เช็คว่างานเสร็จ 100% หรือยัง ถ้าเสร็จแล้วให้เรียกใช้คลาส task-completed
+                    let completedClass = currentTask.progressActual === 100 ? 'task-completed' : '';
+
+                    // แทรกคลาสเข้าไปในแท็ก <tr> ของทั้งแถวบน (Plan) และแถวล่าง (Actual)
+                    let htmlRow1 = `<tr data-id="${currentTask.id}" class="${completedClass}">${typeCellHtml}
                     <td rowspan="2" class="item-clickable" style="font-weight: bold;" onclick="toggleHighlight('${currentTask.id}')" title="คลิกเพื่อไฮไลต์/ยกเลิกไฮไลต์ แถวนี้">${viewIndex + 1}</td>
                     <td rowspan="2" class="text-left" style="font-weight: 500;">${descriptionDisplay}</td>
                     <td rowspan="2" style="font-weight: 600; color: #2c3e50;">${currentTask.typeBudget || '-'}</td>
@@ -976,7 +996,9 @@
                         <div class="action-btns"><button type="button" class="btn-table btn-edit" onclick="editTask(${dbIndex})" title="แก้ไขข้อมูล"><i class="fa-solid fa-pen-to-square"></i></button><button type="button" class="btn-table btn-delete" onclick="deleteTask(${dbIndex})" title="ลบงาน"><i class="fa-solid fa-trash-can"></i></button></div>
                     </td></tr>`;
 
-                let htmlRow2 = `<tr data-id="${currentTask.id}-act"><td class="sub-row">${actualAssignee}</td>
+                // โค้ดเดิม: let htmlRow2 = `<tr data-id="${currentTask.id}-act"><td class="sub-row">${actualAssignee}</td>...
+// แก้เป็น:
+                    let htmlRow2 = `<tr data-id="${currentTask.id}-act" class="${completedClass}"><td class="sub-row">${actualAssignee}</td>
                     <td style="font-weight: bold; color: var(--actual-color);">${currentTask.progressActual}%</td>
                     <td class="sub-row">Actual</td>
                     <td style="font-weight: bold; color: var(--actual-color);" class="editable-cell" contenteditable="true" onblur="inlineEditHandler(${dbIndex}, 'budgetActual', this, true)">${budgetTextActual}</td>`;
