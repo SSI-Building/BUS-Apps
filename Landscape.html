@@ -57,7 +57,6 @@
         color: white; font-size: 10px; padding: 2px 5px; border-radius: 10px; font-weight: bold;
     }
 
-    /* แผงสไลด์ขอบล่างปรับเปลี่ยนลอจิกให้ยืดหยุ่น ย่อยืดตามลากนิ้ว */
     .mobile-bottom-sheet {
         position: fixed; left: 0; right: 0; bottom: 0; height: 52vh;
         display: none; flex-direction: column; background: rgba(255, 255, 255, .96);
@@ -65,7 +64,6 @@
         box-shadow: 0 -15px 40px rgba(0,0,0,.18); overflow: hidden; z-index: 999;
     }
     
-    /* สไตล์ Handle สำหรับจับลากรูดปรับขนาดตาราง */
     .sheet-handle { width: 100%; height: 32px; display: flex; justify-content: center; align-items: center; cursor: ns-resize; }
     .sheet-line { width: 70px; height: 6px; border-radius: 30px; background: #D6D8DC; }
     
@@ -258,9 +256,6 @@ async function sendData(payload) {
     } catch (e) { alert("เชื่อมต่อผิดพลาด"); }
 }
 
-// ==========================================================
-// 🛠️ แก้ไขส่วนควบคุมลากรูด Bottom Sheet ให้ขยายขนาดได้สมบูรณ์ทั้งคอมและมือถือ
-// ==========================================================
 const tableSheet = document.getElementById('table-sheet');
 const formSheet = document.getElementById('form-sheet');
 
@@ -272,7 +267,6 @@ function setupDragLogic(sheetElem, handleElem) {
         if (!isDragging) return;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
         let newHeight = window.innerHeight - clientY;
-        // กำหนดระยะยืดสูงสุด 85% และต่ำสุด 100px
         if (newHeight >= 100 && newHeight <= window.innerHeight * 0.85) {
             sheetElem.style.height = newHeight + 'px';
         }
@@ -288,7 +282,6 @@ function setupDragLogic(sheetElem, handleElem) {
     window.addEventListener('touchend', stopDrag);
 }
 
-// ผูกระบบลากรูดเข้ากับ Handle ของทั้งหน้าต่างตารางและหน้าต่างฟอร์มรายงาน
 setupDragLogic(tableSheet, document.getElementById('table-drag-handle'));
 setupDragLogic(formSheet, document.getElementById('form-drag-handle'));
 
@@ -296,7 +289,7 @@ document.getElementById('table-open-btn').onclick = () => {
     if(activePopup) activePopup.remove();
     formSheet.style.display = 'none';
     tableSheet.style.display = 'flex';
-    tableSheet.style.height = '52vh'; // รีเซ็ตส่วนสูงตั้งต้นตอนเปิดตัว
+    tableSheet.style.height = '52vh'; 
     document.getElementById('fab-box').classList.add('fab-hidden');
 };
 document.getElementById('table-close-btn').onclick = () => {
@@ -372,7 +365,7 @@ function focusOnZoneFromTable(index, element) {
     coords.forEach(c => { sumLng += c[0]; sumLat += c[1]; });
     
     map.flyTo({ center: [sumLng / coords.length, sumLat / coords.length], zoom: 17.2 });
-    tableSheet.style.height = '28vh'; // หดหน้าต่างรายการลงมาเพื่อให้มองเห็นความโดดเด่นบนแผนที่ชัดเจนขึ้น
+    tableSheet.style.height = '28vh'; 
 
     for(let i=0; i<totalZonesCount; i++) {
         map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', i === index ? 0.85 : 0.15);
@@ -388,7 +381,7 @@ function activateReportingForm(zone, index) {
     document.getElementById('form-sheet-title').innerText = `รายงานผล: ${zone.zone_name}`;
     document.getElementById('input-percent').value = '';
     formSheet.style.display = 'flex';
-    formSheet.style.height = 'auto'; // ล็อกความสูงพอดีกับช่องฟอร์มป้อน
+    formSheet.style.height = 'auto'; 
     document.getElementById('fab-box').classList.add('fab-hidden');
 
     const coords = JSON.parse(zone.coordinates_data);
@@ -423,7 +416,13 @@ function resetHighlights() {
 map.on('click', (e) => {
     const features = map.queryRenderedFeatures(e.point);
     const hit = features.some(f => f.layer.id.startsWith('layer-zone-'));
-    if(!hit) { resetHighlights(); formSheet.style.display = 'none'; tableSheet.style.display = 'none'; document.getElementById('fab-box').classList.remove('fab-hidden'); }
+    if(!hit) { 
+        resetHighlights(); 
+        formSheet.style.display = 'none'; 
+        tableSheet.style.display = 'none'; 
+        document.getElementById('fab-box').classList.remove('fab-hidden'); 
+        if(activePopup) { activePopup.remove(); activePopup = null; }
+    }
 });
 
 document.getElementById('btn-submit-data').onclick = async () => {
@@ -459,6 +458,9 @@ map.on('load', async () => {
             map.addLayer({ 'id': lyrId, 'type': 'fill', 'source': srcId, 'paint': { 'fill-color': c, 'fill-opacity': 0.5 } });
             map.addLayer({ 'id': `${lyrId}-stroke`, 'type': 'line', 'source': srcId, 'paint': { 'line-color': c, 'line-width': 2 } });
             
+            // ==========================================================
+            // 🌟 ลอจิกใหม่: กดที่แผนที่ -> เปิดตาราง + ไฮไลต์แถว + สกอร์ไปหา
+            // ==========================================================
             map.on('click', lyrId, (e) => {
                 if(editingZoneId) return;
                 e.stopPropagation();
@@ -482,6 +484,28 @@ map.on('load', async () => {
                     </div>
                 `)
                 .addTo(map);
+
+                // --- ส่วนที่เพิ่มเข้ามาใหม่ ---
+                
+                // 1. ซ่อนฟอร์มรายงาน (ถ้าเปิดอยู่) แล้วเปิดตารางแทนที่
+                formSheet.style.display = 'none';
+                tableSheet.style.display = 'flex';
+                tableSheet.style.height = '35vh'; // ดึงตารางขึ้นมาครึ่งจอ จะได้ไม่บังป้าย Popup
+                document.getElementById('fab-box').classList.add('fab-hidden');
+
+                // 2. ไฮไลต์แถวในตาราง และทำสีเข้มที่แผนที่
+                document.querySelectorAll('#data-table tr').forEach(r => r.classList.remove('selected-row'));
+                for(let i=0; i<totalZonesCount; i++) {
+                    map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', i === index ? 0.85 : 0.15);
+                    map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', i === index ? 5 : 1);
+                }
+
+                // 3. สั่งเลื่อน (Scroll) หน้าตารางให้แถวนี้วิ่งมาอยู่ตรงกลางจอพอดี
+                const row = document.getElementById(`tr-zone-${index}`);
+                if(row) {
+                    row.classList.add('selected-row');
+                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             });
         });
     } catch (err) { console.error(err); }
