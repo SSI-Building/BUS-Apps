@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Map-WasteCheck (Grass Management - Fluent Mobile)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.css" type="text/css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+    body { 
+        margin: 0; padding: 0; 
+        font-family: 'Prompt', sans-serif; 
+        background: #EEF2F8; overflow: hidden; 
+        user-select: none; -webkit-tap-highlight-color: transparent;
+    }
+    * { box-sizing: border-box; }
+    
+    #map { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #F7F8FA; }
+    
+    #zoom-indicator {
+        position: absolute; top: 18px; left: 18px; padding: 10px 16px; border-radius: 20px;
+        background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(18px);
+        font-size: 13px; font-weight: 600; box-shadow: 0 8px 20px rgba(0,0,0,0.15); z-index: 10;
+    }
+
+    #save-panel, #edit-panel {
+        position: absolute; top: 80px; left: 18px;
+        background: rgba(255, 255, 255, 0.95); padding: 15px;
+        border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        display: none; z-index: 10; width: 260px;
+    }
+    #edit-panel { background: #34495e; color: white; }
+    #save-panel h3, #edit-panel h3 { margin: 0 0 10px 0; font-size: 14px; font-weight: 600; }
+    #save-panel input, #save-panel select { width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; }
+    #save-panel button, #edit-panel button { width: 48%; padding: 10px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; }
+    .btn-save { background: #1677FF; color: white; }
+    .btn-cancel { background: #e74c3c; color: white; }
+
+    .fab-container {
+        position: fixed; right: 18px; bottom: 28px; display: flex; flex-direction: column; gap: 15px; z-index: 500; transition: .25s;
+    }
+    .fab-hidden { display: none !important; }
+    .fab {
+        width: 62px; height: 62px; border-radius: 22px; border: none;
+        background: rgba(255, 255, 255, .92); backdrop-filter: blur(18px);
+        box-shadow: 0 8px 30px rgba(0,0,0,.18); font-size: 22px; color: #1677ff;
+        display: flex; align-items: center; justify-content: center; cursor: pointer; transition: .2s;
+    }
+    .fab:active { transform: scale(.93); }
+    .fab-toggle-view { background: #1677FF; color: white; position: relative; }
+    .fab-toggle-view .badge {
+        position: absolute; top: -2px; right: -2px; background: #e74c3c;
+        color: white; font-size: 10px; padding: 2px 5px; border-radius: 10px; font-weight: bold;
+    }
+
+    /* แผงสไลด์ขอบล่างปรับเปลี่ยนลอจิกให้ยืดหยุ่น ย่อยืดตามลากนิ้ว */
+    .mobile-bottom-sheet {
+        position: fixed; left: 0; right: 0; bottom: 0; height: 52vh;
+        display: none; flex-direction: column; background: rgba(255, 255, 255, .96);
+        backdrop-filter: blur(25px); border-radius: 28px 28px 0 0;
+        box-shadow: 0 -15px 40px rgba(0,0,0,.18); overflow: hidden; z-index: 999;
+    }
+    
+    /* สไตล์ Handle สำหรับจับลากรูดปรับขนาดตาราง */
+    .sheet-handle { width: 100%; height: 32px; display: flex; justify-content: center; align-items: center; cursor: ns-resize; }
+    .sheet-line { width: 70px; height: 6px; border-radius: 30px; background: #D6D8DC; }
+    
+    .sheet-header { padding: 4px 24px 12px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #F0F2F5; }
+    .sheet-title { font-size: 18px; font-weight: 700; color: #2d3748; }
+    .btn-close-sheet { background: #F0F2F5; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 22px; color: #666; cursor: pointer; }
+
+    .sheet-content-wrapper { overflow-y: auto; padding: 12px 24px 24px 24px; flex: 1; }
+    
+    #data-table { width: 100%; border-collapse: collapse; }
+    #data-table th { padding: 14px 10px; text-align: left; color: #888; font-size: 13px; border-bottom: 2px solid #F0F2F5; }
+    #data-table td { padding: 18px 10px; font-size: 15px; border-bottom: 1px solid #F0F2F5; color: #2d3748; }
+    #data-table tr { transition: .2s; cursor: pointer; }
+    #data-table tr:not(.selected-row):active { background: #f7fafc; }
+    #data-table tr.selected-row { background: #EAF3FF !important; border-left: 5px solid #1677FF; }
+    .color-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+    .btn-table-report { background: #EAF3FF; border: none; color: #1677FF; font-size: 16px; cursor: pointer; padding: 8px 12px; border-radius: 10px; transition: .2s; }
+    .btn-table-report:active { transform: scale(0.9); background: #1677FF; color: white; }
+
+    .maplibregl-popup-content { padding: 0 !important; border-radius: 22px !important; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,.28) !important; border: none !important; background: white; }
+    .maplibregl-popup-close-button { color: #999 !important; padding: 6px 10px !important; font-size: 16px !important; outline: none !important; top: 4px !important; right: 4px !important; }
+    
+    .custom-popup { width: 250px; padding: 18px; background: white; position: relative; }
+    .popup-title { font-size: 16px; font-weight: 700; color: #2d3748; margin: 0 0 6px 0; padding-right: 30px; word-break: break-all; }
+    .popup-grass-text { font-size: 13px; color: #666; margin-bottom: 12px; }
+    .popup-grass-badge { display: inline-block; padding: 4px 8px; border-radius: 8px; font-weight: bold; font-size: 12px; margin-left: 5px; }
+    
+    .btn-popup-edit-trigger {
+        position: absolute; right: 14px; bottom: 14px; background: #EAF3FF; color: #1677FF;
+        border: none; width: 38px; height: 38px; border-radius: 12px; font-size: 15px;
+        cursor: pointer; display: flex; align-items: center; justify-content: center; transition: .2s;
+    }
+    .btn-popup-edit-trigger:active { transform: scale(0.9); background: #1677FF; color: white; }
+
+    .mobile-report-form { display: flex; flex-direction: column; gap: 12px; padding-top: 15px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 13px; font-weight: 600; color: #4a5568; }
+    .form-group input { width: 100%; padding: 12px; font-size: 15px; border: 1px solid #cbd5e0; border-radius: 12px; outline: none; }
+    .form-group input:focus { border-color: #1677FF; }
+    
+    .btn-update-main {
+        width: 100%; margin-top: 10px; height: 52px; border: none; border-radius: 15px;
+        background: #1677FF; color: white; font-size: 16px; font-weight: 600;
+        box-shadow: 0 10px 25px rgba(22,119,255,.25); cursor: pointer; transition: .2s;
+    }
+    .btn-update-main:active { transform: scale(.97); }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+<div id="zoom-indicator">Zoom: 15.58</div>
+
+<div class="fab-container" id="fab-box">
+    <button class="fab fab-toggle-view" id="view-mode-btn" title="สลับมุมมองสี">
+        <i class="fas fa-layer-group"></i>
+        <span class="badge" id="view-badge">ทีม</span>
+    </button>
+    <button class="fab fab-table" id="table-open-btn" title="ตารางข้อมูล"><i class="fas fa-list-ul"></i></button>
+</div>
+
+<div id="table-sheet" class="mobile-bottom-sheet">
+    <div class="sheet-handle" id="table-drag-handle"><div class="sheet-line"></div></div>
+    <div class="sheet-header">
+        <span class="sheet-title">รายชื่อพื้นที่ดิน</span>
+        <button id="table-close-btn" class="btn-close-sheet">&times;</button>
+    </div>
+    <div id="data-table-wrapper" class="sheet-content-wrapper">
+        <table id="data-table">
+            <thead>
+                <tr>
+                    <th>ชื่อพื้นที่โซน</th>
+                    <th id="th-dynamic-status">ผู้รับผิดชอบ</th>
+                    <th style="text-align: right;">รายงาน</th>
+                </tr>
+            </thead>
+            <tbody id="table-tbody">
+                <tr><td colspan="3" style="text-align:center; color:#999; padding:20px;">กำลังดึงพิกัดแผนที่...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="form-sheet" class="mobile-bottom-sheet" style="height: auto; max-height: 75vh;">
+    <div class="sheet-handle" id="form-drag-handle"><div class="sheet-line"></div></div>
+    <div class="sheet-header">
+        <span class="sheet-title" id="form-sheet-title">อัปเดตสถานะงาน</span>
+        <button id="form-close-btn" class="btn-close-sheet">&times;</button>
+    </div>
+    <div class="sheet-content-wrapper">
+        <div class="mobile-report-form">
+            <div class="form-group">
+                <label for="input-percent">งานที่ตัดเสร็จจริงหน้างาน ณ วันนี้ (%)</label>
+                <input type="number" id="input-percent" placeholder="ระบุตัวเลข 0 - 100" min="0" max="100" pattern="\d*">
+            </div>
+            <div class="form-group">
+                <label for="input-name">ชื่อหัวหน้างานผู้รายงาน</label>
+                <input type="text" id="input-name" placeholder="ระบุชื่อผู้ตรวจสอบคุมงาน">
+            </div>
+            <button class="btn-update-main" id="btn-submit-data">บันทึกส่งรายงานตัดหญ้า</button>
+        </div>
+    </div>
+</div>
+
+<div id="save-panel">
+    <h3 id="panel-title">บันทึกพื้นที่ใหม่</h3>
+    <input type="text" id="zone-name" placeholder="ชื่อโซน / ชื่อพื้นที่" />
+    <label style="font-size:12px;">ทีมทำความสะอาด:</label>
+    <select id="zone-color">
+        <option value="#2ecc71">ทีมสีเขียว</option>
+        <option value="#f1c40f">ทีมสีเหลือง</option>
+    </select>
+    <div style="display: flex; justify-content: space-between;">
+        <button class="btn-save" id="btn-save-zone">บันทึก</button>
+        <button class="btn-cancel" id="btn-cancel-zone">ยกเลิก</button>
+    </div>
+</div>
+
+<div id="edit-panel">
+    <h3 style="margin:0 0 10px 0; font-size:14px;">โหมดปรับแต่งพิกัดแนวเขต</h3>
+    <p id="edit-zone-display" style="font-size:12px; margin-bottom:10px;"></p>
+    <div style="display: flex; justify-content: space-between;">
+        <button class="btn-save" id="btn-update-zone">บันทึกตำแหน่งใหม่</button>
+        <button class="btn-cancel" id="btn-cancel-edit">ยกเลิก</button>
+    </div>
+</div>
+
+<script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+
+<script>
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzZ9MH7fONCkaqgmqWLOM8yAoRm2e4j82x79Lwhpju9k3gz1Uzi9Y4s4ibhwv_bhCnX/exec"; 
+
+const targetLngLat = [99.535692, 11.231666];
+const map = new maplibregl.Map({
+    container: 'map',
+    style: {
+        version: 8,
+        sources: { satellite: { type: 'raster', tiles: ['https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'], tileSize: 256 } },
+        layers: [{ id: 'satellite', type: 'raster', source: 'satellite' }]
+    },
+    center: [targetLngLat[0] - (-0.0010), targetLngLat[1] - 0.0010],
+    zoom: 15.58, bearing: -45.6, maxZoom: 21
+});
+
+const draw = new MapboxDraw({ displayControlsDefault: false, controls: { polygon: true, trash: true } });
+map.addControl(draw, 'top-right');
+
+map.on('move', () => { document.getElementById('zoom-indicator').innerText = `Zoom: ${map.getZoom().toFixed(2)}`; });
+
+let currentFeature = null;
+let editingZoneId = null;
+let totalZonesCount = 0;
+let globalZonesArray = [];
+let viewMode = 'team'; 
+let selectedZone = null;
+let activePopup = null;
+
+map.on('draw.create', (e) => {
+    const feats = draw.getAll();
+    if (feats.features.length > 0) {
+        currentFeature = feats.features[feats.features.length - 1];
+        if (!editingZoneId) document.getElementById('save-panel').style.display = 'block';
+    }
+});
+
+document.getElementById('btn-cancel-zone').onclick = () => {
+    if(currentFeature) draw.delete(currentFeature.id);
+    document.getElementById('save-panel').style.display = 'none';
+};
+
+document.getElementById('btn-save-zone').onclick = async () => {
+    const name = document.getElementById('zone-name').value;
+    const color = document.getElementById('zone-color').value;
+    if(!name || !currentFeature) return;
+    const areaM2 = turf.area(currentFeature);
+    await sendData({
+        action: "saveZone", zone_name: name,
+        coordinates_data: JSON.stringify(currentFeature.geometry.coordinates[0]),
+        area_size: areaM2.toFixed(2) + " ตร.ม.", color: color
+    });
+};
+
+async function sendData(payload) {
+    try {
+        const response = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const res = await response.json();
+        if(res.status === "success") location.reload();
+    } catch (e) { alert("เชื่อมต่อผิดพลาด"); }
+}
+
+// ==========================================================
+// 🛠️ แก้ไขส่วนควบคุมลากรูด Bottom Sheet ให้ขยายขนาดได้สมบูรณ์ทั้งคอมและมือถือ
+// ==========================================================
+const tableSheet = document.getElementById('table-sheet');
+const formSheet = document.getElementById('form-sheet');
+
+function setupDragLogic(sheetElem, handleElem) {
+    let isDragging = false;
+    
+    const startDrag = () => { isDragging = true; document.body.style.userSelect = 'none'; };
+    const onDrag = (e) => {
+        if (!isDragging) return;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        let newHeight = window.innerHeight - clientY;
+        // กำหนดระยะยืดสูงสุด 85% และต่ำสุด 100px
+        if (newHeight >= 100 && newHeight <= window.innerHeight * 0.85) {
+            sheetElem.style.height = newHeight + 'px';
+        }
+    };
+    const stopDrag = () => { isDragging = false; document.body.style.userSelect = ''; };
+
+    handleElem.addEventListener('mousedown', startDrag);
+    window.addEventListener('mousemove', onDrag);
+    window.addEventListener('mouseup', stopDrag);
+    
+    handleElem.addEventListener('touchstart', startDrag);
+    window.addEventListener('touchmove', onDrag);
+    window.addEventListener('touchend', stopDrag);
+}
+
+// ผูกระบบลากรูดเข้ากับ Handle ของทั้งหน้าต่างตารางและหน้าต่างฟอร์มรายงาน
+setupDragLogic(tableSheet, document.getElementById('table-drag-handle'));
+setupDragLogic(formSheet, document.getElementById('form-drag-handle'));
+
+document.getElementById('table-open-btn').onclick = () => {
+    if(activePopup) activePopup.remove();
+    formSheet.style.display = 'none';
+    tableSheet.style.display = 'flex';
+    tableSheet.style.height = '52vh'; // รีเซ็ตส่วนสูงตั้งต้นตอนเปิดตัว
+    document.getElementById('fab-box').classList.add('fab-hidden');
+};
+document.getElementById('table-close-btn').onclick = () => {
+    tableSheet.style.display = 'none';
+    document.getElementById('fab-box').classList.remove('fab-hidden');
+    resetHighlights();
+};
+document.getElementById('form-close-btn').onclick = () => {
+    formSheet.style.display = 'none';
+    document.getElementById('fab-box').classList.remove('fab-hidden');
+    resetHighlights();
+};
+
+function getGrassColor(pct) {
+    if (pct <= 40) return '#2ecc71';
+    if (pct <= 75) return '#f1c40f';
+    return '#e74c3c';
+}
+
+function updateColors() {
+    globalZonesArray.forEach((z, i) => {
+        if(map.getLayer(`layer-zone-${i}`)) {
+            const c = (viewMode === 'team') ? (z.Color || '#2ecc71') : getGrassColor(z.current_grass_percentage);
+            map.setPaintProperty(`layer-zone-${i}`, 'fill-color', c);
+            map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-color', c);
+        }
+    });
+}
+
+function renderTable() {
+    const tbody = document.getElementById('table-tbody');
+    const th = document.getElementById('th-dynamic-status');
+    
+    if(viewMode === 'team') {
+        th.innerText = "ผู้รับผิดชอบ";
+        tbody.innerHTML = globalZonesArray.map((z, i) => `
+            <tr id="tr-zone-${i}" onclick="focusOnZoneFromTable(${i}, this)">
+                <td><span class="color-dot" style="background:${z.Color || '#2ecc71'}"></span>${z.zone_name}</td>
+                <td>${z.Color === '#f1c40f' ? 'ทีมสีเหลือง' : 'ทีมสีเขียว'}</td>
+                <td style="text-align:right;" onclick="event.stopPropagation();"><button class="btn-table-report" onclick="triggerReportFromTable(${i})"><i class="fas fa-file-pen"></i></button></td>
+            </tr>
+        `).join('');
+    } else {
+        th.innerText = "ความยาวหญ้า";
+        tbody.innerHTML = globalZonesArray.map((z, i) => `
+            <tr id="tr-zone-${i}" onclick="focusOnZoneFromTable(${i}, this)">
+                <td><span class="color-dot" style="background:${getGrassColor(z.current_grass_percentage)}"></span>${z.zone_name}</td>
+                <td style="font-weight:bold; color:${getGrassColor(z.current_grass_percentage)}">${z.current_grass_percentage}%</td>
+                <td style="text-align:right;" onclick="event.stopPropagation();"><button class="btn-table-report" onclick="triggerReportFromTable(${i})"><i class="fas fa-file-pen"></i></button></td>
+            </tr>
+        `).join('');
+    }
+}
+
+document.getElementById('view-mode-btn').onclick = () => {
+    if(activePopup) activePopup.remove();
+    viewMode = (viewMode === 'team') ? 'grass' : 'team';
+    document.getElementById('view-badge').innerText = viewMode === 'team' ? "ทีม" : "หญ้า";
+    document.getElementById('view-mode-btn').style.background = viewMode === 'team' ? "#1677FF" : "linear-gradient(135deg, #e74c3c, #c0392b)";
+    updateColors(); renderTable(); resetHighlights();
+    formSheet.style.display = 'none';
+};
+
+function focusOnZoneFromTable(index, element) {
+    document.querySelectorAll('#data-table tr').forEach(r => r.classList.remove('selected-row'));
+    element.classList.add('selected-row');
+
+    if(activePopup) activePopup.remove();
+
+    const zone = globalZonesArray[index];
+    const coords = JSON.parse(zone.coordinates_data);
+    let sumLng = 0, sumLat = 0;
+    coords.forEach(c => { sumLng += c[0]; sumLat += c[1]; });
+    
+    map.flyTo({ center: [sumLng / coords.length, sumLat / coords.length], zoom: 17.2 });
+    tableSheet.style.height = '28vh'; // หดหน้าต่างรายการลงมาเพื่อให้มองเห็นความโดดเด่นบนแผนที่ชัดเจนขึ้น
+
+    for(let i=0; i<totalZonesCount; i++) {
+        map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', i === index ? 0.85 : 0.15);
+        map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', i === index ? 5 : 1);
+    }
+}
+
+function activateReportingForm(zone, index) {
+    selectedZone = zone;
+    if(activePopup) activePopup.remove();
+    tableSheet.style.display = 'none';
+    
+    document.getElementById('form-sheet-title').innerText = `รายงานผล: ${zone.zone_name}`;
+    document.getElementById('input-percent').value = '';
+    formSheet.style.display = 'flex';
+    formSheet.style.height = 'auto'; // ล็อกความสูงพอดีกับช่องฟอร์มป้อน
+    document.getElementById('fab-box').classList.add('fab-hidden');
+
+    const coords = JSON.parse(zone.coordinates_data);
+    let sumLng = 0, sumLat = 0;
+    coords.forEach(c => { sumLng += c[0]; sumLat += c[1]; });
+    map.flyTo({ center: [sumLng / coords.length, sumLat / coords.length], zoom: 17.2 });
+
+    for(let i=0; i<totalZonesCount; i++) {
+        map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', i === index ? 0.85 : 0.15);
+        map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', i === index ? 5 : 1);
+    }
+}
+
+function triggerReportFromTable(index) {
+    activateReportingForm(globalZonesArray[index], index);
+}
+
+window.openFormFromPopup = function(index) {
+    activateReportingForm(globalZonesArray[index], index);
+}
+
+function resetHighlights() {
+    for(let i=0; i<totalZonesCount; i++) {
+        if(map.getLayer(`layer-zone-${i}`)) {
+            map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', 0.5);
+            map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', 2);
+        }
+    }
+    document.querySelectorAll('#data-table tr').forEach(r => r.classList.remove('selected-row'));
+}
+
+map.on('click', (e) => {
+    const features = map.queryRenderedFeatures(e.point);
+    const hit = features.some(f => f.layer.id.startsWith('layer-zone-'));
+    if(!hit) { resetHighlights(); formSheet.style.display = 'none'; tableSheet.style.display = 'none'; document.getElementById('fab-box').classList.remove('fab-hidden'); }
+});
+
+document.getElementById('btn-submit-data').onclick = async () => {
+    if(!selectedZone) return;
+    const pct = document.getElementById('input-percent').value;
+    const name = document.getElementById('input-name').value;
+    if(!pct || pct < 0 || pct > 100 || !name) { alert("ข้อมูลไม่ถูกต้อง"); return; }
+    
+    const btn = document.getElementById('btn-submit-data');
+    btn.disabled = true; btn.innerText = "กำลังบันทึกส่งค่าลงชีต...";
+    
+    await sendData({
+        action: "reportProgress", zone_id: selectedZone.zone_id,
+        zone_name: selectedZone.zone_name, work_percentage: pct, worker_name: name
+    });
+};
+
+map.on('load', async () => {
+    try {
+        const response = await fetch(`${WEB_APP_URL}?action=getZones`);
+        const zones = await response.json();
+        globalZonesArray = zones; totalZonesCount = zones.length;
+        
+        renderTable();
+        
+        zones.forEach((zone, index) => {
+            const srcId = `source-zone-${index}`;
+            const lyrId = `layer-zone-${index}`;
+            const coords = JSON.parse(zone.coordinates_data);
+            const c = (viewMode === 'team') ? (zone.Color || '#2ecc71') : getGrassColor(zone.current_grass_percentage);
+
+            map.addSource(srcId, { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'Polygon', 'coordinates': [coords] } } });
+            map.addLayer({ 'id': lyrId, 'type': 'fill', 'source': srcId, 'paint': { 'fill-color': c, 'fill-opacity': 0.5 } });
+            map.addLayer({ 'id': `${lyrId}-stroke`, 'type': 'line', 'source': srcId, 'paint': { 'line-color': c, 'line-width': 2 } });
+            
+            map.on('click', lyrId, (e) => {
+                if(editingZoneId) return;
+                e.stopPropagation();
+                
+                const currentGrass = zone.current_grass_percentage;
+                const badgeColor = getGrassColor(currentGrass);
+                
+                if(activePopup) activePopup.remove();
+                
+                activePopup = new maplibregl.Popup({ closeButton: true, closeOnClick: false, offset: [0, -5] })
+                .setLngLat(e.lngLat)
+                .setHTML(`
+                    <div class="custom-popup">
+                        <h4 class="popup-title">${zone.zone_name}</h4>
+                        <div class="popup-grass-text">
+                            ระดับความหนาหญ้า: <span class="popup-grass-badge" style="background:${badgeColor}22; color:${badgeColor};">${currentGrass}%</span>
+                        </div>
+                        <button class="btn-popup-edit-trigger" title="คลิกเพื่อป้อนข้อมูล" onclick="openFormFromPopup(${index})">
+                            <i class="fas fa-pencil"></i>
+                        </button>
+                    </div>
+                `)
+                .addTo(map);
+            });
+        });
+    } catch (err) { console.error(err); }
+});
+</script>
+</body>
+</html>
