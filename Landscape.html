@@ -46,42 +46,90 @@
     }
     #edit-panel button { width: 48%; padding: 8px; cursor: pointer; border: none; border-radius: 4px; }
 
-    /* ปรับแต่งความสวยงามและการจัดวางของหน้าต่าง Popup ใหม่ */
+    /* ==========================================================
+       ปรับแต่งดีไซน์หน้าต่าง POPUP ใหม่ให้สวยงาม โมเดิร์น
+       ========================================================== */
+    .maplibregl-popup-content {
+        padding: 0 !important;
+        border-radius: 14px !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+        border: 1px solid rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+    .maplibregl-popup-close-button {
+        color: #95a5a6 !important;
+        padding: 6px 10px !important;
+        font-size: 16px !important;
+        outline: none !important;
+    }
+    .maplibregl-popup-close-button:hover {
+        background: none !important;
+        color: #34495e !important;
+    }
     .custom-popup {
-        position: relative;
-        padding-top: 5px;
-        min-width: 160px;
+        min-width: 200px;
+        background: #ffffff;
+    }
+    .popup-header {
+        background: #f8f9fa;
+        padding: 12px 35px 12px 14px;
+        border-bottom: 1px solid #edf2f7;
     }
     .popup-title {
         font-size: 15px;
-        font-weight: bold;
-        color: #2c3e50;
-        margin: 0 0 4px 0;
-        padding-right: 25px; /* เว้นที่ว่างหลบไอคอนแก้ไข */
-        word-break: break-all;
-    }
-    .popup-size {
-        font-size: 13px;
-        color: #2980b9;
-        font-weight: 600;
+        font-weight: 700;
+        color: #2d3748;
         margin: 0;
+        word-break: break-all;
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
-    /* สไตล์ปุ่มไอคอนแก้ไขขนาดเล็ก */
-    .btn-edit-icon {
-        position: absolute;
-        top: -2px;
-        right: -2px;
-        background: none;
-        border: none;
+    .popup-body {
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .popup-size-box {
+        background: #edf2f7;
+        padding: 8px 12px;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .popup-size-label {
+        font-size: 12px;
+        color: #718096;
+        font-weight: 500;
+    }
+    .popup-size-value {
         font-size: 14px;
+        color: #2b6cb0;
+        font-weight: 700;
+    }
+    .btn-edit-popup {
+        background: #3182ce;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
         cursor: pointer;
-        padding: 4px;
-        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
         transition: background 0.2s;
+        width: 100%;
+        box-sizing: border-box;
     }
-    .btn-edit-icon:hover {
-        background: #f0f0f0;
+    .btn-edit-popup:hover {
+        background: #2b6cb0;
     }
+
     /* กล่องแสดงระดับการซูมมุมบนซ้าย */
     #zoom-indicator {
         position: absolute;
@@ -94,10 +142,10 @@
         color: #555;
         font-weight: bold;
         z-index: 10;
-        pointer-events: none; /* เพื่อไม่ให้บังการคลิกแผนที่ */
+        pointer-events: none;
     }
 
-    /* --- ปุ่มลอยขวาด้านล่าง (FAB) จากเว็บสอง --- */
+    /* --- FAB --- */
     .fab-container {
         position: absolute; bottom: 30px; right: 15px;
         display: flex; flex-direction: column; gap: 12px; z-index: 100;
@@ -114,7 +162,7 @@
     .fab:active { transform: scale(0.9); }
     .fab-table { background: linear-gradient(135deg, #1e90ff, #0077e6); }
 
-    /* --- หน้าต่างสไลด์ข้อมูลจากขอบล่าง (Bottom Sheet Table) จากเว็บสอง --- */
+    /* --- Bottom Sheet Table --- */
     #data-table-container {
         position: fixed; bottom: 0; left: 0; right: 0;
         background: white; border-top-left-radius: 25px; border-top-right-radius: 25px;
@@ -134,6 +182,8 @@
     #data-table { width: 100%; border-collapse: collapse; font-size: 15px; }
     #data-table th { padding: 12px 10px; text-align: left; background: #fff; color: #888; border-bottom: 2px solid #f9f9f9; }
     #data-table td { padding: 15px 10px; border-bottom: 1px solid #f1f1f1; color: #333; cursor: pointer; }
+    
+    #data-table tr.selected-row { background: #e8f4fd !important; }
     #data-table tr:hover { background: #fafafa; }
     .color-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
 </style>
@@ -225,7 +275,6 @@ const map = new maplibregl.Map({
     maxZoom: 21
 });
 
-// ฟังก์ชันสำหรับอัปเดตระดับการซูมบนหน้าจอ
 const zoomIndicator = document.getElementById('zoom-indicator');
 map.on('move', () => {
     zoomIndicator.innerText = `Zoom: ${map.getZoom().toFixed(2)}`;
@@ -239,6 +288,9 @@ map.addControl(draw, 'top-right');
 
 let currentFeature = null;
 let editingZoneId = null; 
+let activePopup = null; 
+let totalZonesCount = 0; 
+let globalZonesArray = []; 
 
 map.on('draw.create', handleDrawEnd);
 map.on('draw.update', handleDrawEnd);
@@ -281,13 +333,14 @@ document.getElementById('btn-save-zone').onclick = async () => {
     await sendData(payload);
 };
 
-function startEditZone(zoneId, zoneName, coordsStr) {
+function startEditZone(zoneId, zoneName, coordsBase64) {
     editingZoneId = zoneId;
     
     document.getElementById('save-panel').style.display = 'none';
     document.getElementById('edit-panel').style.display = 'block';
     document.getElementById('edit-zone-display').innerText = `พื้นที่: ${zoneName} (${zoneId})`;
 
+    const coordsStr = decodeURIComponent(atob(coordsBase64));
     const coords = JSON.parse(coordsStr);
     
     const feature = {
@@ -300,9 +353,10 @@ function startEditZone(zoneId, zoneName, coordsStr) {
     draw.add(feature);
     draw.changeMode('direct_select', { featureId: 'editing-feature' }); 
     
-    // ซ่อน Bottom Sheet หลบทางให้หน้าจอแก้ไขขยายได้เต็มที่
     document.getElementById('data-table-container').style.display = 'none';
     document.getElementById('fab-box').classList.remove('fab-hidden');
+
+    if(activePopup) { activePopup.remove(); activePopup = null; }
 }
 
 document.getElementById('btn-cancel-edit').onclick = () => {
@@ -333,23 +387,16 @@ document.getElementById('btn-update-zone').onclick = async () => {
 
 async function sendData(payload) {
     try {
-        const response = await fetch(WEB_APP_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
+        const response = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
         const result = await response.json();
         if(result.status === "success") {
             alert("บันทึกการเปลี่ยนแปลงเรียบร้อยแล้วครับ!");
             location.reload();
-        } else {
-            alert("เกิดข้อผิดพลาด: " + result.message);
-        }
-    } catch (err) {
-        alert("ไม่สามารถเชื่อมต่อฐานข้อมูลได้");
-    }
+        } else { alert("เกิดข้อผิดพลาด: " + result.message); }
+    } catch (err) { alert("ไม่สามารถเชื่อมต่อฐานข้อมูลได้"); }
 }
 
-// --- ลอจิกควบคุมการทำงานของ Bottom Sheet (ย่อ/รูดขยายหน้าต่าง) ---
+// --- ลอจิกควบคุมการทำงานของ Bottom Sheet ---
 const sheet = document.getElementById('data-table-container');
 const fabBox = document.getElementById('fab-box');
 const dragZone = document.getElementById('drag-zone');
@@ -360,9 +407,7 @@ const dragging = (e) => {
     if (!isDragging) return;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     let newHeight = window.innerHeight - clientY;
-    if (newHeight >= 100 && newHeight <= window.innerHeight * 0.9) {
-        sheet.style.height = newHeight + 'px';
-    }
+    if (newHeight >= 100 && newHeight <= window.innerHeight * 0.9) { sheet.style.height = newHeight + 'px'; }
 };
 const stopDragging = () => { isDragging = false; document.body.style.userSelect = ''; };
 
@@ -381,10 +426,16 @@ document.getElementById('toggle-table-btn').onclick = () => {
 document.getElementById('close-table-btn').onclick = () => {
     sheet.style.display = 'none';
     fabBox.classList.remove('fab-hidden');
+    resetHighlights(); 
 };
 
-// ฟังก์ชันคลิกที่แถวของตารางข้อมูลแล้วเคลื่อนที่แผนที่ไปจุดผืนดินนั้น
-function focusOnZone(coordsStr) {
+// --- กดจาก Table: ไฮไลต์สีเข้ม และไม่มี Popup กวนหน้าจอ ---
+function focusOnZone(coordsStr, targetIndex, element) {
+    document.querySelectorAll('#data-table tr').forEach(tr => tr.classList.remove('selected-row'));
+    element.classList.add('selected-row');
+
+    if(activePopup) { activePopup.remove(); activePopup = null; }
+
     const coords = JSON.parse(coordsStr);
     let sumLng = 0, sumLat = 0;
     coords.forEach(c => { sumLng += c[0]; sumLat += c[1]; });
@@ -392,23 +443,53 @@ function focusOnZone(coordsStr) {
     const centerLat = sumLat / coords.length;
     
     map.flyTo({ center: [centerLng, centerLat], zoom: 17.5 });
-    
-    // หดตำแหน่งหน้าต่างลงไปอยู่ที่ส่วนล่างเพื่อให้มองเห็นแผนที่ผืนดินผืนนั้น
     sheet.style.height = '25vh';
+
+    for (let i = 0; i < totalZonesCount; i++) {
+        if (i === targetIndex) {
+            map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', 0.85);
+            map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', 4.5);
+        } else {
+            map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', 0.15);
+            map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', 1);
+        }
+    }
 }
+
+function resetHighlights() {
+    if(activePopup) { activePopup.remove(); activePopup = null; }
+    for (let i = 0; i < totalZonesCount; i++) {
+        if (map.getLayer(`layer-zone-${i}`)) {
+            map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', 0.5);
+            map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', 2);
+        }
+    }
+    document.querySelectorAll('#data-table tr').forEach(tr => tr.classList.remove('selected-row'));
+}
+
+// เมื่อคลิกพื้นที่ว่างบนแผนที่ ให้รีเซ็ตค่าสีไฮไลต์ทั้งหมด
+map.on('click', (e) => {
+    // เช็คว่าไม่ใช่การคลิกโดน Polygon
+    const features = map.queryRenderedFeatures(e.point);
+    const clickedOnPolygon = features.some(f => f.layer.id.startsWith('layer-zone-'));
+    if (!clickedOnPolygon) {
+        resetHighlights();
+    }
+});
 
 map.on('load', async () => {
     try {
         const response = await fetch(`${WEB_APP_URL}?action=getZones`);
         const zones = await response.json();
+        globalZonesArray = zones; 
+        totalZonesCount = zones.length; 
         
-        // ผูกข้อมูลส่งเข้าตารางด้านล่างบอร์ดมือถือ
         const tableBody = document.getElementById('zone-list-tbody');
         if(zones.length > 0) {
-            tableBody.innerHTML = zones.map(zone => {
+            tableBody.innerHTML = zones.map((zone, index) => {
                 const color = zone.Color || '#2ecc71';
                 return `
-                    <tr onclick="focusOnZone('${zone.coordinates_data.replace(/'/g, "\\'")}')">
+                    <tr onclick="focusOnZone('${zone.coordinates_data.replace(/'/g, "\\'")}', ${index}, this)">
                         <td><span class="color-dot" style="background:${color}"></span>${zone.zone_name}</td>
                         <td style="font-weight:bold; color:#2980b9;">${zone['Area size']}</td>
                     </tr>
@@ -432,39 +513,73 @@ map.on('load', async () => {
             });
 
             map.addLayer({
-                'id': layerId,
-                'type': 'fill',
-                'source': sourceId,
-                'paint': {
-                    'fill-color': zone.Color || '#2ecc71', 
-                    'fill-opacity': 0.5 
-                }
+                'id': layerId, 'type': 'fill', 'source': sourceId,
+                'paint': { 'fill-color': zone.Color || '#2ecc71', 'fill-opacity': 0.5 }
             });
 
             map.addLayer({
-                'id': `${layerId}-stroke`,
-                'type': 'line',
-                'source': sourceId,
-                'paint': {
-                    'line-color': zone.Color || '#2ecc71',
-                    'line-width': 2
-                }
+                'id': `${layerId}-stroke`, 'type': 'line', 'source': sourceId,
+                'paint': { 'line-color': zone.Color || '#2ecc71', 'line-width': 2 }
             });
             
+            // ==========================================================
+            // เมื่อคลิกพื้นที่โดยตรง: ไฮไลต์สี + เปิดหน้าต่าง Popup ดีไซน์ใหม่สุดพรีเมียม
+            // ==========================================================
             map.on('click', layerId, (e) => {
                 if(editingZoneId) return; 
 
-                new maplibregl.Popup()
-                    .setLngLat(e.lngLat)
-                    .setHTML(`
-                        <div class="custom-popup">
-                            <div class="popup-title">${zone.zone_name}</div>
-                            <div class="popup-size">ขนาด: ${zone['Area size']}</div>
-                            
-                            <button class="btn-edit-icon" title="แก้ไขขนาด/รูปทรง" onclick="startEditZone('${zone.zone_id}', '${zone.zone_name}', '${zone.coordinates_data.replace(/'/g, "\\'")}')">✏️</button>
+                // ปรับระดับ Layer สีให้อันอื่นจางลง อันที่เลือกเข้มขึ้นทันที
+                for (let i = 0; i < totalZonesCount; i++) {
+                    if (i === index) {
+                        map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', 0.85);
+                        map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', 4.5);
+                    } else {
+                        map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', 0.15);
+                        map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', 1);
+                    }
+                }
+
+                // ซิงค์เลื่อนแถวข้อมูลในตารางอัตโนมัติ
+                const rows = document.querySelectorAll('#data-table tbody tr');
+                if(rows[index]) {
+                    document.querySelectorAll('#data-table tr').forEach(tr => tr.classList.remove('selected-row'));
+                    rows[index].classList.add('selected-row');
+                    rows[index].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+
+                // เตรียมข้อมูลพิกัด Base64 ส่งให้ตัวแก้ไข
+                const targetZone = globalZonesArray[index];
+                const coordsBase64 = btoa(encodeURIComponent(targetZone.coordinates_data));
+
+                // เคลียร์และสร้าง Popup ดีไซน์ใหม่
+                if(activePopup) activePopup.remove();
+                
+                activePopup = new maplibregl.Popup({
+                    closeButton: true,
+                    closeOnClick: false, // ป้องกันการคลิกซ้ำซ้อนแล้วปิดตัวเอง
+                    offset: [0, -10]
+                })
+                .setLngLat(e.lngLat)
+                .setHTML(`
+                    <div class="custom-popup">
+                        <div class="popup-header">
+                            <div class="popup-title">
+                                <i class="fas fa-map-marker-alt" style="color: ${targetZone.Color || '#2ecc71'}"></i> 
+                                ${targetZone.zone_name}
+                            </div>
                         </div>
-                    `)
-                    .addTo(map);
+                        <div class="popup-body">
+                            <div class="popup-size-box">
+                                <span class="popup-size-label"><i class="fas fa-vector-square"></i> ขนาดพื้นที่</span>
+                                <span class="popup-size-value">${targetZone['Area size']}</span>
+                            </div>
+                            <button class="btn-edit-popup" onclick="startEditZone('${targetZone.zone_id}', '${targetZone.zone_name}', '${coordsBase64}')">
+                                <i class="fas fa-pen"></i> แก้ไขขนาด / รูปทรง
+                            </button>
+                        </div>
+                    </div>
+                `)
+                .addTo(map);
             });
         });
     } catch (err) {
