@@ -47,87 +47,81 @@
     #edit-panel button { width: 48%; padding: 8px; cursor: pointer; border: none; border-radius: 4px; }
 
     /* ==========================================================
-       ปรับแต่งดีไซน์หน้าต่าง POPUP ใหม่ให้สวยงาม โมเดิร์น
+       ปรับแต่งดีไซน์หน้าต่าง POPUP ใหม่ให้เล็ก กระชับ เหมาะกับมือถือ
        ========================================================== */
     .maplibregl-popup-content {
         padding: 0 !important;
-        border-radius: 14px !important;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
-        border: 1px solid rgba(0,0,0,0.05);
+        border-radius: 10px !important; /* ลดความโค้งลงเล็กน้อยให้รับกับกล่องที่เล็กลง */
+        box-shadow: 0 6px 18px rgba(0,0,0,0.15) !important;
+        border: 1px solid rgba(0,0,0,0.08);
         overflow: hidden;
     }
     .maplibregl-popup-close-button {
-        color: #95a5a6 !important;
-        padding: 6px 10px !important;
-        font-size: 16px !important;
+        color: #a0aec0 !important;
+        padding: 4px 8px !important;
+        font-size: 14px !important;
         outline: none !important;
+        top: 2px !important;
+        right: 2px !important;
     }
     .maplibregl-popup-close-button:hover {
         background: none !important;
-        color: #34495e !important;
+        color: #4a5568 !important;
     }
     .custom-popup {
-        min-width: 200px;
+        width: 175px; /* ปรับความกว้างให้กะทัดรัดขึ้น */
         background: #ffffff;
+        padding: 10px 12px; /* ใช้ Padding รวมแทนการแยกส่วน เพื่อประหยัดพื้นที่แนวตั้ง */
+        box-sizing: border-box;
+        position: relative;
     }
-    .popup-header {
-        background: #f8f9fa;
-        padding: 12px 35px 12px 14px;
-        border-bottom: 1px solid #edf2f7;
+    .popup-main-content {
+        padding-right: 32px; /* เว้นพื้นที่ด้านขวาไว้สำหรับปุ่มแก้ไขดินสอ */
     }
     .popup-title {
-        font-size: 15px;
+        font-size: 13px; /* ลดขนาดอักษร */
         font-weight: 700;
         color: #2d3748;
-        margin: 0;
+        margin: 0 0 3px 0;
         word-break: break-all;
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 5px;
+        line-height: 1.2;
     }
-    .popup-body {
-        padding: 14px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-    .popup-size-box {
-        background: #edf2f7;
-        padding: 8px 12px;
-        border-radius: 8px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .popup-size-label {
-        font-size: 12px;
+    .popup-size-text {
+        font-size: 11px;
         color: #718096;
         font-weight: 500;
+        margin: 0;
     }
-    .popup-size-value {
-        font-size: 14px;
+    .popup-size-text strong {
         color: #2b6cb0;
         font-weight: 700;
     }
-    .btn-edit-popup {
-        background: #3182ce;
-        color: white;
-        border: none;
-        padding: 8px 12px;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: 600;
+    /* ปุ่มดินสอแก้ไขแบบกลมขวามือ จิ้มง่ายแต่ไม่กินพื้นที่ */
+    .btn-edit-popup-circle {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #ebf8ff;
+        color: #3182ce;
+        border: 1px solid #bee3f8;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        font-size: 12px;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
-        transition: background 0.2s;
-        width: 100%;
+        transition: all 0.2s;
         box-sizing: border-box;
     }
-    .btn-edit-popup:hover {
-        background: #2b6cb0;
+    .btn-edit-popup-circle:active {
+        background: #3182ce;
+        color: white;
     }
 
     /* กล่องแสดงระดับการซูมมุมบนซ้าย */
@@ -467,9 +461,7 @@ function resetHighlights() {
     document.querySelectorAll('#data-table tr').forEach(tr => tr.classList.remove('selected-row'));
 }
 
-// เมื่อคลิกพื้นที่ว่างบนแผนที่ ให้รีเซ็ตค่าสีไฮไลต์ทั้งหมด
 map.on('click', (e) => {
-    // เช็คว่าไม่ใช่การคลิกโดน Polygon
     const features = map.queryRenderedFeatures(e.point);
     const clickedOnPolygon = features.some(f => f.layer.id.startsWith('layer-zone-'));
     if (!clickedOnPolygon) {
@@ -523,12 +515,11 @@ map.on('load', async () => {
             });
             
             // ==========================================================
-            // เมื่อคลิกพื้นที่โดยตรง: ไฮไลต์สี + เปิดหน้าต่าง Popup ดีไซน์ใหม่สุดพรีเมียม
+            // เมื่อคลิกพื้นที่โดยตรง: เปิดหน้าต่าง Popup ดีไซน์กะทัดรัด (Mobile Compact)
             // ==========================================================
             map.on('click', layerId, (e) => {
                 if(editingZoneId) return; 
 
-                // ปรับระดับ Layer สีให้อันอื่นจางลง อันที่เลือกเข้มขึ้นทันที
                 for (let i = 0; i < totalZonesCount; i++) {
                     if (i === index) {
                         map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', 0.85);
@@ -539,7 +530,6 @@ map.on('load', async () => {
                     }
                 }
 
-                // ซิงค์เลื่อนแถวข้อมูลในตารางอัตโนมัติ
                 const rows = document.querySelectorAll('#data-table tbody tr');
                 if(rows[index]) {
                     document.querySelectorAll('#data-table tr').forEach(tr => tr.classList.remove('selected-row'));
@@ -547,36 +537,31 @@ map.on('load', async () => {
                     rows[index].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
 
-                // เตรียมข้อมูลพิกัด Base64 ส่งให้ตัวแก้ไข
                 const targetZone = globalZonesArray[index];
                 const coordsBase64 = btoa(encodeURIComponent(targetZone.coordinates_data));
 
-                // เคลียร์และสร้าง Popup ดีไซน์ใหม่
                 if(activePopup) activePopup.remove();
                 
                 activePopup = new maplibregl.Popup({
                     closeButton: true,
-                    closeOnClick: false, // ป้องกันการคลิกซ้ำซ้อนแล้วปิดตัวเอง
-                    offset: [0, -10]
+                    closeOnClick: false,
+                    offset: [0, -5]
                 })
                 .setLngLat(e.lngLat)
                 .setHTML(`
                     <div class="custom-popup">
-                        <div class="popup-header">
+                        <div class="popup-main-content">
                             <div class="popup-title">
                                 <i class="fas fa-map-marker-alt" style="color: ${targetZone.Color || '#2ecc71'}"></i> 
                                 ${targetZone.zone_name}
                             </div>
-                        </div>
-                        <div class="popup-body">
-                            <div class="popup-size-box">
-                                <span class="popup-size-label"><i class="fas fa-vector-square"></i> ขนาดพื้นที่</span>
-                                <span class="popup-size-value">${targetZone['Area size']}</span>
+                            <div class="popup-size-text">
+                                ขนาด: <strong>${targetZone['Area size']}</strong>
                             </div>
-                            <button class="btn-edit-popup" onclick="startEditZone('${targetZone.zone_id}', '${targetZone.zone_name}', '${coordsBase64}')">
-                                <i class="fas fa-pen"></i> แก้ไขขนาด / รูปทรง
-                            </button>
                         </div>
+                        <button class="btn-edit-popup-circle" title="แก้ไขพื้นที่" onclick="startEditZone('${targetZone.zone_id}', '${targetZone.zone_name}', '${coordsBase64}')">
+                            <i class="fas fa-pen"></i>
+                        </button>
                     </div>
                 `)
                 .addTo(map);
