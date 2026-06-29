@@ -79,25 +79,13 @@
     #data-table tr { transition: .2s; cursor: pointer; }
     #data-table tr:not(.selected-row):active { background: #f7fafc; }
     #data-table tr.selected-row { background: #EAF3FF !important; border-left: 5px solid #1677FF; }
-    .color-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+    .color-dot { inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
     
     .btn-table-report { background: #EAF3FF; border: none; color: #1677FF; font-size: 16px; cursor: pointer; padding: 8px 12px; border-radius: 10px; transition: .2s; }
     .btn-table-report:active { transform: scale(0.9); background: #1677FF; color: white; }
 
-    .maplibregl-popup-content { padding: 0 !important; border-radius: 22px !important; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,.28) !important; border: none !important; background: white; }
-    .maplibregl-popup-close-button { color: #999 !important; padding: 6px 10px !important; font-size: 16px !important; outline: none !important; top: 4px !important; right: 4px !important; }
-    
-    .custom-popup { width: 250px; padding: 18px; background: white; position: relative; }
-    .popup-title { font-size: 16px; font-weight: 700; color: #2d3748; margin: 0 0 6px 0; padding-right: 30px; word-break: break-all; }
-    .popup-grass-text { font-size: 13px; color: #666; margin-bottom: 12px; }
-    .popup-grass-badge { display: inline-block; padding: 4px 8px; border-radius: 8px; font-weight: bold; font-size: 12px; margin-left: 5px; }
-    
-    .btn-popup-edit-trigger {
-        position: absolute; right: 14px; bottom: 14px; background: #EAF3FF; color: #1677FF;
-        border: none; width: 38px; height: 38px; border-radius: 12px; font-size: 15px;
-        cursor: pointer; display: flex; align-items: center; justify-content: center; transition: .2s;
-    }
-    .btn-popup-edit-trigger:active { transform: scale(0.9); background: #1677FF; color: white; }
+    /* เอาการควบคุมกล่อง Popup ออกจาก CSS เก่าเพื่อความคลีน */
+    .maplibregl-popup { display: none !important; }
 
     .mobile-report-form { display: flex; flex-direction: column; gap: 12px; padding-top: 15px; }
     .form-group { display: flex; flex-direction: column; gap: 6px; }
@@ -222,7 +210,6 @@ let totalZonesCount = 0;
 let globalZonesArray = [];
 let viewMode = 'team'; 
 let selectedZone = null;
-let activePopup = null;
 
 map.on('draw.create', (e) => {
     const feats = draw.getAll();
@@ -287,7 +274,6 @@ setupDragLogic(tableSheet, document.getElementById('table-drag-handle'));
 setupDragLogic(formSheet, document.getElementById('form-drag-handle'));
 
 document.getElementById('table-open-btn').onclick = () => {
-    if(activePopup) activePopup.remove();
     formSheet.style.display = 'none';
     tableSheet.style.display = 'flex';
     tableSheet.style.height = '52vh'; 
@@ -320,6 +306,7 @@ function updateColors() {
     });
 }
 
+// เรนเดอร์ตารางรายชื่อโซนพื้นที่
 function renderTable() {
     const tbody = document.getElementById('table-tbody');
     const th = document.getElementById('th-dynamic-status');
@@ -354,7 +341,6 @@ function renderTable() {
 }
 
 document.getElementById('view-mode-btn').onclick = () => {
-    if(activePopup) activePopup.remove();
     viewMode = (viewMode === 'team') ? 'grass' : 'team';
     document.getElementById('view-badge').innerText = viewMode === 'team' ? "ทีม" : "หญ้า";
     document.getElementById('view-mode-btn').style.background = viewMode === 'team' ? "#1677FF" : "linear-gradient(135deg, #e74c3c, #c0392b)";
@@ -365,8 +351,6 @@ document.getElementById('view-mode-btn').onclick = () => {
 function focusOnZoneFromTable(index, element) {
     document.querySelectorAll('#data-table tr').forEach(r => r.classList.remove('selected-row'));
     element.classList.add('selected-row');
-
-    if(activePopup) activePopup.remove();
 
     const zone = globalZonesArray[index];
     const coords = JSON.parse(zone.coordinates_data);
@@ -384,7 +368,6 @@ function focusOnZoneFromTable(index, element) {
 
 function activateReportingForm(zone, index) {
     selectedZone = zone;
-    if(activePopup) activePopup.remove();
     tableSheet.style.display = 'none';
     
     document.getElementById('form-sheet-title').innerText = `รายงานผล: ${zone.zone_name}`;
@@ -408,10 +391,6 @@ function triggerReportFromTable(index) {
     activateReportingForm(globalZonesArray[index], index);
 }
 
-window.openFormFromPopup = function(index) {
-    activateReportingForm(globalZonesArray[index], index);
-}
-
 function resetHighlights() {
     for(let i=0; i<totalZonesCount; i++) {
         if(map.getLayer(`layer-zone-${i}`)) {
@@ -430,7 +409,6 @@ map.on('click', (e) => {
         formSheet.style.display = 'none'; 
         tableSheet.style.display = 'none'; 
         document.getElementById('fab-box').classList.remove('fab-hidden'); 
-        if(activePopup) { activePopup.remove(); activePopup = null; }
     }
 });
 
@@ -467,44 +445,26 @@ map.on('load', async () => {
             map.addLayer({ 'id': lyrId, 'type': 'fill', 'source': srcId, 'paint': { 'fill-color': c, 'fill-opacity': 0.5 } });
             map.addLayer({ 'id': `${lyrId}-stroke`, 'type': 'line', 'source': srcId, 'paint': { 'line-color': c, 'line-width': 2 } });
             
-            // ❌ เอา e.stopPropagation() ออกเรียบร้อย ป้องกัน Error บั๊กค้าง
-            map.on('click', lyrId, (e) => {
+            // ==========================================================
+            // 🌟 ลอจิกอัปเดต: ตัดระบ Popup ออกถาวร จิ้มแปลงแล้วเด้งตารางสไลด์ไปไฮไลต์ทันที
+            // ==========================================================
+            map.on('click', lyrId, () => {
                 if(editingZoneId) return;
-                
-                const currentGrass = zone.current_grass_percentage;
-                const badgeColor = getGrassColor(currentGrass);
-                
-                if(activePopup) activePopup.remove();
-                
-                activePopup = new maplibregl.Popup({ closeButton: true, closeOnClick: false, offset: [0, -5] })
-                .setLngLat(e.lngLat)
-                .setHTML(`
-                    <div class="custom-popup">
-                        <h4 class="popup-title">${zone.zone_name}</h4>
-                        <div class="popup-grass-text">
-                            ระดับความหนาหญ้า: <span class="popup-grass-badge" style="background:${badgeColor}22; color:${badgeColor};">${currentGrass}%</span>
-                        </div>
-                        <button class="btn-popup-edit-trigger" title="คลิกเพื่อป้อนข้อมูล" onclick="openFormFromPopup(${index})">
-                            <i class="fas fa-pencil"></i>
-                        </button>
-                    </div>
-                `)
-                .addTo(map);
 
-                // ปิดฟอร์ม ถ้าเปิดอยู่ แล้วเปิดตารางแทน
+                // 1. ดึงหน้าต่างตารางรายการขึ้นมาและซ่อนปุ่มเมนูลอย
                 formSheet.style.display = 'none';
                 tableSheet.style.display = 'flex';
-                tableSheet.style.height = '35vh'; 
+                tableSheet.style.height = '35vh'; // ดึงตารางมาแง้มไว้ 35% ไม่ให้บังแผ่นดินเยอะ
                 document.getElementById('fab-box').classList.add('fab-hidden');
 
-                // ไฮไลต์แผนที่
+                // 2. ปรับการเทเฉดสีไฮไลต์บนแปลงแผนที่
                 document.querySelectorAll('#data-table tr').forEach(r => r.classList.remove('selected-row'));
                 for(let i=0; i<totalZonesCount; i++) {
                     map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', i === index ? 0.85 : 0.15);
                     map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', i === index ? 5 : 1);
                 }
 
-                // สไลด์ตารางมาหา
+                // 3. ไฮไลต์แถวในตารางคู่ขนานพร้อมเลื่อนสไลด์ (Scroll) ไปหาไอเทมนั้นแบบนุ่มนวล
                 const row = document.getElementById(`tr-zone-${index}`);
                 if(row) {
                     row.classList.add('selected-row');
