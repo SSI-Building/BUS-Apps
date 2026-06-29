@@ -207,10 +207,18 @@ async function initLiff() {
         applyRoleRestrictions();
         loadMapData();
         
-    } catch (err) {
-        document.getElementById('loading-text').innerText = "❌ เกิดข้อผิดพลาดในการต่อท่อ LINE หรือคุณอาจยังไม่มีสิทธิ์เข้าใช้งาน";
-        console.error(err);
+   } catch (err) {
+    // ดึงโปรไฟล์มาโชว์รหัสเพื่อเอาไปกรอกในชีต
+    try {
+        const profile = await liff.getProfile();
+        document.getElementById('loading-text').innerHTML = 
+            "🔒 บล็อกสิทธิ์คนนอกกลุ่ม<br>" +
+            "กรุณาก๊อปปี้รหัสนี้ไปใส่ในชีตช่องคอลัมน์ D:<br>" +
+            `<input type='text' value='${profile.userId}' style='width:90%; padding:8px; margin-top:5px; text-align:center;' readonly onclick='this.select()'>`;
+    } catch(e) {
+        document.getElementById('loading-text').innerText = "❌ เกิดข้อผิดพลาดในการเชื่อมต่อ LINE";
     }
+}
 }
 
 // 🛠️ ลอจิกสำคัญ: บล็อกหรือซ่อนปุ่มตามสิทธิ์จริงของคนในกลุ่ม
