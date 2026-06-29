@@ -47,11 +47,11 @@
     #edit-panel button { width: 48%; padding: 8px; cursor: pointer; border: none; border-radius: 4px; }
 
     /* ==========================================================
-       ปรับแต่งดีไซน์หน้าต่าง POPUP ใหม่ให้เล็ก กระชับ เหมาะกับมือถือ
+       ปรับแต่งดีไซน์หน้าต่าง POPUP ใหม่ให้กะทัดรัด พร้อมฟอร์มรายงานของหัวหน้างาน
        ========================================================== */
     .maplibregl-popup-content {
         padding: 0 !important;
-        border-radius: 10px !important; /* ลดความโค้งลงเล็กน้อยให้รับกับกล่องที่เล็กลง */
+        border-radius: 10px !important;
         box-shadow: 0 6px 18px rgba(0,0,0,0.15) !important;
         border: 1px solid rgba(0,0,0,0.08);
         overflow: hidden;
@@ -64,22 +64,18 @@
         top: 2px !important;
         right: 2px !important;
     }
-    .maplibregl-popup-close-button:hover {
-        background: none !important;
-        color: #4a5568 !important;
-    }
     .custom-popup {
-        width: 175px; /* ปรับความกว้างให้กะทัดรัดขึ้น */
+        width: 210px; /* ขยายเล็กน้อยเพื่อรองรับช่องพิมพ์ */
         background: #ffffff;
-        padding: 10px 12px; /* ใช้ Padding รวมแทนการแยกส่วน เพื่อประหยัดพื้นที่แนวตั้ง */
+        padding: 10px 12px;
         box-sizing: border-box;
         position: relative;
     }
     .popup-main-content {
-        padding-right: 32px; /* เว้นพื้นที่ด้านขวาไว้สำหรับปุ่มแก้ไขดินสอ */
+        padding-right: 28px;
     }
     .popup-title {
-        font-size: 13px; /* ลดขนาดอักษร */
+        font-size: 13px;
         font-weight: 700;
         color: #2d3748;
         margin: 0 0 3px 0;
@@ -93,38 +89,70 @@
         font-size: 11px;
         color: #718096;
         font-weight: 500;
-        margin: 0;
+        margin: 0 0 4px 0;
     }
-    .popup-size-text strong {
-        color: #2b6cb0;
-        font-weight: 700;
+    .popup-grass-text {
+        font-size: 11px;
+        color: #4a5568;
+        margin: 0 0 6px 0;
     }
-    /* ปุ่มดินสอแก้ไขแบบกลมขวามือ จิ้มง่ายแต่ไม่กินพื้นที่ */
+    
+    /* โครงสร้างฟอร์มรายงานด่วนของหัวหน้างานในกะทัดรัด */
+    .popup-report-form {
+        border-top: 1px solid #edf2f7;
+        padding-top: 6px;
+        margin-top: 4px;
+    }
+    .popup-report-form label {
+        font-size: 10px;
+        font-weight: bold;
+        color: #718096;
+        display: block;
+        margin-bottom: 2px;
+    }
+    .popup-report-form input {
+        width: 100%;
+        padding: 4px 6px;
+        margin-bottom: 5px;
+        box-sizing: border-box;
+        border: 1px solid #cbd5e0;
+        border-radius: 4px;
+        font-size: 11px;
+    }
+    .btn-submit-report {
+        background: #3182ce;
+        color: white;
+        border: none;
+        padding: 5px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: bold;
+        cursor: pointer;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+    }
+    
     .btn-edit-popup-circle {
         position: absolute;
         right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
+        top: 12px;
         background: #ebf8ff;
         color: #3182ce;
         border: 1px solid #bee3f8;
-        width: 28px;
-        height: 28px;
+        width: 26px;
+        height: 26px;
         border-radius: 50%;
-        font-size: 12px;
+        font-size: 11px;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all 0.2s;
         box-sizing: border-box;
     }
-    .btn-edit-popup-circle:active {
-        background: #3182ce;
-        color: white;
-    }
 
-    /* กล่องแสดงระดับการซูมมุมบนซ้าย */
     #zoom-indicator {
         position: absolute;
         top: 10px;
@@ -139,13 +167,12 @@
         pointer-events: none;
     }
 
-    /* --- FAB --- */
+    /* --- FAB Container & Buttons --- */
     .fab-container {
         position: absolute; bottom: 30px; right: 15px;
         display: flex; flex-direction: column; gap: 12px; z-index: 100;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .fab-hidden { opacity: 0; pointer-events: none; transform: scale(0.5) translateY(50px); }
+    .fab-hidden { display: none !important; }
     .fab {
         width: 56px; height: 56px; border-radius: 50%;
         border: none; color: white; font-size: 20px;
@@ -155,6 +182,13 @@
     }
     .fab:active { transform: scale(0.9); }
     .fab-table { background: linear-gradient(135deg, #1e90ff, #0077e6); }
+    
+    /* ปุ่มสลับโหมดการดูสี */
+    .fab-toggle-view { background: linear-gradient(135deg, #2ecc71, #27ae60); position: relative; }
+    .fab-toggle-view .badge {
+        position: absolute; top: -2px; right: -2px; background: #e74c3c;
+        color: white; font-size: 10px; padding: 2px 5px; border-radius: 10px; font-weight: bold;
+    }
 
     /* --- Bottom Sheet Table --- */
     #data-table-container {
@@ -173,7 +207,7 @@
         display: flex; justify-content: space-between; align-items: center;
     }
     #data-table-wrapper { overflow-y: auto; padding: 0 15px 15px; flex: 1; touch-action: pan-y; }
-    #data-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+    #data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
     #data-table th { padding: 12px 10px; text-align: left; background: #fff; color: #888; border-bottom: 2px solid #f9f9f9; }
     #data-table td { padding: 15px 10px; border-bottom: 1px solid #f1f1f1; color: #333; cursor: pointer; }
     
@@ -188,13 +222,15 @@
 <div id="zoom-indicator">Zoom: 15.58</div>
 
 <div class="fab-container" id="fab-box">
+    <button class="fab fab-toggle-view" id="toggle-view-btn" title="สลับมุมมองสีแผนที่">
+        <i class="fas fa-layer-group"></i>
+        <span class="badge" id="view-mode-badge">ทีม</span>
+    </button>
     <button class="fab fab-table" id="toggle-table-btn" title="ตารางข้อมูล"><i class="fas fa-list-ul"></i></button>
 </div>
 
 <div id="data-table-container">
-    <div class="drag-handle" id="drag-zone">
-        <div class="drag-line"></div>
-    </div>
+    <div class="drag-handle" id="drag-zone"><div class="drag-line"></div></div>
     <div id="window-header">
         <strong style="font-size:18px;">ข้อมูลพื้นที่ผืนดิน</strong>
         <button id="close-table-btn" style="background:#f5f5f5; border:none; width:35px; height:35px; border-radius:50%; font-size:22px; color:#999;">&times;</button>
@@ -205,10 +241,11 @@
                 <tr>
                     <th>ชื่อพื้นที่</th>
                     <th>ขนาด</th>
+                    <th id="table-th-status">สถานะทีม</th>
                 </tr>
             </thead>
             <tbody id="zone-list-tbody">
-                <tr><td colspan="2" style="text-align:center; color:#999;">กำลังดึงข้อมูล...</td></tr>
+                <tr><td colspan="3" style="text-align:center; color:#999;">กำลังดึงข้อมูล...</td></tr>
             </tbody>
         </table>
     </div>
@@ -217,10 +254,10 @@
 <div id="save-panel">
     <h3 id="panel-title">บันทึกพื้นที่ใหม่</h3>
     <input type="text" id="zone-name" placeholder="ชื่อโซน / ชื่อพื้นที่" />
-    <label style="font-size:12px;">เลือกสีแสดงผล:</label>
+    <label style="font-size:12px;">เลือกสีประจำทีมทำงาน:</label>
     <select id="zone-color">
-        <option value="#2ecc71">สีเขียว</option>
-        <option value="#f1c40f">สีเหลือง</option>
+        <option value="#2ecc71">ทีมสีเขียว</option>
+        <option value="#f1c40f">ทีมสีเหลือง</option>
     </select>
     <div style="display: flex; justify-content: space-between;">
         <button class="btn-save" id="btn-save-zone">บันทึก</button>
@@ -245,39 +282,21 @@
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzZ9MH7fONCkaqgmqWLOM8yAoRm2e4j82x79Lwhpju9k3gz1Uzi9Y4s4ibhwv_bhCnX/exec"; 
 
 const targetLngLat = [99.535692, 11.231666];
-const desiredOffsetSouth = 0.0010;
-const desiredOffsetWest  = -0.0010;
-const initialBearing = -45.6;
-const initialZoom = 15.58;
-
 const map = new maplibregl.Map({
     container: 'map',
     style: {
         version: 8,
-        sources: {
-            satellite: {
-                type: 'raster',
-                tiles: ['https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'],
-                tileSize: 256
-            }
-        },
+        sources: { satellite: { type: 'raster', tiles: ['https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'], tileSize: 256 } },
         layers: [{ id: 'satellite', type: 'raster', source: 'satellite' }]
     },
-    center: [targetLngLat[0] - desiredOffsetWest, targetLngLat[1] - desiredOffsetSouth],
-    zoom: initialZoom,
-    bearing: initialBearing,
-    maxZoom: 21
+    center: [targetLngLat[0] - (-0.0010), targetLngLat[1] - 0.0010],
+    zoom: 15.58, bearing: -45.6, maxZoom: 21
 });
 
 const zoomIndicator = document.getElementById('zoom-indicator');
-map.on('move', () => {
-    zoomIndicator.innerText = `Zoom: ${map.getZoom().toFixed(2)}`;
-});
+map.on('move', () => { zoomIndicator.innerText = `Zoom: ${map.getZoom().toFixed(2)}`; });
 
-const draw = new MapboxDraw({
-    displayControlsDefault: false,
-    controls: { polygon: true, trash: true }
-});
+const draw = new MapboxDraw({ displayControlsDefault: false, controls: { polygon: true, trash: true } });
 map.addControl(draw, 'top-right');
 
 let currentFeature = null;
@@ -286,6 +305,9 @@ let activePopup = null;
 let totalZonesCount = 0; 
 let globalZonesArray = []; 
 
+// 'team' = ดูสีแบ่งตามคอลัมน์ E, 'grass' = ดูตามสภาพความหนาของหญ้าจริง (เขียว/เหลือง/แดง)
+let currentViewMode = 'team'; 
+
 map.on('draw.create', handleDrawEnd);
 map.on('draw.update', handleDrawEnd);
 
@@ -293,9 +315,7 @@ function handleDrawEnd(e) {
     const feats = draw.getAll();
     if (feats.features.length > 0) {
         currentFeature = feats.features[feats.features.length - 1];
-        if (!editingZoneId) {
-            document.getElementById('save-panel').style.display = 'block';
-        }
+        if (!editingZoneId) document.getElementById('save-panel').style.display = 'block';
     }
 }
 
@@ -308,48 +328,31 @@ document.getElementById('btn-cancel-zone').onclick = () => {
 document.getElementById('btn-save-zone').onclick = async () => {
     const zoneName = document.getElementById('zone-name').value;
     const color = document.getElementById('zone-color').value;
-    
     if(!zoneName) { alert('กรุณากรอกชื่อโซนด้วยครับ'); return; }
     if(!currentFeature) return;
 
     const areaSquareMeters = turf.area(currentFeature);
-    const areaSizeText = areaSquareMeters.toFixed(2) + " ตร.ม.";
-    const coords = currentFeature.geometry.coordinates[0]; 
-
     const payload = {
         action: "saveZone",
         zone_name: zoneName,
-        coordinates_data: JSON.stringify(coords),
-        area_size: areaSizeText,
+        coordinates_data: JSON.stringify(currentFeature.geometry.coordinates[0]),
+        area_size: areaSquareMeters.toFixed(2) + " ตร.ม.",
         color: color
     };
-
     await sendData(payload);
 };
 
 function startEditZone(zoneId, zoneName, coordsBase64) {
     editingZoneId = zoneId;
-    
     document.getElementById('save-panel').style.display = 'none';
     document.getElementById('edit-panel').style.display = 'block';
-    document.getElementById('edit-zone-display').innerText = `พื้นที่: ${zoneName} (${zoneId})`;
+    document.getElementById('edit-zone-display').innerText = `พื้นที่: ${zoneName}`;
 
     const coordsStr = decodeURIComponent(atob(coordsBase64));
-    const coords = JSON.parse(coordsStr);
-    
-    const feature = {
-        id: 'editing-feature',
-        type: 'Feature',
-        properties: {},
-        geometry: { type: 'Polygon', coordinates: [coords] }
-    };
-
-    draw.add(feature);
+    draw.add({ id: 'editing-feature', type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [JSON.parse(coordsStr)] } });
     draw.changeMode('direct_select', { featureId: 'editing-feature' }); 
-    
     document.getElementById('data-table-container').style.display = 'none';
-    document.getElementById('fab-box').classList.remove('fab-hidden');
-
+    document.getElementById('fab-box').classList.add('fab-hidden');
     if(activePopup) { activePopup.remove(); activePopup = null; }
 }
 
@@ -357,25 +360,19 @@ document.getElementById('btn-cancel-edit').onclick = () => {
     draw.deleteAll();
     document.getElementById('edit-panel').style.display = 'none';
     editingZoneId = null;
-    currentFeature = null;
+    document.getElementById('fab-box').classList.remove('fab-hidden');
 };
 
 document.getElementById('btn-update-zone').onclick = async () => {
     const feats = draw.getAll();
     if(feats.features.length === 0) return;
-    
-    const updatedFeature = feats.features[0];
-    const areaSquareMeters = turf.area(updatedFeature);
-    const areaSizeText = areaSquareMeters.toFixed(2) + " ตร.ม.";
-    const coords = updatedFeature.geometry.coordinates[0];
-
+    const areaSquareMeters = turf.area(feats.features[0]);
     const payload = {
         action: "updateZone",
         zone_id: editingZoneId,
-        coordinates_data: JSON.stringify(coords),
-        area_size: areaSizeText
+        coordinates_data: JSON.stringify(feats.features[0].geometry.coordinates[0]),
+        area_size: areaSquareMeters.toFixed(2) + " ตร.ม."
     };
-
     await sendData(payload);
 };
 
@@ -383,70 +380,111 @@ async function sendData(payload) {
     try {
         const response = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
         const result = await response.json();
-        if(result.status === "success") {
-            alert("บันทึกการเปลี่ยนแปลงเรียบร้อยแล้วครับ!");
-            location.reload();
-        } else { alert("เกิดข้อผิดพลาด: " + result.message); }
+        if(result.status === "success") { alert("ดำเนินการสำเร็จ!"); location.reload(); }
     } catch (err) { alert("ไม่สามารถเชื่อมต่อฐานข้อมูลได้"); }
 }
 
-// --- ลอจิกควบคุมการทำงานของ Bottom Sheet ---
+// --- ควบคุมหน้าต่างเลื่อนขึ้นลง ---
 const sheet = document.getElementById('data-table-container');
 const fabBox = document.getElementById('fab-box');
 const dragZone = document.getElementById('drag-zone');
-
 let isDragging = false;
-const startDragging = () => { isDragging = true; document.body.style.userSelect = 'none'; };
-const dragging = (e) => {
+
+dragZone.addEventListener('mousedown', () => isDragging = true);
+window.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    let newHeight = window.innerHeight - clientY;
-    if (newHeight >= 100 && newHeight <= window.innerHeight * 0.9) { sheet.style.height = newHeight + 'px'; }
-};
-const stopDragging = () => { isDragging = false; document.body.style.userSelect = ''; };
+    let newHeight = window.innerHeight - e.clientY;
+    if (newHeight >= 100 && newHeight <= window.innerHeight * 0.9) sheet.style.height = newHeight + 'px';
+});
+window.addEventListener('mouseup', () => isDragging = false);
+dragZone.addEventListener('touchstart', () => isDragging = true);
+window.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    let newHeight = window.innerHeight - e.touches[0].clientY;
+    if (newHeight >= 100 && newHeight <= window.innerHeight * 0.9) sheet.style.height = newHeight + 'px';
+});
+window.addEventListener('touchend', () => isDragging = false);
 
-dragZone.addEventListener('mousedown', startDragging);
-window.addEventListener('mousemove', dragging);
-window.addEventListener('mouseup', stopDragging);
-dragZone.addEventListener('touchstart', startDragging);
-window.addEventListener('touchmove', dragging);
-window.addEventListener('touchend', stopDragging);
+document.getElementById('toggle-table-btn').onclick = () => { sheet.style.display = 'flex'; sheet.style.height = '50vh'; fabBox.classList.add('fab-hidden'); };
+document.getElementById('close-table-btn').onclick = () => { sheet.style.display = 'none'; fabBox.classList.remove('fab-hidden'); resetHighlights(); };
 
-document.getElementById('toggle-table-btn').onclick = () => {
-    sheet.style.display = 'flex';
-    sheet.style.height = '50vh';
-    fabBox.classList.add('fab-hidden');
-};
-document.getElementById('close-table-btn').onclick = () => {
-    sheet.style.display = 'none';
-    fabBox.classList.remove('fab-hidden');
-    resetHighlights(); 
+// --- สูตรสลัดเฉดสีตามระดับความหนาหญ้าคงเหลือจริง ---
+function getGrassColor(grassPercent) {
+    if (grassPercent <= 40) return '#2ecc71'; // หญ้าสั้น = สีเขียว
+    if (grassPercent <= 75) return '#f1c40f'; // หญ้าเริ่มหนา = สีเหลือง
+    return '#e74c3c'; // หญ้ายาวมาก = สีแดง
+}
+
+// --- ฟังก์ชันเปลี่ยนการเทสีเลเยอร์บนแผนที่ตามโหมดมุมมองปัจจุบัน ---
+function updateMapLayerColors() {
+    globalZonesArray.forEach((zone, i) => {
+        if (map.getLayer(`layer-zone-${i}`)) {
+            // สลับการดึงชุดสีระหว่าง สีประจำทีม (zone.Color) กับ สีสภาพหญ้า (getGrassColor)
+            const targetColor = (currentViewMode === 'team') ? (zone.Color || '#2ecc71') : getGrassColor(zone.current_grass_percentage);
+            map.setPaintProperty(`layer-zone-${i}`, 'fill-color', targetColor);
+            map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-color', targetColor);
+        }
+    });
+}
+
+// --- ฟังก์ชันเรนเดอร์ตารางประวัติให้ล้อไปตามโหมดมุมมอง ---
+function updateTableContent() {
+    const tableBody = document.getElementById('zone-list-tbody');
+    const thStatus = document.getElementById('table-th-status');
+    
+    if(currentViewMode === 'team') {
+        thStatus.innerText = "สีทีมผู้รับผิดชอบ";
+        tableBody.innerHTML = globalZonesArray.map((zone, index) => {
+            const color = zone.Color || '#2ecc71';
+            return `<tr onclick="focusOnZone('${zone.coordinates_data.replace(/'/g, "\\'")}', ${index}, this)">
+                <td><span class="color-dot" style="background:${color}"></span>${zone.zone_name}</td>
+                <td style="font-weight:bold; color:#2980b9;">${zone['Area size']}</td>
+                <td>${color === '#2ecc71' ? 'ทีมสีเขียว' : 'ทีมสีเหลือง'}</td>
+            </tr>`;
+        }).join('');
+    } else {
+        thStatus.innerText = "ความหนาหญ้าปัจจุบัน";
+        tableBody.innerHTML = globalZonesArray.map((zone, index) => {
+            const grassColor = getGrassColor(zone.current_grass_percentage);
+            return `<tr onclick="focusOnZone('${zone.coordinates_data.replace(/'/g, "\\'")}', ${index}, this)">
+                <td><span class="color-dot" style="background:${grassColor}"></span>${zone.zone_name}</td>
+                <td style="font-weight:bold; color:#2980b9;">${zone['Area size']}</td>
+                <td style="font-weight:bold; color:${grassColor}">${zone.current_grass_percentage}% (งานค้าง ${zone.current_grass_percentage}%)</td>
+            </tr>`;
+        }).join('');
+    }
+}
+
+// --- สลับโหมดเมื่อคลิกปุ่มสลับมุมมอง ---
+document.getElementById('toggle-view-btn').onclick = () => {
+    if (currentViewMode === 'team') {
+        currentViewMode = 'grass';
+        document.getElementById('view-mode-badge').innerText = "หญ้า";
+        document.getElementById('toggle-view-btn').style.background = "linear-gradient(135deg, #e74c3c, #c0392b)";
+    } else {
+        currentViewMode = 'team';
+        document.getElementById('view-mode-badge').innerText = "ทีม";
+        document.getElementById('toggle-view-btn').style.background = "linear-gradient(135deg, #2ecc71, #27ae60)";
+    }
+    updateMapLayerColors();
+    updateTableContent();
+    if(activePopup) { activePopup.remove(); activePopup = null; resetHighlights(); }
 };
 
-// --- กดจาก Table: ไฮไลต์สีเข้ม และไม่มี Popup กวนหน้าจอ ---
 function focusOnZone(coordsStr, targetIndex, element) {
     document.querySelectorAll('#data-table tr').forEach(tr => tr.classList.remove('selected-row'));
     element.classList.add('selected-row');
-
     if(activePopup) { activePopup.remove(); activePopup = null; }
 
     const coords = JSON.parse(coordsStr);
     let sumLng = 0, sumLat = 0;
     coords.forEach(c => { sumLng += c[0]; sumLat += c[1]; });
-    const centerLng = sumLng / coords.length;
-    const centerLat = sumLat / coords.length;
-    
-    map.flyTo({ center: [centerLng, centerLat], zoom: 17.5 });
+    map.flyTo({ center: [sumLng / coords.length, sumLat / coords.length], zoom: 17.5 });
     sheet.style.height = '25vh';
 
     for (let i = 0; i < totalZonesCount; i++) {
-        if (i === targetIndex) {
-            map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', 0.85);
-            map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', 4.5);
-        } else {
-            map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', 0.15);
-            map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', 1);
-        }
+        map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', i === targetIndex ? 0.85 : 0.15);
+        map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', i === targetIndex ? 4.5 : 1);
     }
 }
 
@@ -462,12 +500,34 @@ function resetHighlights() {
 }
 
 map.on('click', (e) => {
-    const features = map.queryRenderedFeatures(e.point);
-    const clickedOnPolygon = features.some(f => f.layer.id.startsWith('layer-zone-'));
-    if (!clickedOnPolygon) {
-        resetHighlights();
-    }
+    if (!map.queryRenderedFeatures(e.point).some(f => f.layer.id.startsWith('layer-zone-'))) resetHighlights();
 });
+
+// --- ฟังก์ชันบันทึกรายงานผลการดำเนินงานเข้าตารางประวัติจากฟอร์ม Popup ---
+async function submitReport(zoneId, zoneName) {
+    const workPercent = document.getElementById('input-work-percent').value;
+    const workerName = document.getElementById('input-worker-name').value;
+    
+    if(!workPercent || workPercent < 0 || workPercent > 100) { alert('กรุณากรอกเปอร์เซ็นต์ความคืบหน้างานให้ถูกต้อง (0-100)'); return; }
+    if(!workerName) { alert('กรุณาระบุชื่อผู้บันทึกความคืบหน้าด้วยครับ'); return; }
+
+    const submitBtn = document.getElementById('btn-submit-report');
+    submitBtn.disabled = true; submitBtn.innerText = "กำลังบันทึก...";
+
+    const payload = {
+        action: "reportProgress",
+        zone_id: zoneId,
+        zone_name: zoneName,
+        work_percentage: workPercent,
+        worker_name: workerName
+    };
+
+    try {
+        const response = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const result = await response.json();
+        if(result.status === "success") { alert('บันทึกรายงานความคืบหน้าสำเร็จเรียบร้อยแล้ว!'); location.reload(); }
+    } catch(err) { alert('ไม่สามารถเชื่อมข้อมูลหลังบ้านได้ในขณะนี้'); submitBtn.disabled = false; submitBtn.innerText = "บันทึกข้อมูลรายงาน"; }
+}
 
 map.on('load', async () => {
     try {
@@ -476,58 +536,28 @@ map.on('load', async () => {
         globalZonesArray = zones; 
         totalZonesCount = zones.length; 
         
-        const tableBody = document.getElementById('zone-list-tbody');
-        if(zones.length > 0) {
-            tableBody.innerHTML = zones.map((zone, index) => {
-                const color = zone.Color || '#2ecc71';
-                return `
-                    <tr onclick="focusOnZone('${zone.coordinates_data.replace(/'/g, "\\'")}', ${index}, this)">
-                        <td><span class="color-dot" style="background:${color}"></span>${zone.zone_name}</td>
-                        <td style="font-weight:bold; color:#2980b9;">${zone['Area size']}</td>
-                    </tr>
-                `;
-            }).join('');
-        } else {
-            tableBody.innerHTML = '<tr><td colspan="2" style="text-align:center; color:#999;">ไม่พบข้อมูลพื้นที่</td></tr>';
-        }
+        updateTableContent(); // จัดข้อมูลพ่นใส่ตาราง Bottom Sheet
 
         zones.forEach((zone, index) => {
             const sourceId = `source-zone-${index}`;
             const layerId = `layer-zone-${index}`;
             const coords = JSON.parse(zone.coordinates_data);
-
-            map.addSource(sourceId, {
-                'type': 'geojson',
-                'data': {
-                    'type': 'Feature',
-                    'geometry': { 'type': 'Polygon', 'coordinates': [coords] }
-                }
-            });
-
-            map.addLayer({
-                'id': layerId, 'type': 'fill', 'source': sourceId,
-                'paint': { 'fill-color': zone.Color || '#2ecc71', 'fill-opacity': 0.5 }
-            });
-
-            map.addLayer({
-                'id': `${layerId}-stroke`, 'type': 'line', 'source': sourceId,
-                'paint': { 'line-color': zone.Color || '#2ecc71', 'line-width': 2 }
-            });
             
-            // ==========================================================
-            // เมื่อคลิกพื้นที่โดยตรง: เปิดหน้าต่าง Popup ดีไซน์กะทัดรัด (Mobile Compact)
-            // ==========================================================
+            // เริ่มต้นหน้าแรก ดึงสีทีม (zone.Color) มาเทสีกราฟิกก่อนตามโหมดเริ่มต้น
+            const initialColor = zone.Color || '#2ecc71';
+
+            map.addSource(sourceId, { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'Polygon', 'coordinates': [coords] } } });
+            map.addLayer({ 'id': layerId, 'type': 'fill', 'source': sourceId, 'paint': { 'fill-color': initialColor, 'fill-opacity': 0.5 } });
+            map.addLayer({ 'id': `${layerId}-stroke`, 'type': 'line', 'source': sourceId, 'paint': { 'line-color': initialColor, 'line-width': 2 } });
+            
+            // เมื่อคลิกโดนพื้นที่โดยตรง: เปิดหน้าต่างกรอกฟอร์มอัปเดตหญ้า + ดึงปุ่มกลมดินสอแก้ไขขอบเขตไว้มุมขวาบน
             map.on('click', layerId, (e) => {
                 if(editingZoneId) return; 
+                e.stopPropagation(); 
 
                 for (let i = 0; i < totalZonesCount; i++) {
-                    if (i === index) {
-                        map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', 0.85);
-                        map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', 4.5);
-                    } else {
-                        map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', 0.15);
-                        map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', 1);
-                    }
+                    map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', i === index ? 0.85 : 0.15);
+                    map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', i === index ? 4.5 : 1);
                 }
 
                 const rows = document.querySelectorAll('#data-table tbody tr');
@@ -539,37 +569,39 @@ map.on('load', async () => {
 
                 const targetZone = globalZonesArray[index];
                 const coordsBase64 = btoa(encodeURIComponent(targetZone.coordinates_data));
+                const grassColor = getGrassColor(targetZone.current_grass_percentage);
 
                 if(activePopup) activePopup.remove();
                 
-                activePopup = new maplibregl.Popup({
-                    closeButton: true,
-                    closeOnClick: false,
-                    offset: [0, -5]
-                })
+                activePopup = new maplibregl.Popup({ closeButton: true, closeOnClick: false, offset: [0, -5] })
                 .setLngLat(e.lngLat)
                 .setHTML(`
                     <div class="custom-popup">
                         <div class="popup-main-content">
-                            <div class="popup-title">
-                                <i class="fas fa-map-marker-alt" style="color: ${targetZone.Color || '#2ecc71'}"></i> 
-                                ${targetZone.zone_name}
-                            </div>
-                            <div class="popup-size-text">
-                                ขนาด: <strong>${targetZone['Area size']}</strong>
-                            </div>
+                            <div class="popup-title"><i class="fas fa-layer-group"></i> ${targetZone.zone_name}</div>
+                            <div class="popup-size-text">ขนาด: <strong>${targetZone['Area size']}</strong></div>
+                            <div class="popup-grass-text">หญ้าหนา: <strong style="color:${grassColor}">${targetZone.current_grass_percentage}%</strong></div>
                         </div>
-                        <button class="btn-edit-popup-circle" title="แก้ไขพื้นที่" onclick="startEditZone('${targetZone.zone_id}', '${targetZone.zone_name}', '${coordsBase64}')">
+                        
+                        <button class="btn-edit-popup-circle" title="แก้ไขพิกัดพื้นที่" onclick="startEditZone('${targetZone.zone_id}', '${targetZone.zone_name}', '${coordsBase64}')">
                             <i class="fas fa-pen"></i>
                         </button>
+
+                        <div class="popup-report-form">
+                            <label>พื้นที่นี้ตัดเสร็จเพิ่มขึ้นอีก (%)</label>
+                            <input type="number" id="input-work-percent" placeholder="เช่น กรอก 100 หากตัดหมด" min="0" max="100">
+                            <label>ชื่อหัวหน้างาน / ผู้รายงาน</label>
+                            <input type="text" id="input-worker-name" placeholder="ชื่อผู้ตัด/ผู้ตรวจ">
+                            <button class="btn-submit-report" id="btn-submit-report" onclick="submitReport('${targetZone.zone_id}', '${targetZone.zone_name}')">
+                                <i class="fas fa-check-circle"></i> บันทึกรายงานตัดหญ้า
+                            </button>
+                        </div>
                     </div>
                 `)
                 .addTo(map);
             });
         });
-    } catch (err) {
-        console.error("Error loading zones:", err);
-    }
+    } catch (err) { console.error("Error loading zones:", err); }
 });
 </script>
 </body>
