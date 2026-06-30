@@ -10,61 +10,47 @@
 <link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.css" type="text/css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
 <style>
-    body { 
-        margin: 0; padding: 0; 
-        font-family: 'Prompt', sans-serif; 
-        background: #EEF2F8; overflow: hidden; 
-        user-select: none; -webkit-tap-highlight-color: transparent;
-    }
+    body { margin: 0; padding: 0; font-family: 'Prompt', sans-serif; background: #EEF2F8; overflow: hidden; user-select: none; -webkit-tap-highlight-color: transparent; }
     * { box-sizing: border-box; }
     
     #map { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #F7F8FA; touch-action: manipulation; }
     
-    #save-panel, #edit-panel {
-        position: absolute; top: 80px; left: 18px;
-        background: rgba(255, 255, 255, 0.95); padding: 15px;
-        border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-        display: none; z-index: 10; width: 260px;
+    /* 🌟 วิดเจ็ตโปรไฟล์แบบมินิมอล */
+    #profile-widget {
+        position: absolute; top: 15px; left: 15px; z-index: 100;
+        background: rgba(255, 255, 255, 0.95); padding: 8px 16px;
+        border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        font-size: 13px; font-weight: 600; color: #333; display: flex; align-items: center; gap: 8px; cursor: pointer; backdrop-filter: blur(5px);
     }
+    .badge-role { font-size: 10px; padding: 3px 8px; border-radius: 12px; color: white; background: #95a5a6; }
+    .badge-vip { background: #e67e22; }
+    
+    /* โครงสร้าง Panel เดิม */
+    #save-panel, #edit-panel { position: absolute; top: 80px; left: 18px; background: rgba(255, 255, 255, 0.95); padding: 15px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: none; z-index: 10; width: 260px; }
     #edit-panel { background: #34495e; color: white; }
     #save-panel h3, #edit-panel h3 { margin: 0 0 10px 0; font-size: 14px; font-weight: 600; }
-    #save-panel input, #save-panel select { width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; }
-    #save-panel button, #edit-panel button { width: 48%; padding: 10px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; }
+    #save-panel input, #save-panel select { width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; font-family: 'Prompt'; }
+    #save-panel button, #edit-panel button { width: 48%; padding: 10px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; font-family: 'Prompt';}
     .btn-save { background: #1677FF; color: white; }
     .btn-cancel { background: #e74c3c; color: white; }
 
-    .fab-container {
-        position: fixed; right: 18px; bottom: 28px; display: flex; flex-direction: column; gap: 15px; z-index: 500; transition: .25s;
-    }
+    /* โครงสร้าง FAB และ Bottom Sheet เดิม */
+    .fab-container { position: fixed; right: 18px; bottom: 28px; display: flex; flex-direction: column; gap: 15px; z-index: 500; transition: .25s; }
     .fab-hidden { display: none !important; }
-    .fab {
-        width: 62px; height: 62px; border-radius: 22px; border: none;
-        background: rgba(255, 255, 255, .92); backdrop-filter: blur(18px);
-        box-shadow: 0 8px 30px rgba(0,0,0,.18); font-size: 22px; color: #1677ff;
-        display: flex; align-items: center; justify-content: center; cursor: pointer; transition: .2s;
-    }
+    .fab { width: 62px; height: 62px; border-radius: 22px; border: none; background: rgba(255, 255, 255, .92); backdrop-filter: blur(18px); box-shadow: 0 8px 30px rgba(0,0,0,.18); font-size: 22px; color: #1677ff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: .2s; }
     .fab:active { transform: scale(.93); }
     .fab-toggle-view { background: #1677FF; color: white; position: relative; }
-    .fab-toggle-view .badge {
-        position: absolute; top: -2px; right: -2px; background: #e74c3c;
-        color: white; font-size: 10px; padding: 2px 5px; border-radius: 10px; font-weight: bold;
-    }
+    .fab-toggle-view .badge { position: absolute; top: -2px; right: -2px; background: #e74c3c; color: white; font-size: 10px; padding: 2px 5px; border-radius: 10px; font-weight: bold; }
 
-    .mobile-bottom-sheet {
-        position: fixed; left: 0; right: 0; bottom: 0; height: 52vh;
-        display: none; flex-direction: column; background: rgba(255, 255, 255, .96);
-        backdrop-filter: blur(25px); border-radius: 28px 28px 0 0;
-        box-shadow: 0 -15px 40px rgba(0,0,0,.18); overflow: hidden; z-index: 999;
-    }
-    
+    .mobile-bottom-sheet { position: fixed; left: 0; right: 0; bottom: 0; height: 52vh; display: none; flex-direction: column; background: rgba(255, 255, 255, .96); backdrop-filter: blur(25px); border-radius: 28px 28px 0 0; box-shadow: 0 -15px 40px rgba(0,0,0,.18); overflow: hidden; z-index: 999; }
     .sheet-handle { width: 100%; height: 32px; display: flex; justify-content: center; align-items: center; cursor: ns-resize; }
     .sheet-line { width: 70px; height: 6px; border-radius: 30px; background: #D6D8DC; }
-    
     .sheet-header { padding: 4px 24px 12px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #F0F2F5; }
     .sheet-title { font-size: 18px; font-weight: 700; color: #2d3748; }
     .btn-close-sheet { background: #F0F2F5; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 22px; color: #666; cursor: pointer; }
-
     .sheet-content-wrapper { overflow-y: auto; padding: 12px 24px 24px 24px; flex: 1; }
     
     #data-table { width: 100%; border-collapse: collapse; font-size: 15px; }
@@ -73,36 +59,32 @@
     #data-table tr { transition: .2s; cursor: pointer; }
     #data-table tr:not(.selected-row):active { background: #f7fafc; }
     #data-table tr.selected-row { background: #EAF3FF !important; border-left: 5px solid #1677FF; }
-    .color-dot { inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+    .color-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
     
     .btn-table-report { background: #EAF3FF; border: none; color: #1677FF; font-size: 16px; cursor: pointer; padding: 8px 12px; border-radius: 10px; transition: .2s; }
     .btn-table-report:active { transform: scale(0.9); background: #1677FF; color: white; }
 
-    .maplibregl-popup { display: none !important; }
-
     .mobile-report-form { display: flex; flex-direction: column; gap: 12px; padding-top: 15px; }
     .form-group { display: flex; flex-direction: column; gap: 6px; }
     .form-group label { font-size: 13px; font-weight: 600; color: #4a5568; }
-    .form-group input { width: 100%; padding: 12px; font-size: 15px; border: 1px solid #cbd5e0; border-radius: 12px; outline: none; }
+    .form-group input { width: 100%; padding: 12px; font-size: 15px; border: 1px solid #cbd5e0; border-radius: 12px; outline: none; font-family: 'Prompt'; }
     .form-group input:focus { border-color: #1677FF; }
-    
-    .btn-update-main {
-        width: 100%; margin-top: 10px; height: 52px; border: none; border-radius: 15px;
-        background: #1677FF; color: white; font-size: 16px; font-weight: 600;
-        box-shadow: 0 10px 25px rgba(22,119,255,.25); cursor: pointer; transition: .2s;
-    }
+    .btn-update-main { width: 100%; margin-top: 10px; height: 52px; border: none; border-radius: 15px; background: #1677FF; color: white; font-size: 16px; font-weight: 600; box-shadow: 0 10px 25px rgba(22,119,255,.25); cursor: pointer; transition: .2s; font-family: 'Prompt';}
     .btn-update-main:active { transform: scale(.97); }
+
 </style>
 </head>
 <body>
 
 <div id="map"></div>
 
+<div id="profile-widget" onclick="handleLoginClick()">
+    <i class="fas fa-user-circle" style="font-size: 18px; color: #1677FF;"></i>
+    <span id="profile-name">ผู้เยี่ยมชม</span>
+</div>
+
 <div class="fab-container" id="fab-box">
-    <button class="fab fab-toggle-view" id="view-mode-btn" title="สลับมุมมองสี">
-        <i class="fas fa-layer-group"></i>
-        <span class="badge" id="view-badge">ทีม</span>
-    </button>
+    <button class="fab fab-toggle-view" id="view-mode-btn" title="สลับมุมมองสี"><i class="fas fa-layer-group"></i><span class="badge" id="view-badge">ทีม</span></button>
     <button class="fab fab-table" id="table-open-btn" title="ตารางข้อมูล"><i class="fas fa-list-ul"></i></button>
 </div>
 
@@ -118,11 +100,11 @@
                 <tr>
                     <th>ชื่อพื้นที่โซน</th>
                     <th id="th-dynamic-status">ผู้รับผิดชอบ</th>
-                    <th style="text-align: right;">รายงาน</th>
+                    <th style="text-align: right;" id="th-report">รายงาน</th>
                 </tr>
             </thead>
             <tbody id="table-tbody">
-                <tr><td colspan="3" style="text-align:center; color:#999; padding:20px;">กำลังดึงพิกัดแผนที่...</td></tr>
+                <tr><td colspan="3" style="text-align:center; color:#999; padding:20px;">กำลังดึงข้อมูล...</td></tr>
             </tbody>
         </table>
     </div>
@@ -136,15 +118,25 @@
     </div>
     <div class="sheet-content-wrapper">
         <div class="mobile-report-form">
-            <div class="form-group">
-                <label for="input-percent">งานที่ตัดเสร็จจริงหน้างาน ณ วันนี้ (%)</label>
-                <input type="number" id="input-percent" placeholder="ระบุตัวเลข 0 - 100" min="0" max="100" pattern="\d*">
-            </div>
-            <div class="form-group">
-                <label for="input-name">ชื่อหัวหน้างานผู้รายงาน</label>
-                <input type="text" id="input-name" placeholder="ระบุชื่อผู้ตรวจสอบคุมงาน">
-            </div>
+            <div class="form-group"><label>งานที่ตัดเสร็จจริงหน้างาน ณ วันนี้ (%)</label><input type="number" id="input-percent" placeholder="ระบุตัวเลข 0 - 100" min="0" max="100"></div>
+            <div class="form-group"><label>ชื่อหัวหน้างานผู้รายงาน</label><input type="text" id="input-name" placeholder="ระบุชื่อผู้ตรวจสอบ" readonly></div>
             <button class="btn-update-main" id="btn-submit-data">บันทึกส่งรายงานตัดหญ้า</button>
+        </div>
+    </div>
+</div>
+
+<div id="register-sheet" class="mobile-bottom-sheet" style="height: auto; max-height: 85vh;">
+    <div class="sheet-handle"><div class="sheet-line"></div></div>
+    <div class="sheet-header">
+        <span class="sheet-title">ลงทะเบียนเข้าใช้งาน</span>
+        <button onclick="document.getElementById('register-sheet').style.display='none'" class="btn-close-sheet">&times;</button>
+    </div>
+    <div class="sheet-content-wrapper">
+        <div class="mobile-report-form">
+            <div class="form-group"><label>รหัสพนักงาน</label><input type="text" id="reg-emp-id" placeholder="เช่น P0001"></div>
+            <div class="form-group"><label>ชื่อ - สกุล</label><input type="text" id="reg-name" placeholder="ชื่อจริง นามสกุล"></div>
+            <div class="form-group"><label>ตำแหน่ง</label><input type="text" id="reg-position" placeholder="ระบุตำแหน่งงาน"></div>
+            <button class="btn-update-main" id="btn-register" onclick="submitRegistration()">ส่งข้อมูลลงทะเบียน</button>
         </div>
     </div>
 </div>
@@ -153,22 +145,10 @@
     <h3 id="panel-title">บันทึกพื้นที่ใหม่</h3>
     <input type="text" id="zone-name" placeholder="ชื่อโซน / ชื่อพื้นที่" />
     <label style="font-size:12px;">ทีมทำความสะอาด:</label>
-    <select id="zone-color">
-        <option value="#2ecc71">ทีมสีเขียว</option>
-        <option value="#f1c40f">ทีมสีเหลือง</option>
-    </select>
+    <select id="zone-color"><option value="#2ecc71">ทีมสีเขียว</option><option value="#f1c40f">ทีมสีเหลือง</option></select>
     <div style="display: flex; justify-content: space-between;">
         <button class="btn-save" id="btn-save-zone">บันทึก</button>
         <button class="btn-cancel" id="btn-cancel-zone">ยกเลิก</button>
-    </div>
-</div>
-
-<div id="edit-panel">
-    <h3 style="margin:0 0 10px 0; font-size:14px;">โหมดปรับแต่งพิกัดแนวเขต</h3>
-    <p id="edit-zone-display" style="font-size:12px; margin-bottom:10px;"></p>
-    <div style="display: flex; justify-content: space-between;">
-        <button class="btn-save" id="btn-update-zone">บันทึกตำแหน่งใหม่</button>
-        <button class="btn-cancel" id="btn-cancel-edit">ยกเลิก</button>
     </div>
 </div>
 
@@ -178,59 +158,139 @@
 
 <script>
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzZ9MH7fONCkaqgmqWLOM8yAoRm2e4j82x79Lwhpju9k3gz1Uzi9Y4s4ibhwv_bhCnX/exec"; 
+const LIFF_ID = "2007956727-tmpCUfRZ";
+
+// 🌟 ตัวแปรเก็บสิทธิ์และสถานะ
+let currentUser = { role: "Guest", name: "", uid: "" };
 
 const targetLngLat = [99.535692, 11.231666];
 const map = new maplibregl.Map({
     container: 'map',
-    style: {
-        version: 8,
-        sources: { satellite: { type: 'raster', tiles: ['https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'], tileSize: 256 } },
-        layers: [{ id: 'satellite', type: 'raster', source: 'satellite' }]
-    },
+    style: { version: 8, sources: { satellite: { type: 'raster', tiles: ['https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'], tileSize: 256 } }, layers: [{ id: 'satellite', type: 'raster', source: 'satellite' }] },
     center: [targetLngLat[0] - (-0.0010), targetLngLat[1] - 0.0010],
     zoom: 15.58, bearing: -45.6, maxZoom: 21
 });
+map.touchZoomRotate.enable({ around: "center" }); map.dragPan.enable(); map.dragRotate.disable(); map.doubleClickZoom.disable();
 
-// ป้องกันซูมรัวๆ แล้วงง
-map.touchZoomRotate.enable({ around: "center" });
-map.dragPan.enable();
-map.dragRotate.disable();
-map.doubleClickZoom.disable();
 
-const draw = new MapboxDraw({ displayControlsDefault: false, controls: { polygon: true, trash: true } });
-map.addControl(draw, 'top-right');
+const draw = new MapboxDraw({ 
+    displayControlsDefault: false, 
+    controls: { polygon: true, trash: true } 
+});
 
-let currentFeature = null;
-let editingZoneId = null;
-let totalZonesCount = 0;
-let globalZonesArray = [];
-let viewMode = 'team'; 
-let selectedZone = null;
-let isBusy = false; 
+let currentFeature = null; let editingZoneId = null; let totalZonesCount = 0; let globalZonesArray = []; let viewMode = 'team'; let selectedZone = null; let isBusy = false;
 
+// 🌟 เริ่มต้น LIFF
+async function initLIFF() {
+    try {
+        await liff.init({ liffId: LIFF_ID });
+        if (liff.isLoggedIn()) {
+            document.getElementById('profile-name').innerText = "กำลังเข้าสู่ระบบ...";
+            const profile = await liff.getProfile();
+            currentUser.uid = profile.userId;
+            verifyUser(currentUser.uid);
+        } else {
+            document.getElementById('profile-name').innerHTML = 'เข้าสู่ระบบ (พนักงาน)';
+        }
+    } catch (err) { console.error("LIFF Error:", err); }
+}
+
+function handleLoginClick() {
+    if (!liff.isLoggedIn()) {
+        liff.login();
+    }
+}
+
+// 2. ฟังก์ชันตรวจสอบสิทธิ์ (อัปเดตให้แอดเครื่องมือเมื่อเป็น VIP)
+async function verifyUser(uid) {
+    try {
+        const res = await fetch(`${WEB_APP_URL}?action=login&uid=${uid}`);
+        const data = await res.json();
+        
+        if (data.status === "success") {
+            currentUser.role = data.role.trim() === "VIP" ? "VIP" : "User";
+            currentUser.name = data.name;
+            
+            // อัปเดตวิดเจ็ตแสดงชื่อ
+            let badgeClass = currentUser.role === "VIP" ? "badge-role badge-vip" : "badge-role";
+            document.getElementById('profile-widget').innerHTML = `
+                ${currentUser.name} <span class="${badgeClass}">${currentUser.role}</span>
+            `;
+            document.getElementById('input-name').value = currentUser.name; 
+            
+            // 🌟 ปลดล็อกเครื่องมือเฉพาะ VIP
+            if (currentUser.role === "VIP") {
+                // แสดงปุ่ม Polygon และปุ่ม Delete
+                if (!map.hasControl(draw)) {
+                    map.addControl(draw, 'top-right');
+                }
+                
+                // แสดงช่อง "รายงาน" ในตาราง
+                document.getElementById('th-report').style.display = "table-cell";
+
+                // ดึง Polygon ทั้งหมดที่มีอยู่เข้าสู่โหมด Draw เพื่อให้ VIP สามารถกดคลิกเลือกแล้วลบ (Trash) ได้
+                globalZonesArray.forEach(zone => {
+                    if(zone.coords) {
+                        draw.add({ 
+                            id: zone.zone_id, 
+                            type: 'Feature', 
+                            properties: {}, 
+                            geometry: { type: 'Polygon', coordinates: [zone.coords] } 
+                        });
+                    }
+                });
+            }
+            
+            renderTable(); 
+        } else {
+            // กรณีไม่เจอรายชื่อให้เปิดฟอร์มลงทะเบียน
+            document.getElementById('profile-name').innerText = 'ลงทะเบียนพนักงาน';
+            document.getElementById('register-sheet').style.display = 'flex';
+        }
+    } catch (e) {
+        console.error("Verify Error", e);
+    }
+}
+
+// 🌟 ส่งข้อมูลลงทะเบียน
+async function submitRegistration() {
+    const empId = document.getElementById('reg-emp-id').value;
+    const name = document.getElementById('reg-name').value;
+    const pos = document.getElementById('reg-position').value;
+    
+    if(!empId || !name || !pos) { alert("กรอกข้อมูลให้ครบครับ"); return; }
+    document.getElementById('btn-register').innerText = "กำลังบันทึก...";
+    
+    await sendData({ action: "register", emp_id: empId, emp_name: name, emp_position: pos, line_uid: currentUser.uid });
+}
+
+// (โครงสร้างการวาด/บันทึกเดิม)
 map.on('draw.create', (e) => {
+    if (currentUser.role !== "VIP") { draw.deleteAll(); return; }
     const feats = draw.getAll();
-    if (feats.features.length > 0) {
-        currentFeature = feats.features[feats.features.length - 1];
-        if (!editingZoneId) document.getElementById('save-panel').style.display = 'block';
+    if (feats.features.length > 0) { currentFeature = feats.features[feats.features.length - 1]; document.getElementById('save-panel').style.display = 'block'; }
+});
+map.on('draw.delete', async (e) => {
+    if (currentUser.role !== "VIP") return;
+    if (e.features.length > 0) {
+        if(confirm("ยืนยันที่จะลบโซนนี้ออกจากระบบ?")) {
+            // หาโซนที่ตรงกับที่กดลบ
+            const feat = e.features[0];
+            const zone = globalZonesArray.find(z => JSON.stringify(z.coords) === JSON.stringify(feat.geometry.coordinates[0]));
+            if(zone) {
+                await sendData({ action: "deleteZone", zone_id: zone.zone_id });
+            }
+        } else {
+            location.reload(); // ถ้ายกเลิก ให้โหลดแมพใหม่ดึงอันเดิมกลับมา
+        }
     }
 });
 
-document.getElementById('btn-cancel-zone').onclick = () => {
-    if(currentFeature) draw.delete(currentFeature.id);
-    document.getElementById('save-panel').style.display = 'none';
-};
-
+document.getElementById('btn-cancel-zone').onclick = () => { if(currentFeature) draw.delete(currentFeature.id); document.getElementById('save-panel').style.display = 'none'; };
 document.getElementById('btn-save-zone').onclick = async () => {
-    const name = document.getElementById('zone-name').value;
-    const color = document.getElementById('zone-color').value;
-    if(!name || !currentFeature) return;
-    const areaM2 = turf.area(currentFeature);
-    await sendData({
-        action: "saveZone", zone_name: name,
-        coordinates_data: JSON.stringify(currentFeature.geometry.coordinates[0]),
-        area_size: areaM2.toFixed(2) + " ตร.ม.", color: color
-    });
+    const name = document.getElementById('zone-name').value; const color = document.getElementById('zone-color').value;
+    if(!name || !currentFeature) return; const areaM2 = turf.area(currentFeature);
+    await sendData({ action: "saveZone", zone_name: name, coordinates_data: JSON.stringify(currentFeature.geometry.coordinates[0]), area_size: areaM2.toFixed(2) + " ตร.ม.", color: color });
 };
 
 async function sendData(payload) {
@@ -241,316 +301,165 @@ async function sendData(payload) {
     } catch (e) { alert("เชื่อมต่อผิดพลาด"); }
 }
 
-const tableSheet = document.getElementById('table-sheet');
-const formSheet = document.getElementById('form-sheet');
-
-function loadSavedHeight(sheetElem, defaultHeight) {
-    const savedHeight = localStorage.getItem(sheetElem.id + '_height');
-    if (savedHeight) {
-        sheetElem.style.height = savedHeight;
-    } else {
-        sheetElem.style.height = defaultHeight;
-    }
+const tableSheet = document.getElementById('table-sheet'); const formSheet = document.getElementById('form-sheet');
+function loadSavedHeight(s, d) { const h = localStorage.getItem(s.id + '_h'); s.style.height = h ? h : d; }
+function setupDrag(s, h) {
+    let d = false;
+    const start = () => { d = true; };
+    const move = (e) => { if (!d) return; const y = e.touches ? e.touches[0].clientY : e.clientY; let nh = window.innerHeight - y; if (nh >= 100 && nh <= window.innerHeight * 0.85) s.style.height = nh + 'px'; };
+    const stop = () => { if (!d) return; d = false; localStorage.setItem(s.id + '_h', s.style.height); };
+    h.addEventListener('mousedown', start); window.addEventListener('mousemove', move); window.addEventListener('mouseup', stop);
+    h.addEventListener('touchstart', start); window.addEventListener('touchmove', move); window.addEventListener('touchend', stop);
 }
+setupDrag(tableSheet, document.getElementById('table-drag-handle')); setupDrag(formSheet, document.getElementById('form-drag-handle'));
 
-function setupDragLogic(sheetElem, handleElem) {
-    let isDragging = false;
-    
-    const startDrag = () => { isDragging = true; document.body.style.userSelect = 'none'; };
-    const onDrag = (e) => {
-        if (!isDragging) return;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        let newHeight = window.innerHeight - clientY;
-        if (newHeight >= 100 && newHeight <= window.innerHeight * 0.85) {
-            sheetElem.style.height = newHeight + 'px';
-        }
-    };
-    const stopDrag = () => { 
-        if (!isDragging) return;
-        isDragging = false; 
-        document.body.style.userSelect = ''; 
-        localStorage.setItem(sheetElem.id + '_height', sheetElem.style.height);
-    };
+document.getElementById('table-open-btn').onclick = () => { formSheet.style.display = 'none'; tableSheet.style.display = 'flex'; loadSavedHeight(tableSheet, '52vh'); document.getElementById('fab-box').classList.add('fab-hidden'); };
+document.getElementById('table-close-btn').onclick = () => { tableSheet.style.display = 'none'; document.getElementById('fab-box').classList.remove('fab-hidden'); resetHighlights(); };
+document.getElementById('form-close-btn').onclick = () => { formSheet.style.display = 'none'; document.getElementById('fab-box').classList.remove('fab-hidden'); resetHighlights(); };
 
-    handleElem.addEventListener('mousedown', startDrag);
-    window.addEventListener('mousemove', onDrag);
-    window.addEventListener('mouseup', stopDrag);
-    
-    handleElem.addEventListener('touchstart', startDrag);
-    window.addEventListener('touchmove', onDrag);
-    window.addEventListener('touchend', stopDrag);
-}
-
-setupDragLogic(tableSheet, document.getElementById('table-drag-handle'));
-setupDragLogic(formSheet, document.getElementById('form-drag-handle'));
-
-document.getElementById('table-open-btn').onclick = () => {
-    formSheet.style.display = 'none';
-    tableSheet.style.display = 'flex';
-    loadSavedHeight(tableSheet, '52vh'); 
-    document.getElementById('fab-box').classList.add('fab-hidden');
-};
-document.getElementById('table-close-btn').onclick = () => {
-    tableSheet.style.display = 'none';
-    document.getElementById('fab-box').classList.remove('fab-hidden');
-    resetHighlights();
-};
-document.getElementById('form-close-btn').onclick = () => {
-    formSheet.style.display = 'none';
-    document.getElementById('fab-box').classList.remove('fab-hidden');
-    resetHighlights();
-};
-
-function getGrassColor(pct) {
-    if (pct <= 40) return '#2ecc71';
-    if (pct <= 75) return '#f1c40f';
-    return '#e74c3c';
-}
-
+function getGrassColor(pct) { return pct <= 40 ? '#2ecc71' : pct <= 75 ? '#f1c40f' : '#e74c3c'; }
 function updateColors() {
     globalZonesArray.forEach((z, i) => {
         if(map.getLayer(`layer-zone-${i}`)) {
-            const c = (viewMode === 'team') ? (z.Color || '#2ecc71') : getGrassColor(z.current_grass_percentage);
-            map.setPaintProperty(`layer-zone-${i}`, 'fill-color', c);
-            map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-color', c);
+            const c = viewMode === 'team' ? (z.Color || '#2ecc71') : getGrassColor(z.current_grass_percentage);
+            map.setPaintProperty(`layer-zone-${i}`, 'fill-color', c); map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-color', c);
         }
     });
 }
 
+// 🌟 แสดงตารางแบบแยกสิทธิ์
 function renderTable() {
     const tbody = document.getElementById('table-tbody');
-    const th = document.getElementById('th-dynamic-status');
+    const thDynamic = document.getElementById('th-dynamic-status');
+    const thReport = document.getElementById('th-report');
     
-    if(viewMode === 'team') {
-        th.innerText = "ผู้รับผิดชอบ";
-        tbody.innerHTML = globalZonesArray.map((z, i) => `
-            <tr id="tr-zone-${i}" onclick="focusOnZoneFromTable(${i}, this)">
-                <td><span class="color-dot" style="background:${z.Color || '#2ecc71'}"></span>${z.zone_name}</td>
-                <td>${z.Color === '#f1c40f' ? 'ทีมสีเหลือง' : 'ทีมสีเขียว'}</td>
-                <td style="text-align:right;">
-                    <button class="btn-table-report" onclick="event.stopPropagation(); triggerReportFromTable(${i})">
-                        <i class="fas fa-file-pen"></i>
-                    </button>
-                </td>
-            </tr>
-        `).join('');
-    } else {
-        th.innerText = "ความยาวหญ้า";
-        tbody.innerHTML = globalZonesArray.map((z, i) => `
-            <tr id="tr-zone-${i}" onclick="focusOnZoneFromTable(${i}, this)">
-                <td><span class="color-dot" style="background:${getGrassColor(z.current_grass_percentage)}"></span>${z.zone_name}</td>
-                <td style="font-weight:bold; color:${getGrassColor(z.current_grass_percentage)}">${z.current_grass_percentage}%</td>
-                <td style="text-align:right;">
-                    <button class="btn-table-report" onclick="event.stopPropagation(); triggerReportFromTable(${i})">
-                        <i class="fas fa-file-pen"></i>
-                    </button>
-                </td>
-            </tr>
-        `).join('');
-    }
+    // ซ่อนหัวข้อรายงานถ้าไม่ใช่ VIP
+    thReport.style.display = currentUser.role === "VIP" ? "table-cell" : "none";
+    
+    thDynamic.innerText = viewMode === 'team' ? "ผู้รับผิดชอบ" : "ความยาวหญ้า";
+    
+    tbody.innerHTML = globalZonesArray.map((z, i) => {
+        const valCol = viewMode === 'team' 
+            ? `<td>${z.Color === '#f1c40f' ? 'ทีมสีเหลือง' : 'ทีมสีเขียว'}</td>`
+            : `<td style="font-weight:bold; color:${getGrassColor(z.current_grass_percentage)}">${z.current_grass_percentage}%</td>`;
+            
+        // ปุ่มรายงาน โผล่เฉพาะ VIP
+        const actionCol = currentUser.role === "VIP" 
+            ? `<td style="text-align:right;"><button class="btn-table-report" onclick="event.stopPropagation(); activateReportingForm(globalZonesArray[${i}], ${i})"><i class="fas fa-file-pen"></i></button></td>`
+            : "";
+            
+        return `<tr id="tr-zone-${i}" onclick="focusOnZoneFromTable(${i}, this)">
+            <td><span class="color-dot" style="background:${viewMode === 'team' ? (z.Color||'#2ecc71') : getGrassColor(z.current_grass_percentage)}"></span>${z.zone_name}</td>
+            ${valCol}
+            ${actionCol}
+        </tr>`;
+    }).join('');
 }
 
 document.getElementById('view-mode-btn').onclick = () => {
-    viewMode = (viewMode === 'team') ? 'grass' : 'team';
+    viewMode = viewMode === 'team' ? 'grass' : 'team';
     document.getElementById('view-badge').innerText = viewMode === 'team' ? "ทีม" : "หญ้า";
     document.getElementById('view-mode-btn').style.background = viewMode === 'team' ? "#1677FF" : "linear-gradient(135deg, #e74c3c, #c0392b)";
-    updateColors(); renderTable(); resetHighlights();
-    formSheet.style.display = 'none';
+    updateColors(); renderTable(); resetHighlights(); formSheet.style.display = 'none';
 };
 
 function focusOnZoneFromTable(index, element) {
-    document.querySelectorAll('#data-table tr').forEach(r => r.classList.remove('selected-row'));
-    element.classList.add('selected-row');
-
-    const zone = globalZonesArray[index];
-    
-    const bounds = new maplibregl.LngLatBounds();
-    zone.coords.forEach(c => bounds.extend(c));
-    
-    // 🌟 บล็อกคำสั่งไม่ให้แผนที่หมุนกลับไปทิศเหนือ
-    map.fitBounds(bounds, { 
-        padding: 40, 
-        duration: 750,
-        bearing: map.getBearing() 
-    });
-    
-    loadSavedHeight(tableSheet, '52vh'); 
-
-    for(let i=0; i<totalZonesCount; i++) {
-        map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', i === index ? 0.85 : 0.15);
-        map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', i === index ? 5 : 2);
-    }
+    document.querySelectorAll('#data-table tr').forEach(r => r.classList.remove('selected-row')); element.classList.add('selected-row');
+    const zone = globalZonesArray[index]; const bounds = new maplibregl.LngLatBounds(); zone.coords.forEach(c => bounds.extend(c));
+    map.fitBounds(bounds, { padding: 40, duration: 750, bearing: map.getBearing() });
+    loadSavedHeight(tableSheet, '52vh');
+    for(let i=0; i<totalZonesCount; i++) { map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', i === index ? 0.85 : 0.15); map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', i === index ? 5 : 2); }
 }
 
 function activateReportingForm(zone, index) {
-    selectedZone = zone;
-    tableSheet.style.display = 'none';
-    
+    if (currentUser.role !== "VIP") return; // กันเหนียว
+    selectedZone = zone; tableSheet.style.display = 'none';
     document.getElementById('form-sheet-title').innerText = `รายงานผล: ${zone.zone_name}`;
-    document.getElementById('input-percent').value = '';
-    formSheet.style.display = 'flex';
-    
-    loadSavedHeight(formSheet, 'auto');
+    document.getElementById('input-percent').value = ''; formSheet.style.display = 'flex'; loadSavedHeight(formSheet, 'auto');
     document.getElementById('fab-box').classList.add('fab-hidden');
-
-    const bounds = new maplibregl.LngLatBounds();
-    zone.coords.forEach(c => bounds.extend(c));
-    
-    // 🌟 บล็อกคำสั่งไม่ให้แผนที่หมุนกลับไปทิศเหนือ
-    map.fitBounds(bounds, { 
-        padding: 40, 
-        duration: 750,
-        bearing: map.getBearing()
-    });
-
-    for(let i=0; i<totalZonesCount; i++) {
-        map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', i === index ? 0.85 : 0.15);
-        map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', i === index ? 5 : 2);
-    }
-}
-
-function triggerReportFromTable(index) {
-    activateReportingForm(globalZonesArray[index], index);
+    const bounds = new maplibregl.LngLatBounds(); zone.coords.forEach(c => bounds.extend(c));
+    map.fitBounds(bounds, { padding: 40, duration: 750, bearing: map.getBearing() });
+    for(let i=0; i<totalZonesCount; i++) { map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', i === index ? 0.85 : 0.15); map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', i === index ? 5 : 2); }
 }
 
 function resetHighlights() {
-    for(let i=0; i<totalZonesCount; i++) {
-        if(map.getLayer(`layer-zone-${i}`)) {
-            map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', 0.5);
-            map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', 2);
-        }
-    }
+    for(let i=0; i<totalZonesCount; i++) { if(map.getLayer(`layer-zone-${i}`)) { map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', 0.5); map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', 2); } }
     document.querySelectorAll('#data-table tr').forEach(r => r.classList.remove('selected-row'));
 }
 
 document.getElementById('btn-submit-data').onclick = async () => {
-    if(!selectedZone) return;
-    const pct = document.getElementById('input-percent').value;
-    const name = document.getElementById('input-name').value;
+    if(!selectedZone) return; const pct = document.getElementById('input-percent').value; const name = document.getElementById('input-name').value;
     if(!pct || pct < 0 || pct > 100 || !name) { alert("ข้อมูลไม่ถูกต้อง"); return; }
-    
-    const btn = document.getElementById('btn-submit-data');
-    btn.disabled = true; btn.innerText = "กำลังบันทึกส่งค่าลงชีต...";
-    
-    await sendData({
-        action: "reportProgress", zone_id: selectedZone.zone_id,
-        zone_name: selectedZone.zone_name, work_percentage: pct, worker_name: name
-    });
+    const btn = document.getElementById('btn-submit-data'); btn.disabled = true; btn.innerText = "กำลังบันทึก...";
+    await sendData({ action: "reportProgress", zone_id: selectedZone.zone_id, zone_name: selectedZone.zone_name, work_percentage: pct, worker_name: name });
 };
 
-function handlePolygonClick(lngLat) {
-    if(isBusy || editingZoneId) return;
-    isBusy = true; 
-
-    let foundIndex = -1;
-    const point = turf.point([lngLat.lng, lngLat.lat]);
-
-    for(let i = 0; i < globalZonesArray.length; i++) {
-        const zone = globalZonesArray[i];
-        if(zone.turfBuffered && turf.booleanPointInPolygon(point, zone.turfBuffered)) {
-            foundIndex = i;
-            break;
-        }
-    }
-
-    if(foundIndex === -1) {
-        resetHighlights();
-        formSheet.style.display = "none";
-        tableSheet.style.display = "none";
-        document.getElementById("fab-box").classList.remove("fab-hidden");
-        isBusy = false;
-        return;
-    }
-
-    formSheet.style.display = "none";
-    tableSheet.style.display = "flex";
-    loadSavedHeight(tableSheet, "52vh");
-    document.getElementById("fab-box").classList.add("fab-hidden");
-
-    document.querySelectorAll("#data-table tr").forEach(r => r.classList.remove("selected-row"));
-
-    for(let i=0; i<totalZonesCount; i++) {
-        map.setPaintProperty(`layer-zone-${i}`, "fill-opacity", i === foundIndex ? 0.85 : 0.15);
-        map.setPaintProperty(`layer-zone-${i}-stroke`, "line-width", i === foundIndex ? 5 : 2);
-    }
-
-    const row = document.getElementById(`tr-zone-${foundIndex}`);
-    if(row) {
-        row.classList.add("selected-row");
-        row.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-    
-    setTimeout(() => { isBusy = false; }, 300);
-}
-
-let pointerStartX = 0;
-let pointerStartY = 0;
-
-map.getCanvas().addEventListener("pointerdown", function(e) {
-    pointerStartX = e.clientX;
-    pointerStartY = e.clientY;
-});
-
-map.getCanvas().addEventListener("pointerup", function(e) {
+// ... โค้ด pointerdown/up และ fetchWithRetry คงเดิม (ย่อให้สั้นเพื่อไม่ให้รก) ...
+let pointerStartX = 0; let pointerStartY = 0;
+map.getCanvas().addEventListener("pointerdown", e => { pointerStartX = e.clientX; pointerStartY = e.clientY; });
+map.getCanvas().addEventListener("pointerup", e => {
     if (isBusy || editingZoneId) return;
-
-    const moveDistanceX = Math.abs(e.clientX - pointerStartX);
-    const moveDistanceY = Math.abs(e.clientY - pointerStartY);
-    if (moveDistanceX > 6 || moveDistanceY > 6) return;
-
-    if (draw.getMode() === 'simple_select' || draw.getMode() === 'direct_select') {
-        const rect = map.getCanvas().getBoundingClientRect();
-        const point = [
-            e.clientX - rect.left,
-            e.clientY - rect.top
-        ];
-        const lngLat = map.unproject(point);
-        handlePolygonClick(lngLat);
-    }
+    if (Math.abs(e.clientX - pointerStartX) > 6 || Math.abs(e.clientY - pointerStartY) > 6) return;
+    const rect = map.getCanvas().getBoundingClientRect(); const lngLat = map.unproject([e.clientX - rect.left, e.clientY - rect.top]);
+    if (currentUser.role === "VIP" && draw.getMode() !== 'simple_select') return; // ให้ VIP วาดได้สะดวก
+    
+    isBusy = true; let foundIndex = -1; const point = turf.point([lngLat.lng, lngLat.lat]);
+    for(let i = 0; i < globalZonesArray.length; i++) { if(globalZonesArray[i].turfBuffered && turf.booleanPointInPolygon(point, globalZonesArray[i].turfBuffered)) { foundIndex = i; break; } }
+    
+    if(foundIndex === -1) { resetHighlights(); formSheet.style.display = "none"; tableSheet.style.display = "none"; document.getElementById("fab-box").classList.remove("fab-hidden"); isBusy = false; return; }
+    formSheet.style.display = "none"; tableSheet.style.display = "flex"; loadSavedHeight(tableSheet, "52vh"); document.getElementById("fab-box").classList.add("fab-hidden");
+    document.querySelectorAll("#data-table tr").forEach(r => r.classList.remove("selected-row"));
+    for(let i=0; i<totalZonesCount; i++) { map.setPaintProperty(`layer-zone-${i}`, "fill-opacity", i === foundIndex ? 0.85 : 0.15); map.setPaintProperty(`layer-zone-${i}-stroke`, "line-width", i === foundIndex ? 5 : 2); }
+    const row = document.getElementById(`tr-zone-${foundIndex}`); if(row) { row.classList.add("selected-row"); row.scrollIntoView({ behavior: "smooth", block: "start" }); }
+    setTimeout(() => { isBusy = false; }, 300);
 });
 
 async function fetchWithRetry(url, retries = 3, delay = 2000) {
     for (let i = 0; i < retries; i++) {
-        try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error("การตอบรับเน็ตมีปัญหา");
-            return await response.json();
-        } catch (err) {
-            console.warn(`ดาวน์โหลดหลุด (รอบที่ ${i + 1}/${retries}) กำลังต่อสายใหม่ในอีก ${delay}ms...`);
-            if (i === retries - 1) throw err;
-            await new Promise(res => setTimeout(res, delay));
-        }
+        try { const r = await fetch(url); if (!r.ok) throw new Error("เน็ตหลุด"); return await r.json(); } 
+        catch (err) { if (i === retries - 1) throw err; await new Promise(res => setTimeout(res, delay)); }
     }
 }
 
+// 3. ตอนโหลดข้อมูล map.on('load')
 map.on('load', async () => {
+    initLIFF(); // ตรวจสอบ LIFF 
+    
     try {
-        const zones = await fetchWithRetry(`${WEB_APP_URL}?action=getZones`);
-        globalZonesArray = zones; totalZonesCount = zones.length;
+        const zones = await fetchWithRetry(`${WEB_APP_URL}?action=getZones`); 
+        globalZonesArray = zones; 
+        totalZonesCount = zones.length;
         
         zones.forEach((zone) => {
-            try {
-                zone.coords = JSON.parse(zone.coordinates_data);
-                zone.turfPolygon = turf.polygon([zone.coords]);
-                zone.turfBuffered = turf.buffer(zone.turfPolygon, 8, { units: "meters" });
-            } catch(jsonErr) { console.error("โครงสร้างพิกัดโซนนี้ผิดพลาด:", jsonErr); }
+            try { 
+                zone.coords = JSON.parse(zone.coordinates_data); 
+                zone.turfPolygon = turf.polygon([zone.coords]); 
+                zone.turfBuffered = turf.buffer(zone.turfPolygon, 8, { units: "meters" }); 
+            } catch(err) { console.warn("Parse Error:", err); }
         });
         
         renderTable();
         
+        // 🌟 วาด Polygon สีๆ ลงบนแผนที่ (ทุกคนมองเห็นได้ ไม่ต้องซ่อน)
         zones.forEach((zone, index) => {
             if(!zone.coords) return;
-            const srcId = `source-zone-${index}`;
-            const lyrId = `layer-zone-${index}`;
-            const c = (viewMode === 'team') ? (zone.Color || '#2ecc71') : getGrassColor(zone.current_grass_percentage);
-
-            map.addSource(srcId, { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'Polygon', 'coordinates': [zone.coords] } } });
-            map.addLayer({ 'id': lyrId, 'type': 'fill', 'source': srcId, 'paint': { 'fill-color': c, 'fill-opacity': 0.5 } });
-            map.addLayer({ 'id': `${lyrId}-stroke`, 'type': 'line', 'source': srcId, 'paint': { 'line-color': c, 'line-width': 2 } });
+            const c = viewMode === 'team' ? (zone.Color || '#2ecc71') : getGrassColor(zone.current_grass_percentage);
+            
+            map.addSource(`source-zone-${index}`, { 
+                'type': 'geojson', 
+                'data': { 'type': 'Feature', 'geometry': { 'type': 'Polygon', 'coordinates': [zone.coords] } } 
+            });
+            map.addLayer({ 
+                'id': `layer-zone-${index}`, 'type': 'fill', 'source': `source-zone-${index}`, 
+                'paint': { 'fill-color': c, 'fill-opacity': 0.5 } 
+            });
+            map.addLayer({ 
+                'id': `layer-zone-${index}-stroke`, 'type': 'line', 'source': `source-zone-${index}`, 
+                'paint': { 'line-color': c, 'line-width': 2 } 
+            });
         });
     } catch (err) { 
-        console.error("Fatal Error:", err); 
-        alert("ไม่สามารถติดต่อเซิร์ฟเวอร์ Google Sheet ได้ในขณะนี้ กรุณารีเฟรชใหม่อีกครั้งครับ");
+        console.error(err); 
     }
 });
 </script>
