@@ -71,7 +71,6 @@
     .form-group input:focus { border-color: #1677FF; }
     .btn-update-main { width: 100%; margin-top: 10px; height: 52px; border: none; border-radius: 15px; background: #1677FF; color: white; font-size: 16px; font-weight: 600; box-shadow: 0 10px 25px rgba(22,119,255,.25); cursor: pointer; transition: .2s; font-family: 'Prompt';}
     .btn-update-main:active { transform: scale(.97); }
-
 </style>
 </head>
 <body>
@@ -160,7 +159,6 @@
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzZ9MH7fONCkaqgmqWLOM8yAoRm2e4j82x79Lwhpju9k3gz1Uzi9Y4s4ibhwv_bhCnX/exec"; 
 const LIFF_ID = "2007956727-tmpCUfRZ";
 
-// 🌟 ตัวแปรเก็บสิทธิ์และสถานะ
 let currentUser = { role: "Guest", name: "", uid: "" };
 
 const targetLngLat = [99.535692, 11.231666];
@@ -172,7 +170,6 @@ const map = new maplibregl.Map({
 });
 map.touchZoomRotate.enable({ around: "center" }); map.dragPan.enable(); map.dragRotate.disable(); map.doubleClickZoom.disable();
 
-
 const draw = new MapboxDraw({ 
     displayControlsDefault: false, 
     controls: { polygon: true, trash: true } 
@@ -180,7 +177,6 @@ const draw = new MapboxDraw({
 
 let currentFeature = null; let editingZoneId = null; let totalZonesCount = 0; let globalZonesArray = []; let viewMode = 'team'; let selectedZone = null; let isBusy = false;
 
-// 🌟 เริ่มต้น LIFF
 async function initLIFF() {
     try {
         await liff.init({ liffId: LIFF_ID });
@@ -201,7 +197,6 @@ function handleLoginClick() {
     }
 }
 
-// 2. ฟังก์ชันตรวจสอบสิทธิ์ (อัปเดตให้แอดเครื่องมือเมื่อเป็น VIP)
 async function verifyUser(uid) {
     try {
         const res = await fetch(`${WEB_APP_URL}?action=login&uid=${uid}`);
@@ -211,24 +206,18 @@ async function verifyUser(uid) {
             currentUser.role = data.role.trim() === "VIP" ? "VIP" : "User";
             currentUser.name = data.name;
             
-            // อัปเดตวิดเจ็ตแสดงชื่อ
             let badgeClass = currentUser.role === "VIP" ? "badge-role badge-vip" : "badge-role";
             document.getElementById('profile-widget').innerHTML = `
                 ${currentUser.name} <span class="${badgeClass}">${currentUser.role}</span>
             `;
             document.getElementById('input-name').value = currentUser.name; 
             
-            // 🌟 ปลดล็อกเครื่องมือเฉพาะ VIP
             if (currentUser.role === "VIP") {
-                // แสดงปุ่ม Polygon และปุ่ม Delete
                 if (!map.hasControl(draw)) {
                     map.addControl(draw, 'top-right');
                 }
-                
-                // แสดงช่อง "รายงาน" ในตาราง
                 document.getElementById('th-report').style.display = "table-cell";
 
-                // ดึง Polygon ทั้งหมดที่มีอยู่เข้าสู่โหมด Draw เพื่อให้ VIP สามารถกดคลิกเลือกแล้วลบ (Trash) ได้
                 globalZonesArray.forEach(zone => {
                     if(zone.coords) {
                         draw.add({ 
@@ -240,10 +229,8 @@ async function verifyUser(uid) {
                     }
                 });
             }
-            
             renderTable(); 
         } else {
-            // กรณีไม่เจอรายชื่อให้เปิดฟอร์มลงทะเบียน
             document.getElementById('profile-name').innerText = 'ลงทะเบียนพนักงาน';
             document.getElementById('register-sheet').style.display = 'flex';
         }
@@ -252,7 +239,6 @@ async function verifyUser(uid) {
     }
 }
 
-// 🌟 ส่งข้อมูลลงทะเบียน
 async function submitRegistration() {
     const empId = document.getElementById('reg-emp-id').value;
     const name = document.getElementById('reg-name').value;
@@ -264,7 +250,6 @@ async function submitRegistration() {
     await sendData({ action: "register", emp_id: empId, emp_name: name, emp_position: pos, line_uid: currentUser.uid });
 }
 
-// (โครงสร้างการวาด/บันทึกเดิม)
 map.on('draw.create', (e) => {
     if (currentUser.role !== "VIP") { draw.deleteAll(); return; }
     const feats = draw.getAll();
@@ -274,14 +259,13 @@ map.on('draw.delete', async (e) => {
     if (currentUser.role !== "VIP") return;
     if (e.features.length > 0) {
         if(confirm("ยืนยันที่จะลบโซนนี้ออกจากระบบ?")) {
-            // หาโซนที่ตรงกับที่กดลบ
             const feat = e.features[0];
             const zone = globalZonesArray.find(z => JSON.stringify(z.coords) === JSON.stringify(feat.geometry.coordinates[0]));
             if(zone) {
                 await sendData({ action: "deleteZone", zone_id: zone.zone_id });
             }
         } else {
-            location.reload(); // ถ้ายกเลิก ให้โหลดแมพใหม่ดึงอันเดิมกลับมา
+            location.reload();
         }
     }
 });
@@ -327,15 +311,12 @@ function updateColors() {
     });
 }
 
-// 🌟 แสดงตารางแบบแยกสิทธิ์
 function renderTable() {
     const tbody = document.getElementById('table-tbody');
     const thDynamic = document.getElementById('th-dynamic-status');
     const thReport = document.getElementById('th-report');
     
-    // ซ่อนหัวข้อรายงานถ้าไม่ใช่ VIP
     thReport.style.display = currentUser.role === "VIP" ? "table-cell" : "none";
-    
     thDynamic.innerText = viewMode === 'team' ? "ผู้รับผิดชอบ" : "ความยาวหญ้า";
     
     tbody.innerHTML = globalZonesArray.map((z, i) => {
@@ -343,7 +324,6 @@ function renderTable() {
             ? `<td>${z.Color === '#f1c40f' ? 'ทีมสีเหลือง' : 'ทีมสีเขียว'}</td>`
             : `<td style="font-weight:bold; color:${getGrassColor(z.current_grass_percentage)}">${z.current_grass_percentage}%</td>`;
             
-        // ปุ่มรายงาน โผล่เฉพาะ VIP
         const actionCol = currentUser.role === "VIP" 
             ? `<td style="text-align:right;"><button class="btn-table-report" onclick="event.stopPropagation(); activateReportingForm(globalZonesArray[${i}], ${i})"><i class="fas fa-file-pen"></i></button></td>`
             : "";
@@ -368,18 +348,18 @@ function focusOnZoneFromTable(index, element) {
     const zone = globalZonesArray[index]; const bounds = new maplibregl.LngLatBounds(); zone.coords.forEach(c => bounds.extend(c));
     map.fitBounds(bounds, { padding: 40, duration: 750, bearing: map.getBearing() });
     loadSavedHeight(tableSheet, '52vh');
-    for(let i=0; i<totalZonesCount; i++) { map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', i === index ? 0.85 : 0.15); map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', i === index ? 5 : 2); }
+    for(let i=0; i<totalZonesCount; i++) { if(map.getLayer(`layer-zone-${i}`)) { map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', i === index ? 0.85 : 0.15); map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', i === index ? 5 : 2); } }
 }
 
 function activateReportingForm(zone, index) {
-    if (currentUser.role !== "VIP") return; // กันเหนียว
+    if (currentUser.role !== "VIP") return; 
     selectedZone = zone; tableSheet.style.display = 'none';
     document.getElementById('form-sheet-title').innerText = `รายงานผล: ${zone.zone_name}`;
     document.getElementById('input-percent').value = ''; formSheet.style.display = 'flex'; loadSavedHeight(formSheet, 'auto');
     document.getElementById('fab-box').classList.add('fab-hidden');
     const bounds = new maplibregl.LngLatBounds(); zone.coords.forEach(c => bounds.extend(c));
     map.fitBounds(bounds, { padding: 40, duration: 750, bearing: map.getBearing() });
-    for(let i=0; i<totalZonesCount; i++) { map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', i === index ? 0.85 : 0.15); map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', i === index ? 5 : 2); }
+    for(let i=0; i<totalZonesCount; i++) { if(map.getLayer(`layer-zone-${i}`)) { map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', i === index ? 0.85 : 0.15); map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', i === index ? 5 : 2); } }
 }
 
 function resetHighlights() {
@@ -394,24 +374,52 @@ document.getElementById('btn-submit-data').onclick = async () => {
     await sendData({ action: "reportProgress", zone_id: selectedZone.zone_id, zone_name: selectedZone.zone_name, work_percentage: pct, worker_name: name });
 };
 
-// ... โค้ด pointerdown/up และ fetchWithRetry คงเดิม (ย่อให้สั้นเพื่อไม่ให้รก) ...
-let pointerStartX = 0; let pointerStartY = 0;
-map.getCanvas().addEventListener("pointerdown", e => { pointerStartX = e.clientX; pointerStartY = e.clientY; });
-map.getCanvas().addEventListener("pointerup", e => {
-    if (isBusy || editingZoneId) return;
-    if (Math.abs(e.clientX - pointerStartX) > 6 || Math.abs(e.clientY - pointerStartY) > 6) return;
-    const rect = map.getCanvas().getBoundingClientRect(); const lngLat = map.unproject([e.clientX - rect.left, e.clientY - rect.top]);
-    if (currentUser.role === "VIP" && draw.getMode() !== 'simple_select') return; // ให้ VIP วาดได้สะดวก
+// 🌟 เปลี่ยนมาใช้ระบบ Native Map Click ของ MapLibre 100% (แก้ไขจากจุดที่พัง)
+map.on('click', (e) => {
+    if (editingZoneId) return;
+    if (currentUser.role === "VIP" && draw.getMode() !== 'simple_select') return;
     
-    isBusy = true; let foundIndex = -1; const point = turf.point([lngLat.lng, lngLat.lat]);
-    for(let i = 0; i < globalZonesArray.length; i++) { if(globalZonesArray[i].turfBuffered && turf.booleanPointInPolygon(point, globalZonesArray[i].turfBuffered)) { foundIndex = i; break; } }
+    // สร้าง Array รายชื่อ Layer ทั้งหมดในแผนที่เพื่อตรวจจับการกด
+    const layerIds = [];
+    for (let i = 0; i < totalZonesCount; i++) {
+        if (map.getLayer(`layer-zone-${i}`)) {
+            layerIds.push(`layer-zone-${i}`);
+        }
+    }
     
-    if(foundIndex === -1) { resetHighlights(); formSheet.style.display = "none"; tableSheet.style.display = "none"; document.getElementById("fab-box").classList.remove("fab-hidden"); isBusy = false; return; }
-    formSheet.style.display = "none"; tableSheet.style.display = "flex"; loadSavedHeight(tableSheet, "52vh"); document.getElementById("fab-box").classList.add("fab-hidden");
-    document.querySelectorAll("#data-table tr").forEach(r => r.classList.remove("selected-row"));
-    for(let i=0; i<totalZonesCount; i++) { map.setPaintProperty(`layer-zone-${i}`, "fill-opacity", i === foundIndex ? 0.85 : 0.15); map.setPaintProperty(`layer-zone-${i}-stroke`, "line-width", i === foundIndex ? 5 : 2); }
-    const row = document.getElementById(`tr-zone-${foundIndex}`); if(row) { row.classList.add("selected-row"); row.scrollIntoView({ behavior: "smooth", block: "start" }); }
-    setTimeout(() => { isBusy = false; }, 300);
+    // ตรวจหาฟีเจอร์ที่อยู่ใต้จุดพิกัดที่เมาส์หรือนิ้วจิ้ม (e.point)
+    const features = map.queryRenderedFeatures(e.point, { layers: layerIds });
+    
+    if (features.length > 0) {
+        // ดึงค่า Index ของเลเยอร์ที่จิ้มโดนออกมาระบุตำแหน่งโซน
+        const layerId = features[0].layer.id;
+        const foundIndex = parseInt(layerId.replace('layer-zone-', ''), 10);
+        
+        // รันลอจิกเปิด Bottom Sheet แสดงตาราง และไฮไลต์โซนบนแผนที่เหมือนเดิม
+        formSheet.style.display = "none"; 
+        tableSheet.style.display = "flex"; 
+        loadSavedHeight(tableSheet, "52vh"); 
+        document.getElementById("fab-box").classList.add("fab-hidden");
+        
+        document.querySelectorAll("#data-table tr").forEach(r => r.classList.remove("selected-row"));
+        for(let i = 0; i < totalZonesCount; i++) {
+            if(map.getLayer(`layer-zone-${i}`)) {
+                map.setPaintProperty(`layer-zone-${i}`, "fill-opacity", i === foundIndex ? 0.85 : 0.15);
+                map.setPaintProperty(`layer-zone-${i}-stroke`, "line-width", i === foundIndex ? 5 : 2);
+            }
+        }
+        const row = document.getElementById(`tr-zone-${foundIndex}`); 
+        if(row) { 
+            row.classList.add("selected-row"); 
+            row.scrollIntoView({ behavior: "smooth", block: "start" }); 
+        }
+    } else {
+        // ถ้าจิ้มโดนพื้นที่ว่างเปล่า ให้เคลียร์สถานะกลับสู่หน้าจอเริ่มต้น
+        resetHighlights(); 
+        formSheet.style.display = "none"; 
+        tableSheet.style.display = "none"; 
+        document.getElementById("fab-box").classList.remove("fab-hidden");
+    }
 });
 
 async function fetchWithRetry(url, retries = 3, delay = 2000) {
@@ -421,9 +429,8 @@ async function fetchWithRetry(url, retries = 3, delay = 2000) {
     }
 }
 
-// 3. ตอนโหลดข้อมูล map.on('load')
 map.on('load', async () => {
-    initLIFF(); // ตรวจสอบ LIFF 
+    initLIFF(); 
     
     try {
         const zones = await fetchWithRetry(`${WEB_APP_URL}?action=getZones`); 
@@ -440,7 +447,6 @@ map.on('load', async () => {
         
         renderTable();
         
-        // 🌟 วาด Polygon สีๆ ลงบนแผนที่ (ทุกคนมองเห็นได้ ไม่ต้องซ่อน)
         zones.forEach((zone, index) => {
             if(!zone.coords) return;
             const c = viewMode === 'team' ? (zone.Color || '#2ecc71') : getGrassColor(zone.current_grass_percentage);
