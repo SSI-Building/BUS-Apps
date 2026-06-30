@@ -101,7 +101,7 @@
 <div id="map"></div>
 
 <div class="fab-container" id="fab-box">
-    <button class="fab" id="login-open-btn" title="เข้าสู่ระบบพนักงาน">
+    <button class="fab" id="login-open-btn" title="ระบบสมาชิกพนักงาน">
         <i class="fas fa-user-lock" id="login-icon"></i>
     </button>
     <button class="fab fab-toggle-view" id="view-mode-btn" title="สลับมุมมองสี">
@@ -111,21 +111,39 @@
     <button class="fab fab-table" id="table-open-btn" title="ตารางข้อมูล"><i class="fas fa-list-ul"></i></button>
 </div>
 
-<div id="login-sheet" class="mobile-bottom-sheet" style="height: auto; max-height: 60vh;">
+<div id="login-sheet" class="mobile-bottom-sheet" style="height: auto; max-height: 70vh;">
     <div class="sheet-handle" id="login-drag-handle"><div class="sheet-line"></div></div>
     <div class="sheet-header">
-        <span class="sheet-title" id="login-sheet-title">ยืนยันตัวตนพนักงาน</span>
+        <span class="sheet-title" id="login-sheet-title">ระบบสมาชิกพนักงาน</span>
         <button id="login-close-btn" class="btn-close-sheet">&times;</button>
     </div>
     <div class="sheet-content-wrapper">
-        <div class="mobile-report-form" id="login-form-area">
-            <div class="form-group" id="emp-id-group">
-                <label for="input-emp-id">รหัสพนักงาน</label>
-                <input type="text" id="input-emp-id" placeholder="ระบุรหัสพนักงานของคุณเพื่อตรวจสอบสิทธิ์">
+        <div id="login-state-profile" style="display:none;" class="mobile-report-form">
+            <p id="user-info-display" style="margin:0; font-size:15px; color:#2d3748; line-height:1.6;"></p>
+            <button class="btn-update-main" id="btn-logout" style="background:#e74c3c; box-shadow:0 10px 25px rgba(231,76,60,.25);">ออกจากระบบ</button>
+        </div>
+
+        <div id="login-state-connecting" style="display:none; text-align:center; padding: 25px 0;">
+            <i class="fas fa-spinner fa-spin" style="font-size:32px; color:#1677FF; margin-bottom:12px;"></i>
+            <p style="margin:0; font-size:15px; color:#666;">กำลังเชื่อมต่อยืนยันสิทธิ์กับระบบ LINE...</p>
+        </div>
+
+        <div id="login-state-register" style="display:none;" class="mobile-report-form">
+            <p style="margin:0 0 8px 0; font-size:14px; color:#e74c3c; font-weight:600;"><i class="fas fa-exclaimed-circle"></i> ไม่พบข้อมูล LINE ของคุณในระบบ กรุณาลงทะเบียนพนักงาน</p>
+            <div class="form-group">
+                <label for="reg-emp-id">รหัสพนักงาน <span style="color:red;">*</span></label>
+                <input type="text" id="reg-emp-id" placeholder="ระบุรหัสประจำตัวพนักงานของคุณ">
             </div>
-            <p id="user-info-display" style="margin:0; font-size:15px; color:#2d3748; display:none; line-height:1.6;"></p>
-            <button class="btn-update-main" id="btn-submit-login">เข้าสู่ระบบ</button>
-            <button class="btn-update-main" id="btn-logout" style="background:#e74c3c; box-shadow:0 10px 25px rgba(231,76,60,.25); display:none;">ออกจากระบบ</button>
+            <div class="form-group">
+                <label for="reg-emp-name">ชื่อ - นามสกุล <span style="color:red;">*</span></label>
+                <input type="text" id="reg-emp-name" placeholder="ระบุชื่อและนามสกุลจริง">
+            </div>
+            <div class="form-group">
+                <label for="reg-emp-pos">ตำแหน่งงาน (ใส่หรือไม่ใส่ก็ได้)</label>
+                <input type="text" id="reg-emp-pos" placeholder="ระบุตำแหน่งงานของคุณ">
+            </div>
+            <input type="hidden" id="reg-line-id">
+            <button class="btn-update-main" id="btn-submit-register" style="background:#2ecc71; box-shadow:0 10px 25px rgba(46,204,113,.25);">บันทึกการลงทะเบียน</button>
         </div>
     </div>
 </div>
@@ -196,14 +214,15 @@
     </div>
 </div>
 
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
 <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
 <script>
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzZ9MH7fONCkaqgmqWLOM8yAoRm2e4j82x79Lwhpju9k3gz1Uzi9Y4s4ibhwv_bhCnX/exec";
+const LIFF_ID = "2007956727-tmpCUfRZ";
 
-// เช็คสิทธิ์และข้อมูลผู้ใช้จาก LocalStorage (ถ้าไม่มีให้ตั้งต้นเป็น Guest)
 let currentUserRole = localStorage.getItem('user_role') || 'Guest';
 let currentUserName = localStorage.getItem('user_name') || '';
 let currentUserPos = localStorage.getItem('user_pos') || '';
@@ -275,11 +294,7 @@ const loginSheet = document.getElementById('login-sheet');
 
 function loadSavedHeight(sheetElem, defaultHeight) {
     const savedHeight = localStorage.getItem(sheetElem.id + '_height');
-    if (savedHeight) {
-        sheetElem.style.height = savedHeight;
-    } else {
-        sheetElem.style.height = defaultHeight;
-    }
+    if (savedHeight) { sheetElem.style.height = savedHeight; } else { sheetElem.style.height = defaultHeight; }
 }
 
 function setupDragLogic(sheetElem, handleElem) {
@@ -289,14 +304,11 @@ function setupDragLogic(sheetElem, handleElem) {
         if (!isDragging) return;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
         let newHeight = window.innerHeight - clientY;
-        if (newHeight >= 100 && newHeight <= window.innerHeight * 0.85) {
-            sheetElem.style.height = newHeight + 'px';
-        }
+        if (newHeight >= 100 && newHeight <= window.innerHeight * 0.85) { sheetElem.style.height = newHeight + 'px'; }
     };
     const stopDrag = () => {
         if (!isDragging) return;
-        isDragging = false;
-        document.body.style.userSelect = '';
+        isDragging = false; document.body.style.userSelect = '';
         localStorage.setItem(sheetElem.id + '_height', sheetElem.style.height);
     };
     handleElem.addEventListener('mousedown', startDrag);
@@ -311,98 +323,145 @@ setupDragLogic(tableSheet, document.getElementById('table-drag-handle'));
 setupDragLogic(formSheet, document.getElementById('form-drag-handle'));
 setupDragLogic(loginSheet, document.getElementById('login-drag-handle'));
 
-// --- ส่วนจัดแสดงปุ่มเปิดปิดฟอร์มต่าง ๆ ---
 document.getElementById('table-open-btn').onclick = () => {
-    formSheet.style.display = 'none';
-    loginSheet.style.display = 'none';
-    tableSheet.style.display = 'flex';
-    loadSavedHeight(tableSheet, '52vh');
+    formSheet.style.display = 'none'; loginSheet.style.display = 'none';
+    tableSheet.style.display = 'flex'; loadSavedHeight(tableSheet, '52vh');
     document.getElementById('fab-box').classList.add('fab-hidden');
 };
 document.getElementById('table-close-btn').onclick = () => {
-    tableSheet.style.display = 'none';
-    document.getElementById('fab-box').classList.remove('fab-hidden');
+    tableSheet.style.display = 'none'; document.getElementById('fab-box').classList.remove('fab-hidden');
     resetHighlights();
 };
 document.getElementById('form-close-btn').onclick = () => {
-    formSheet.style.display = 'none';
-    document.getElementById('fab-box').classList.remove('fab-hidden');
+    formSheet.style.display = 'none'; document.getElementById('fab-box').classList.remove('fab-hidden');
     resetHighlights();
 };
-
-// --- ลอจิกเปิด-ปิดระบบ ล็อกอินพนักงาน ---
-const loginOpenBtn = document.getElementById('login-open-btn');
-loginOpenBtn.onclick = () => {
-    tableSheet.style.display = 'none';
-    formSheet.style.display = 'none';
-    loginSheet.style.display = 'flex';
-    document.getElementById('fab-box').classList.add('fab-hidden');
-
-    const inputGroup = document.getElementById('emp-id-group');
-    const infoDisplay = document.getElementById('user-info-display');
-    const submitBtn = document.getElementById('btn-submit-login');
-    const logoutBtn = document.getElementById('btn-logout');
-
-    if (currentUserRole !== 'Guest') {
-        inputGroup.style.display = 'none';
-        submitBtn.style.display = 'none';
-        infoDisplay.style.display = 'block';
-        infoDisplay.innerHTML = `👋 สวัสดีครับ <b>คุณ ${currentUserName}</b><br>💼 ตำแหน่ง: ${currentUserPos}<br>🔐 ระดับสิทธิ์: <span style="color:#1677FF;font-weight:700;">${currentUserRole}</span>`;
-        logoutBtn.style.display = 'block';
-    } else {
-        inputGroup.style.display = 'flex';
-        submitBtn.style.display = 'block';
-        infoDisplay.style.display = 'none';
-        logoutBtn.style.display = 'none';
-    }
-};
 document.getElementById('login-close-btn').onclick = () => {
-    loginSheet.style.display = 'none';
-    document.getElementById('fab-box').classList.remove('fab-hidden');
+    loginSheet.style.display = 'none'; document.getElementById('fab-box').classList.remove('fab-hidden');
 };
 
-// --- ปลั๊กระบบล็อกอินตรวจสอบสิทธิ์ ---
-document.getElementById('btn-submit-login').onclick = async () => {
-    const empId = document.getElementById('input-emp-id').value.trim();
-    if (!empId) { alert("กรุณาระบุรหัสพนักงาน"); return; }
+// ==========================================================================
+// 🔌 ระบบจัดการการเชื่อมต่อ LINE LIFF และการยืนยันตน / ลงทะเบียนอัตโนมัติ
+// ==========================================================================
+liff.init({ liffId: LIFF_ID }).then(() => {
+    if (liff.isLoggedIn() && currentUserRole === 'Guest') {
+        // กรณีพึ่งถูกเด้งกลับมาจากหน้ายืนยันตนของ LINE ระบบจะเช็คประวัติเงียบๆ หลังบ้านทันที
+        checkLiffRegistration(false);
+    }
+}).catch(err => console.error("LIFF Init Error:", err));
 
-    const btn = document.getElementById('btn-submit-login');
-    btn.disabled = true; btn.innerText = "กำลังตรวจสอบสิทธิ์...";
+async function checkLiffRegistration(isExplicitClick) {
+    if (isExplicitClick) {
+        document.getElementById('login-state-profile').style.display = 'none';
+        document.getElementById('login-state-register').style.display = 'none';
+        document.getElementById('login-state-connecting').style.display = 'block';
+        loginSheet.style.display = 'flex';
+    }
 
     try {
+        const profile = await liff.getProfile();
+        const lineUserId = profile.userId;
+
         const response = await fetch(WEB_APP_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: "loginCheck", emp_id: empId })
+            body: JSON.stringify({ action: "liffLoginCheck", line_user_id: lineUserId })
         });
         const res = await response.json();
+
         if (res.status === "success") {
             localStorage.setItem('user_role', res.role);
             localStorage.setItem('user_name', res.name);
             localStorage.setItem('user_pos', res.position);
-            alert(`เข้าสู่ระบบสำเร็จ! ระดับสิทธิ์ของคุณคือ: ${res.role}`);
+            if (isExplicitClick) alert(`เข้าสู่ระบบพนักงานสำเร็จ! สิทธิ์ของคุณคือ: ${res.role}`);
             location.reload();
         } else {
-            alert(res.message || "ไม่พบรหัสพนักงานนี้ในระบบ");
-            btn.disabled = false; btn.innerText = "เข้าสู่ระบบ";
+            // ไม่เจอข้อมูล LineUserID ในระบบ -> เปิดฟอร์มให้กรอกลงทะเบียนตามเงื่อนไข
+            document.getElementById('login-state-connecting').style.display = 'none';
+            document.getElementById('login-state-profile').style.display = 'none';
+            document.getElementById('login-state-register').style.display = 'block';
+            document.getElementById('reg-line-id').value = lineUserId;
+            loginSheet.style.display = 'flex';
         }
-    } catch(err) {
-        alert("การเชื่อมต่อล้มเหลว");
-        btn.disabled = false; btn.innerText = "เข้าสู่ระบบ";
+    } catch (err) {
+        console.error(err);
+        if (isExplicitClick) { alert("เกิดปัญหาขัดข้องในการเชื่อมต่อ LINE"); loginSheet.style.display = 'none'; }
+    }
+}
+
+// คลิกปุ่มควบคุมระบบสมาชิกพนักงาน (FAB)
+document.getElementById('login-open-btn').onclick = () => {
+    tableSheet.style.display = 'none';
+    formSheet.style.display = 'none';
+    document.getElementById('fab-box').classList.add('fab-hidden');
+
+    if (currentUserRole !== 'Guest') {
+        // กรณีมีประวัติในคุกกี้เว็บอยู่แล้ว -> โชว์ประวัติได้เลย
+        document.getElementById('login-state-connecting').style.display = 'none';
+        document.getElementById('login-state-register').style.display = 'none';
+        document.getElementById('login-state-profile').style.display = 'block';
+        document.getElementById('user-info-display').innerHTML = `👋 สวัสดีครับ <b>คุณ ${currentUserName}</b><br>💼 ตำแหน่ง: ${currentUserPos || 'ไม่ระบุ'}<br>🔐 สิทธิ์การใช้งาน: <span style="color:#1677FF;font-weight:700;">${currentUserRole}</span>`;
+        loginSheet.style.display = 'flex';
+    } else {
+        // ยังไม่มีประวัติ -> ตรวจสอบการเปิดสิทธิ์ LINE LINE
+        if (!liff.isLoggedIn()) {
+            liff.login();
+        } else {
+            checkLiffRegistration(true);
+        }
     }
 };
 
+// กดยืนยันการลงทะเบียนพนักงานใหม่
+document.getElementById('btn-submit-register').onclick = async () => {
+    const empId = document.getElementById('reg-emp-id').value.trim();
+    const empName = document.getElementById('reg-emp-name').value.trim();
+    const empPos = document.getElementById('reg-emp-pos').value.trim();
+    const lineId = document.getElementById('reg-line-id').value;
+
+    if (!empId || !empName) { alert("กรุณาระบุรหัสพนักงานและชื่อ-นามสกุลจริง"); return; }
+
+    const btn = document.getElementById('btn-submit-register');
+    btn.disabled = true; btn.innerText = "กำลังบันทึกข้อมูลพนักงาน...";
+
+    try {
+        const response = await fetch(WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: "registerEmployee",
+                emp_id: empId, name: empName, position: empPos, line_user_id: lineId
+            })
+        });
+        const res = await response.json();
+        if (res.status === "success") {
+            alert("ลงทะเบียนข้อมูลพนักงานเรียบร้อยแล้วครับ!");
+            loginSheet.style.display = 'none';
+            document.getElementById('fab-box').classList.remove('fab-hidden');
+            document.getElementById('reg-emp-id').value = '';
+            document.getElementById('reg-emp-name').value = '';
+            document.getElementById('reg-emp-pos').value = '';
+            location.reload(); // หน้าเว็บจะโหลดใหม่และทำการจับคู่ออโต้ล็อกอินให้ทันที
+        } else {
+            alert(res.message || "ลงทะเบียนล้มเหลว");
+            btn.disabled = false; btn.innerText = "บันทึกการลงทะเบียน";
+        }
+    } catch(err) {
+        alert("เกิดข้อผิดพลาดในการส่งประวัติลงทะเบียน");
+        btn.disabled = false; btn.innerText = "บันทึกการลงทะเบียน";
+    }
+};
+
+// ปุ่มออกจากระบบ
 document.getElementById('btn-logout').onclick = () => {
     localStorage.removeItem('user_role');
     localStorage.removeItem('user_name');
     localStorage.removeItem('user_pos');
+    if (liff.isLoggedIn()) { liff.logout(); }
     alert("ออกจากระบบเรียบร้อยแล้ว");
     location.reload();
 };
 
 function getGrassColor(pct) {
-    if (pct <= 40) return '#2ecc71';
-    if (pct <= 75) return '#f1c40f';
-    return '#e74c3c';
+    if (pct <= 40) return '#2ecc71'; if (pct <= 75) return '#f1c40f'; return '#e74c3c';
 }
 
 function updateColors() {
@@ -420,8 +479,8 @@ function renderTable() {
     const th = document.getElementById('th-dynamic-status');
     const thReport = document.getElementById('th-report-col');
     
-    // จัดการหัวตาราง Column รายงานตามสิทธิ์ VIP เท่านั้น
-    if (currentUserRole === 'VIP') {
+    // คุมการแสดงผลคอลัมน์รายงาน: ให้เฉพาะ VIP หรือ User ที่มีสิทธิ์ล็อกอินเห็นเท่านั้น (Guest จะไม่เห็น)
+    if (currentUserRole === 'VIP' || currentUserRole === 'User') {
         thReport.style.display = '';
     } else {
         thReport.style.display = 'none';
@@ -433,7 +492,7 @@ function renderTable() {
             <tr id="tr-zone-${i}" onclick="focusOnZoneFromTable(${i}, this)">
                 <td><span class="color-dot" style="background:${z.Color || '#2ecc71'}"></span>${z.zone_name}</td>
                 <td>${z.Color === '#f1c40f' ? 'ทีมสีเหลือง' : 'ทีมสีเขียว'}</td>
-                <td style="text-align:right; ${currentUserRole === 'VIP' ? '' : 'display:none;'}">
+                <td style="text-align:right; ${(currentUserRole === 'VIP' || currentUserRole === 'User') ? '' : 'display:none;'}">
                     <button class="btn-table-report" onclick="event.stopPropagation(); triggerReportFromTable(${i})">
                         <i class="fas fa-file-pen"></i>
                     </button>
@@ -446,7 +505,7 @@ function renderTable() {
             <tr id="tr-zone-${i}" onclick="focusOnZoneFromTable(${i}, this)">
                 <td><span class="color-dot" style="background:${getGrassColor(z.current_grass_percentage)}"></span>${z.zone_name}</td>
                 <td style="font-weight:bold; color:${getGrassColor(z.current_grass_percentage)}">${z.current_grass_percentage}%</td>
-                <td style="text-align:right; ${currentUserRole === 'VIP' ? '' : 'display:none;'}">
+                <td style="text-align:right; ${(currentUserRole === 'VIP' || currentUserRole === 'User') ? '' : 'display:none;'}">
                     <button class="btn-table-report" onclick="event.stopPropagation(); triggerReportFromTable(${i})">
                         <i class="fas fa-file-pen"></i>
                     </button>
@@ -467,19 +526,11 @@ document.getElementById('view-mode-btn').onclick = () => {
 function focusOnZoneFromTable(index, element) {
     document.querySelectorAll('#data-table tr').forEach(r => r.classList.remove('selected-row'));
     element.classList.add('selected-row');
-
     const zone = globalZonesArray[index];
     const bounds = new maplibregl.LngLatBounds();
     zone.coords.forEach(c => bounds.extend(c));
-   
-    map.fitBounds(bounds, {
-        padding: 40,
-        duration: 750,
-        bearing: map.getBearing()
-    });
-   
+    map.fitBounds(bounds, { padding: 40, duration: 750, bearing: map.getBearing() });
     loadSavedHeight(tableSheet, '52vh');
-
     for(let i=0; i<totalZonesCount; i++) {
         map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', i === index ? 0.85 : 0.15);
         map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', i === index ? 5 : 2);
@@ -487,26 +538,17 @@ function focusOnZoneFromTable(index, element) {
 }
 
 function activateReportingForm(zone, index) {
-    selectedZone = zone;
-    tableSheet.style.display = 'none';
-   
+    selectedZone = zone; tableSheet.style.display = 'none';
     document.getElementById('form-sheet-title').innerText = `รายงานผล: ${zone.zone_name}`;
     document.getElementById('input-percent').value = '';
-    // เอาชื่อพนักงานที่ล็อกอินอยู่โยนเข้าไปให้ฟอร์มอัตโนมัติเพื่อความสะดวก
-    document.getElementById('input-name').value = currentUserName; 
+    document.getElementById('input-name').value = currentUserName; // วางชื่อพนักงานที่ล็อกอินอยู่ให้แบบอัตโนมัติ
     formSheet.style.display = 'flex';
-   
     loadSavedHeight(formSheet, 'auto');
     document.getElementById('fab-box').classList.add('fab-hidden');
 
     const bounds = new maplibregl.LngLatBounds();
     zone.coords.forEach(c => bounds.extend(c));
-   
-    map.fitBounds(bounds, {
-        padding: 40,
-        duration: 750,
-        bearing: map.getBearing()
-    });
+    map.fitBounds(bounds, { padding: 40, duration: 750, bearing: map.getBearing() });
 
     for(let i=0; i<totalZonesCount; i++) {
         map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', i === index ? 0.85 : 0.15);
@@ -514,9 +556,7 @@ function activateReportingForm(zone, index) {
     }
 }
 
-function triggerReportFromTable(index) {
-    activateReportingForm(globalZonesArray[index], index);
-}
+function triggerReportFromTable(index) { activateReportingForm(globalZonesArray[index], index); }
 
 function resetHighlights() {
     for(let i=0; i<totalZonesCount; i++) {
@@ -544,36 +584,22 @@ document.getElementById('btn-submit-data').onclick = async () => {
 };
 
 function handlePolygonClick(lngLat) {
-    if(isBusy || editingZoneId) return;
-    isBusy = true;
-
-    let foundIndex = -1;
-    const point = turf.point([lngLat.lng, lngLat.lat]);
+    if(isBusy || editingZoneId) return; isBusy = true;
+    let foundIndex = -1; const point = turf.point([lngLat.lng, lngLat.lat]);
 
     for(let i = 0; i < globalZonesArray.length; i++) {
         const zone = globalZonesArray[i];
-        if(zone.turfBuffered && turf.booleanPointInPolygon(point, zone.turfBuffered)) {
-            foundIndex = i;
-            break;
-        }
+        if(zone.turfBuffered && turf.booleanPointInPolygon(point, zone.turfBuffered)) { foundIndex = i; break; }
     }
 
     if(foundIndex === -1) {
-        resetHighlights();
-        formSheet.style.display = "none";
-        tableSheet.style.display = "none";
-        loginSheet.style.display = "none";
-        document.getElementById("fab-box").classList.remove("fab-hidden");
-        isBusy = false;
-        return;
+        resetHighlights(); formSheet.style.display = "none"; tableSheet.style.display = "none"; loginSheet.style.display = "none";
+        document.getElementById("fab-box").classList.remove("fab-hidden"); isBusy = false; return;
     }
 
-    formSheet.style.display = "none";
-    loginSheet.style.display = "none";
-    tableSheet.style.display = "flex";
-    loadSavedHeight(tableSheet, "52vh");
+    formSheet.style.display = "none"; loginSheet.style.display = "none";
+    tableSheet.style.display = "flex"; loadSavedHeight(tableSheet, "52vh");
     document.getElementById("fab-box").classList.add("fab-hidden");
-
     document.querySelectorAll("#data-table tr").forEach(r => r.classList.remove("selected-row"));
 
     for(let i=0; i<totalZonesCount; i++) {
@@ -582,27 +608,15 @@ function handlePolygonClick(lngLat) {
     }
 
     const row = document.getElementById(`tr-zone-${foundIndex}`);
-    if(row) {
-        row.classList.add("selected-row");
-        row.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-   
+    if(row) { row.classList.add("selected-row"); row.scrollIntoView({ behavior: "smooth", block: "start" }); }
     setTimeout(() => { isBusy = false; }, 300);
 }
 
-let pointerStartX = 0;
-let pointerStartY = 0;
-
-map.getCanvas().addEventListener("pointerdown", function(e) {
-    pointerStartX = e.clientX;
-    pointerStartY = e.clientY;
-});
-
+let pointerStartX = 0; let pointerStartY = 0;
+map.getCanvas().addEventListener("pointerdown", function(e) { pointerStartX = e.clientX; pointerStartY = e.clientY; });
 map.getCanvas().addEventListener("pointerup", function(e) {
     if (isBusy || editingZoneId) return;
-
-    const moveDistanceX = Math.abs(e.clientX - pointerStartX);
-    const moveDistanceY = Math.abs(e.clientY - pointerStartY);
+    const moveDistanceX = Math.abs(e.clientX - pointerStartX); const moveDistanceY = Math.abs(e.clientY - pointerStartY);
     if (moveDistanceX > 6 || moveDistanceY > 6) return;
 
     if (draw.getMode() === 'simple_select' || draw.getMode() === 'direct_select') {
@@ -620,7 +634,7 @@ async function fetchWithRetry(url, retries = 3, delay = 2000) {
             if (!response.ok) throw new Error("การตอบรับเน็ตมีปัญหา");
             return await response.json();
         } catch (err) {
-            console.warn(`ดาวน์โหลดหลุด (รอบที่ ${i + 1}/${retries}) กำลังต่อสายใหม่ในอีก ${delay}ms...`);
+            console.warn(`ดาวน์โหลดหลุด (รอบที่ ${i + 1}/${retries})...`);
             if (i === retries - 1) throw err;
             await new Promise(res => setTimeout(res, delay));
         }
@@ -628,15 +642,14 @@ async function fetchWithRetry(url, retries = 3, delay = 2000) {
 }
 
 map.on('load', async () => {
-    // 🛠️ ลอจิกปรับปรุงความปลอดภัยหน้าบ้านตามระดับสิทธิ์ที่ตรวจเจอ
+    // 🛠️ ตรวจควบคุมสิทธิ์หน้าบ้าน (สิทธิ์ VIP เท่านั้นที่เห็นกล่อง Polygon Tool และ Delete Tool เสมอ)
     const drawCtrl = document.querySelector('.mapboxgl-ctrl-top-right');
     if (currentUserRole === 'VIP') {
         if(drawCtrl) drawCtrl.style.display = 'block';
         document.getElementById('login-open-btn').classList.add('logged-in');
         document.getElementById('login-icon').className = 'fas fa-user-check';
     } else {
-        // หากเป็น Guest หรือ User ทั่วไป จะโดนซ่อนเครื่องมือวาด Polygon และปุ่ม Delete ทันที
-        if(drawCtrl) drawCtrl.style.display = 'none'; 
+        if(drawCtrl) drawCtrl.style.display = 'none'; // Guest และ User จะไม่เห็นเครื่องมือวาดปรับพิกัด
         if(currentUserRole === 'User') {
             document.getElementById('login-open-btn').classList.add('logged-in');
             document.getElementById('login-icon').className = 'fas fa-user-tie';
@@ -659,9 +672,8 @@ map.on('load', async () => {
        
         zones.forEach((zone, index) => {
             if(!zone.coords) return;
-            const srcId = `source-zone-${index}`;
-            const lyrId = `layer-zone-${index}`;
-            const c = (viewMode === 'team') ? (zone.Color || '#2ecc71') : getGrassColor(z.current_grass_percentage);
+            const srcId = `source-zone-${index}`; const lyrId = `layer-zone-${index}`;
+            const c = (viewMode === 'team') ? (zone.Color || '#2ecc71') : getGrassColor(zone.current_grass_percentage);
 
             map.addSource(srcId, { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'Polygon', 'coordinates': [zone.coords] } } });
             map.addLayer({ 'id': lyrId, 'type': 'fill', 'source': srcId, 'paint': { 'fill-color': c, 'fill-opacity': 0.5 } });
@@ -669,7 +681,7 @@ map.on('load', async () => {
         });
     } catch (err) {
         console.error("Fatal Error:", err);
-        alert("ไม่สามารถติดต่อเซิร์ฟเวอร์ Google Sheet ได้ในขณะนี้ กรุณารีเฟรชใหม่อีกครั้งครับ");
+        alert("ไม่สามารถติดต่อเซิร์ฟเวอร์ได้ กรุณารีเฟรชใหม่อีกครั้งครับ");
     }
 });
 </script>
