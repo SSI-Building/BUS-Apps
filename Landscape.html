@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>Landscape</title>
+<title>Map-WasteCheck (Grass Management - Fluent Mobile)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -458,6 +458,70 @@ document.getElementById('btn-submit-data').onclick = async () => {
     });
 };
 
+// ==========================================================
+// 🌟 เรดาร์จับการสัมผัส (Global Click) แม่นยำ 100% บนมือถือ
+// ==========================================================
+map.on('click', (e) => {
+    if(editingZoneId) return; // ถ้ากำลังวาดแก้ไขพิกัดอยู่ ห้ามกดทะลุ
+
+    // ยิงเรดาร์ตรวจว่านิ้วที่จิ้มลงไป โดนเลเยอร์ชื่อ layer-zone- หรือไม่
+    const features = map.queryRenderedFeatures(e.point);
+    const clickedFeature = features.find(f => f.layer.id.startsWith('layer-zone-'));
+
+    if (clickedFeature) {
+        // 🟢 กรณีที่ 1: นิ้วจิ้มโดนแปลงที่ดิน
+        
+        // สกัดเอาตัวเลข Index จากชื่อเลเยอร์ (เช่น 'layer-zone-5' -> ได้เลข 5)
+        const index = parseInt(clickedFeature.layer.id.replace('layer-zone-', ''), 10);
+
+        // 1. เปิดหน้าต่างตารางสไลด์ขึ้นมา
+        formSheet.style.display = 'none';
+        tableSheet.style.display = 'flex';
+        loadSavedHeight(tableSheet, '40vh'); 
+        document.getElementById('fab-box').classList.add('fab-hidden');
+
+        // 2. ล้างสีแถวตารางเก่า และทำสีไฮไลต์แปลงบนแผนที่ให้เข้มขึ้น
+        document.querySelectorAll('#data-table tr').forEach(r => r.classList.remove('selected-row'));
+        for(let i=0; i<totalZonesCount; i++) {
+            map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', i === index ? 0.85 : 0.15);
+            map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', i === index ? 5 : 1);
+        }
+
+        // 3. เลื่อน (Scroll) แถวในตารางให้เด้งขึ้นมาอยู่บรรทัดบนสุด
+        const row = document.getElementById(`tr-zone-${index}`);
+        if(row) {
+            row.classList.add('selected-row');
+            row.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+    } else {
+        // 🔴 กรณีที่ 2: นิ้วจิ้มโดนพื้นที่ว่าง (แผ่นดินเปล่า)
+        resetHighlights(); 
+        formSheet.style.display = 'none'; 
+        tableSheet.style.display = 'none'; 
+        document.getElementById('fab-box').classList.remove('fab-hidden'); 
+    }
+});
+
+// ดักจับการกดส่งรายงาน
+document.getElementById('btn-submit-data').onclick = async () => {
+    if(!selectedZone) return;
+    const pct = document.getElementById('input-percent').value;
+    const name = document.getElementById('input-name').value;
+    if(!pct || pct < 0 || pct > 100 || !name) { alert("ข้อมูลไม่ถูกต้อง"); return; }
+    
+    const btn = document.getElementById('btn-submit-data');
+    btn.disabled = true; btn.innerText = "กำลังบันทึกส่งค่าลงชีต...";
+    
+    await sendData({
+        action: "reportProgress", zone_id: selectedZone.zone_id,
+        zone_name: selectedZone.zone_name, work_percentage: pct, worker_name: name
+    });
+};
+
+// ==========================================================
+// 🌟 โหลดข้อมูลตอนเปิดหน้าเว็บ 
+// ==========================================================
 map.on('load', async () => {
     try {
         const response = await fetch(`${WEB_APP_URL}?action=getZones`);
@@ -466,6 +530,7 @@ map.on('load', async () => {
         
         renderTable();
         
+        // วาดรูปทรงแผนที่ลงไปเฉยๆ (ไม่ต้องฝัง Event Click ทีละเลเยอร์แล้ว)
         zones.forEach((zone, index) => {
             const srcId = `source-zone-${index}`;
             const lyrId = `layer-zone-${index}`;
@@ -475,33 +540,10 @@ map.on('load', async () => {
             map.addSource(srcId, { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'Polygon', 'coordinates': [coords] } } });
             map.addLayer({ 'id': lyrId, 'type': 'fill', 'source': srcId, 'paint': { 'fill-color': c, 'fill-opacity': 0.5 } });
             map.addLayer({ 'id': `${lyrId}-stroke`, 'type': 'line', 'source': srcId, 'paint': { 'line-color': c, 'line-width': 2 } });
-            
-            map.on('click', lyrId, () => {
-                if(editingZoneId) return;
-
-                formSheet.style.display = 'none';
-                tableSheet.style.display = 'flex';
-                
-                // เรียกความจำ แทนที่การเซ็ตเป็น 35vh ตายตัว
-                loadSavedHeight(tableSheet, '40vh'); 
-                
-                document.getElementById('fab-box').classList.add('fab-hidden');
-
-                document.querySelectorAll('#data-table tr').forEach(r => r.classList.remove('selected-row'));
-                for(let i=0; i<totalZonesCount; i++) {
-                    map.setPaintProperty(`layer-zone-${i}`, 'fill-opacity', i === index ? 0.85 : 0.15);
-                    map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-width', i === index ? 5 : 1);
-                }
-
-                const row = document.getElementById(`tr-zone-${index}`);
-                if(row) {
-                    row.classList.add('selected-row');
-                    row.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            });
         });
     } catch (err) { console.error(err); }
 });
+
 </script>
 </body>
 </html>
