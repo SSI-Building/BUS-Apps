@@ -340,12 +340,10 @@ document.getElementById('login-close-btn').onclick = () => {
     loginSheet.style.display = 'none'; document.getElementById('fab-box').classList.remove('fab-hidden');
 };
 
-// ==========================================================================
-// 🔌 ระบบจัดการการเชื่อมต่อ LINE LIFF และการยืนยันตน / ลงทะเบียนอัตโนมัติ
-// ==========================================================================
+
 liff.init({ liffId: LIFF_ID }).then(() => {
     if (liff.isLoggedIn() && currentUserRole === 'Guest') {
-        // กรณีพึ่งถูกเด้งกลับมาจากหน้ายืนยันตนของ LINE ระบบจะเช็คประวัติเงียบๆ หลังบ้านทันที
+       
         checkLiffRegistration(false);
     }
 }).catch(err => console.error("LIFF Init Error:", err));
@@ -375,7 +373,7 @@ async function checkLiffRegistration(isExplicitClick) {
             if (isExplicitClick) alert(`เข้าสู่ระบบพนักงานสำเร็จ! สิทธิ์ของคุณคือ: ${res.role}`);
             location.reload();
         } else {
-            // ไม่เจอข้อมูล LineUserID ในระบบ -> เปิดฟอร์มให้กรอกลงทะเบียนตามเงื่อนไข
+        
             document.getElementById('login-state-connecting').style.display = 'none';
             document.getElementById('login-state-profile').style.display = 'none';
             document.getElementById('login-state-register').style.display = 'block';
@@ -388,21 +386,21 @@ async function checkLiffRegistration(isExplicitClick) {
     }
 }
 
-// คลิกปุ่มควบคุมระบบสมาชิกพนักงาน (FAB)
+
 document.getElementById('login-open-btn').onclick = () => {
     tableSheet.style.display = 'none';
     formSheet.style.display = 'none';
     document.getElementById('fab-box').classList.add('fab-hidden');
 
     if (currentUserRole !== 'Guest') {
-        // กรณีมีประวัติในคุกกี้เว็บอยู่แล้ว -> โชว์ประวัติได้เลย
+    
         document.getElementById('login-state-connecting').style.display = 'none';
         document.getElementById('login-state-register').style.display = 'none';
         document.getElementById('login-state-profile').style.display = 'block';
         document.getElementById('user-info-display').innerHTML = `👋 สวัสดีครับ <b>คุณ ${currentUserName}</b><br>💼 ตำแหน่ง: ${currentUserPos || 'ไม่ระบุ'}<br>🔐 สิทธิ์การใช้งาน: <span style="color:#1677FF;font-weight:700;">${currentUserRole}</span>`;
         loginSheet.style.display = 'flex';
     } else {
-        // ยังไม่มีประวัติ -> ตรวจสอบการเปิดสิทธิ์ LINE LINE
+     
         if (!liff.isLoggedIn()) {
             liff.login();
         } else {
@@ -411,7 +409,7 @@ document.getElementById('login-open-btn').onclick = () => {
     }
 };
 
-// กดยืนยันการลงทะเบียนพนักงานใหม่
+
 document.getElementById('btn-submit-register').onclick = async () => {
     const empId = document.getElementById('reg-emp-id').value.trim();
     const empName = document.getElementById('reg-emp-name').value.trim();
@@ -439,7 +437,7 @@ document.getElementById('btn-submit-register').onclick = async () => {
             document.getElementById('reg-emp-id').value = '';
             document.getElementById('reg-emp-name').value = '';
             document.getElementById('reg-emp-pos').value = '';
-            location.reload(); // หน้าเว็บจะโหลดใหม่และทำการจับคู่ออโต้ล็อกอินให้ทันที
+            location.reload(); 
         } else {
             alert(res.message || "ลงทะเบียนล้มเหลว");
             btn.disabled = false; btn.innerText = "บันทึกการลงทะเบียน";
@@ -450,7 +448,7 @@ document.getElementById('btn-submit-register').onclick = async () => {
     }
 };
 
-// ปุ่มออกจากระบบ
+
 document.getElementById('btn-logout').onclick = () => {
     localStorage.removeItem('user_role');
     localStorage.removeItem('user_name');
@@ -479,7 +477,7 @@ function renderTable() {
     const th = document.getElementById('th-dynamic-status');
     const thReport = document.getElementById('th-report-col');
     
-    // 🛠️ แก้ไขจุดที่ 1: ปรับให้แสดงหัวข้อคอลัมน์ "รายงาน" เฉพาะสิทธิ์ VIP เท่านั้น (User และ Guest จะถูกซ่อน)
+  
     if (currentUserRole === 'VIP') {
         thReport.style.display = '';
     } else {
@@ -492,7 +490,7 @@ function renderTable() {
             <tr id="tr-zone-${i}" onclick="focusOnZoneFromTable(${i}, this)">
                 <td><span class="color-dot" style="background:${z.Color || '#2ecc71'}"></span>${z.zone_name}</td>
                 <td>${z.Color === '#f1c40f' ? 'ทีมสีเหลือง' : 'ทีมสีเขียว'}</td>
-                // 🛠️ แก้ไขจุดที่ 2: ซ่อนช่องปุ่มกดรายงานของแต่ละแถวในโหมดทีม
+                
                 <td style="text-align:right; ${(currentUserRole === 'VIP') ? '' : 'display:none;'}">
                     <button class="btn-table-report" onclick="event.stopPropagation(); triggerReportFromTable(${i})">
                         <i class="fas fa-file-pen"></i>
@@ -506,7 +504,7 @@ function renderTable() {
             <tr id="tr-zone-${i}" onclick="focusOnZoneFromTable(${i}, this)">
                 <td><span class="color-dot" style="background:${getGrassColor(z.current_grass_percentage)}"></span>${z.zone_name}</td>
                 <td style="font-weight:bold; color:${getGrassColor(z.current_grass_percentage)}">${z.current_grass_percentage}%</td>
-                // 🛠️ แก้ไขจุดที่ 3: ซ่อนช่องปุ่มกดรายงานของแต่ละแถวในโหมดหญ้า
+             
                 <td style="text-align:right; ${(currentUserRole === 'VIP') ? '' : 'display:none;'}">
                     <button class="btn-table-report" onclick="event.stopPropagation(); triggerReportFromTable(${i})">
                         <i class="fas fa-file-pen"></i>
@@ -543,7 +541,7 @@ function activateReportingForm(zone, index) {
     selectedZone = zone; tableSheet.style.display = 'none';
     document.getElementById('form-sheet-title').innerText = `รายงานผล: ${zone.zone_name}`;
     document.getElementById('input-percent').value = '';
-    document.getElementById('input-name').value = currentUserName; // วางชื่อพนักงานที่ล็อกอินอยู่ให้แบบอัตโนมัติ
+    document.getElementById('input-name').value = currentUserName; 
     formSheet.style.display = 'flex';
     loadSavedHeight(formSheet, 'auto');
     document.getElementById('fab-box').classList.add('fab-hidden');
@@ -644,14 +642,14 @@ async function fetchWithRetry(url, retries = 3, delay = 2000) {
 }
 
 map.on('load', async () => {
-    // 🛠️ ตรวจควบคุมสิทธิ์หน้าบ้าน (สิทธิ์ VIP เท่านั้นที่เห็นกล่อง Polygon Tool และ Delete Tool เสมอ)
+   
     const drawCtrl = document.querySelector('.mapboxgl-ctrl-top-right');
     if (currentUserRole === 'VIP') {
         if(drawCtrl) drawCtrl.style.display = 'block';
         document.getElementById('login-open-btn').classList.add('logged-in');
         document.getElementById('login-icon').className = 'fas fa-user-check';
     } else {
-        if(drawCtrl) drawCtrl.style.display = 'none'; // Guest และ User จะไม่เห็นเครื่องมือวาดปรับพิกัด
+        if(drawCtrl) drawCtrl.style.display = 'none'; 
         if(currentUserRole === 'User') {
             document.getElementById('login-open-btn').classList.add('logged-in');
             document.getElementById('login-icon').className = 'fas fa-user-tie';
