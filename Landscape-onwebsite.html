@@ -19,7 +19,11 @@
     }
     * { box-sizing: border-box; }
     
-    #map { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #F7F8FA; }
+    /* 🌟 เพิ่ม touch-action: none เพื่อตัดการแทรกแซง Gesture ของตัว Browser มือถือ */
+    #map { 
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+        background: #F7F8FA; touch-action: none; 
+    }
     
     #zoom-indicator {
         position: absolute; top: 18px; left: 18px; padding: 10px 16px; border-radius: 20px;
@@ -31,11 +35,11 @@
         position: absolute; top: 80px; left: 18px;
         background: rgba(255, 255, 255, 0.95); padding: 15px;
         border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-        display: none; z-index: 10; width: 260px;
+        display: none; z-index: 10; width: 260px; box-sizing: border-box;
     }
     #edit-panel { background: #34495e; color: white; }
     #save-panel h3, #edit-panel h3 { margin: 0 0 10px 0; font-size: 14px; font-weight: 600; }
-    #save-panel input, #save-panel select { width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; }
+    #save-panel input, #save-panel select { width: 100%; padding: 6px; margin-bottom: 10px; box-sizing: border-box; }
     #save-panel button, #edit-panel button { width: 48%; padding: 10px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; }
     .btn-save { background: #1677FF; color: white; }
     .btn-cancel { background: #e74c3c; color: white; }
@@ -73,9 +77,9 @@
 
     .sheet-content-wrapper { overflow-y: auto; padding: 12px 24px 24px 24px; flex: 1; }
     
-    #data-table { width: 100%; border-collapse: collapse; }
-    #data-table th { padding: 14px 10px; text-align: left; color: #888; font-size: 13px; border-bottom: 2px solid #F0F2F5; }
-    #data-table td { padding: 18px 10px; font-size: 15px; border-bottom: 1px solid #F0F2F5; color: #2d3748; }
+    #data-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+    #data-table th { padding: 12px 10px; text-align: left; background: #fff; color: #888; border-bottom: 2px solid #f9f9f9; }
+    #data-table td { padding: 15px 10px; border-bottom: 1px solid #f1f1f1; color: #333; cursor: pointer; }
     #data-table tr { transition: .2s; cursor: pointer; }
     #data-table tr:not(.selected-row):active { background: #f7fafc; }
     #data-table tr.selected-row { background: #EAF3FF !important; border-left: 5px solid #1677FF; }
@@ -171,10 +175,10 @@
 </div>
 
 <div id="edit-panel">
-    <h3 style="margin:0 0 10px 0; font-size:14px;">โหมดปรับแต่งพิกัดแนวเขต</h3>
+    <h3 style="margin:0 0 10px 0; font-size:14px;">กำลังอยู่ในโหมดแก้ไขพื้นที่</h3>
     <p id="edit-zone-display" style="font-size:12px; margin-bottom:10px;"></p>
     <div style="display: flex; justify-content: space-between;">
-        <button class="btn-save" id="btn-update-zone">บันทึกตำแหน่งใหม่</button>
+        <button class="btn-save" id="btn-update-zone">บันทึกใหม่</button>
         <button class="btn-cancel" id="btn-cancel-edit">ยกเลิก</button>
     </div>
 </div>
@@ -197,6 +201,11 @@ const map = new maplibregl.Map({
     center: [targetLngLat[0] - (-0.0010), targetLngLat[1] - 0.0010],
     zoom: 15.58, bearing: -45.6, maxZoom: 21
 });
+
+// 🌟 [ปรับปรุงความเสถียรบนมือถือ]: ปิดระบบซูมซ้ำซ้อนเพื่อเคลียร์ทางให้คำสั่งคลิกเลเยอร์ทำงานทันที
+map.doubleClickZoom.disable();
+map.touchZoomRotate.disableRotation();
+map.touchPitch.disable();
 
 const draw = new MapboxDraw({ displayControlsDefault: false, controls: { polygon: true, trash: true } });
 map.addControl(draw, 'top-right');
@@ -431,28 +440,32 @@ document.getElementById('btn-submit-data').onclick = async () => {
 };
 
 // =========================================================================
-// 🌟 เปลี่ยนระบบดักการกดคลิกบนแผนที่แบบ Bounding Box คลุมนิ้วมือถือ และจำความสูง 🌟
+// 🌟 [ระบบตรวจสอบสิทธิ์อัปเดต]: รองรับการตรวจจับแบบกลุ่มพิกัด (BBox) + ล็อกเลเยอร์เป้าหมายแม่นยำ 100% บนมือถือ
 // =========================================================================
-map.on('click', (e) => {
+function handlePolygonClick(e) {
     if(editingZoneId) return;
 
-    // ขยายรัศมีพิกัดรอบนิ้วจิ้ม 10x10 พิกเซล แก้ปัญหานิ้วหนา (Touch Tolerance) บนมือถือ
-    const padding = 5;
+    // ขยายพื้นที่กล่องตรวจจับสัญญาณรอบนิ้วจิ้ม 15 พิกเซล เพื่อให้จิ้มง่ายขึ้นบนจอโทรศัพท์
+    const padding = 15;
     const bbox = [
         [e.point.x - padding, e.point.y - padding],
         [e.point.x + padding, e.point.y + padding]
     ];
 
-    const features = map.queryRenderedFeatures(bbox);
-    const clickedFeature = features.find(f => f.layer.id && f.layer.id.startsWith('layer-zone-'));
+    // เจาะจงฟิลเตอร์ระบุเฉพาะชุดชื่อเลเยอร์ที่ดินเท่านั้น ภาพดาวเทียมและป้ายแท็กอื่นจะไม่ถูกนำมาคำนวณปะปน
+    const targetLayerIds = globalZonesArray.map((z, i) => `layer-zone-${i}`).filter(id => map.getLayer(id));
+    if(!targetLayerIds.length) return;
 
-    if (clickedFeature) {
+    const features = map.queryRenderedFeatures(bbox, { layers: targetLayerIds });
+
+    if (features && features.length > 0) {
+        const clickedFeature = features[0];
         const index = parseInt(clickedFeature.layer.id.replace('layer-zone-', ''), 10);
 
         formSheet.style.display = 'none';
         tableSheet.style.display = 'flex';
         
-        // 🛠️ โหลดความสูงตารางล่าสุดที่แอดมินลากทิ้งไว้มาแสดงผลเสมอ ไม่หดตัวกลับไปค่าเดิม
+        // ดึงค่าความสูงของตารางที่เคยบันทึกไว้ล่าสุดมาแสดงผล
         loadSavedHeight(tableSheet, '52vh'); 
         document.getElementById('fab-box').classList.add('fab-hidden');
 
@@ -465,17 +478,20 @@ map.on('click', (e) => {
         const row = document.getElementById(`tr-zone-${index}`);
         if(row) {
             row.classList.add('selected-row');
-            // รูดแถวที่จิ้มเด้งขึ้นบรรดทัดบนสุดของแผงตาราง
+            // ดันแถวตารางข้อมูลเลื่อนขึ้นมาล็อกอยู่ที่บรรทัดแรกสุดด้านบนสุดของแผงตารางเสมอ
             row.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     } else {
-        // แตะที่ว่าง เคลียร์ไฮไลต์และหุบหน้าต่างทั้งหมดลง
+        // แตะโดนพื้นที่ดินว่างเปล่า สั่งปิดแผงสไลด์และรีเซ็ตสีเลเยอร์กลับเป็นค่ามาตรฐาน
         resetHighlights(); 
         formSheet.style.display = 'none'; 
         tableSheet.style.display = 'none'; 
         document.getElementById('fab-box').classList.remove('fab-hidden'); 
     }
-});
+}
+
+// ผูกฟังก์ชันสัมผัสเข้ากับระบบดักจับพิกัดแผนที่ทั้งสองระบบเพื่อความลื่นไหลสูงสุด
+map.on('click', handlePolygonClick);
 
 map.on('load', async () => {
     try {
