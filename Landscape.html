@@ -479,8 +479,8 @@ function renderTable() {
     const th = document.getElementById('th-dynamic-status');
     const thReport = document.getElementById('th-report-col');
     
-    // คุมการแสดงผลคอลัมน์รายงาน: ให้เฉพาะ VIP หรือ User ที่มีสิทธิ์ล็อกอินเห็นเท่านั้น (Guest จะไม่เห็น)
-    if (currentUserRole === 'VIP' || currentUserRole === 'User') {
+    // 🛠️ แก้ไขจุดที่ 1: ปรับให้แสดงหัวข้อคอลัมน์ "รายงาน" เฉพาะสิทธิ์ VIP เท่านั้น (User และ Guest จะถูกซ่อน)
+    if (currentUserRole === 'VIP') {
         thReport.style.display = '';
     } else {
         thReport.style.display = 'none';
@@ -492,7 +492,8 @@ function renderTable() {
             <tr id="tr-zone-${i}" onclick="focusOnZoneFromTable(${i}, this)">
                 <td><span class="color-dot" style="background:${z.Color || '#2ecc71'}"></span>${z.zone_name}</td>
                 <td>${z.Color === '#f1c40f' ? 'ทีมสีเหลือง' : 'ทีมสีเขียว'}</td>
-                <td style="text-align:right; ${(currentUserRole === 'VIP' || currentUserRole === 'User') ? '' : 'display:none;'}">
+                // 🛠️ แก้ไขจุดที่ 2: ซ่อนช่องปุ่มกดรายงานของแต่ละแถวในโหมดทีม
+                <td style="text-align:right; ${(currentUserRole === 'VIP') ? '' : 'display:none;'}">
                     <button class="btn-table-report" onclick="event.stopPropagation(); triggerReportFromTable(${i})">
                         <i class="fas fa-file-pen"></i>
                     </button>
@@ -505,7 +506,8 @@ function renderTable() {
             <tr id="tr-zone-${i}" onclick="focusOnZoneFromTable(${i}, this)">
                 <td><span class="color-dot" style="background:${getGrassColor(z.current_grass_percentage)}"></span>${z.zone_name}</td>
                 <td style="font-weight:bold; color:${getGrassColor(z.current_grass_percentage)}">${z.current_grass_percentage}%</td>
-                <td style="text-align:right; ${(currentUserRole === 'VIP' || currentUserRole === 'User') ? '' : 'display:none;'}">
+                // 🛠️ แก้ไขจุดที่ 3: ซ่อนช่องปุ่มกดรายงานของแต่ละแถวในโหมดหญ้า
+                <td style="text-align:right; ${(currentUserRole === 'VIP') ? '' : 'display:none;'}">
                     <button class="btn-table-report" onclick="event.stopPropagation(); triggerReportFromTable(${i})">
                         <i class="fas fa-file-pen"></i>
                     </button>
