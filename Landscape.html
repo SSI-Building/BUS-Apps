@@ -194,6 +194,10 @@
 <div id="save-panel">
     <h3 id="panel-title">บันทึกพื้นที่ใหม่</h3>
     <input type="text" id="zone-name" placeholder="ชื่อโซน / ชื่อพื้นที่" />
+    
+    <label style="font-size:12px;">รอบหญ้ายาวเต็ม 100% (วัน):</label>
+    <input type="number" id="zone-cycle" placeholder="ค่ามาตรฐาน 30 วัน" value="30" min="1" />
+    
     <label style="font-size:12px;">ทีมทำความสะอาด:</label>
     <select id="zone-color">
         <option value="#2ecc71">ทีมสีเขียว</option>
@@ -273,10 +277,14 @@ document.getElementById('btn-save-zone').onclick = async () => {
     const color = document.getElementById('zone-color').value;
     if(!name || !currentFeature) return;
     const areaM2 = turf.area(currentFeature);
+    const cycle = document.getElementById('zone-cycle').value; 
     await sendData({
-        action: "saveZone", zone_name: name,
+        action: "saveZone", 
+        zone_name: name,
         coordinates_data: JSON.stringify(currentFeature.geometry.coordinates[0]),
-        area_size: areaM2.toFixed(2) + " ตร.ม.", color: color
+        area_size: areaM2.toFixed(2) + " ตร.ม.", 
+        color: color,
+        growth_cycle: cycle 
     });
 };
 
