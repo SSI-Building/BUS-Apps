@@ -75,21 +75,23 @@
     /* ---------------------------------------------------------------------- */
     /* CSS สำหรับจัดวาง Card */
     /* ---------------------------------------------------------------------- */
+    /* --- จุดที่ 1: ขยายความกว้างสูงสุดของหน้าเว็บให้รองรับ 5 ตัว --- */
     .app-list {
         display: flex; 
         flex-wrap: wrap; 
         justify-content: center; 
         align-items: flex-start; 
         gap: 25px; 
-        max-width: 1200px; 
+        max-width: 1400px; /* 📝 แก้จาก 1200px เป็น 1400px */
         margin: 20px auto 50px auto;
         padding: 0 20px;
     }
 
+    /* --- จุดที่ 2: ปรับขนาดของการ์ดให้เล็กลงเล็กน้อยเพื่อให้ยัดแถวละ 5 ตัวได้ --- */
     .app-card {
         flex: 1 1 200px; 
-        max-width: 280px; 
-        min-width: 200px; 
+        max-width: 240px; /* 📝 แก้จาก 280px เป็น 240px */
+        min-width: 180px; /* 📝 แก้จาก 200px เป็น 180px (เผื่อหน้าจอเล็ก) */
         background-color: rgba(255,255,255,0.95);
         border-radius: 20px;
         padding: 25px 20px;
@@ -122,7 +124,19 @@
     .folder-card { background-color: rgba(239, 246, 255, 0.95); border: 2px dashed #71c77f; }
     .folder-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(8px); z-index: 999; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
     .folder-overlay.active { opacity: 1; pointer-events: auto; }
-    .folder-content { background: rgba(255, 255, 255, 0.98); padding: 35px 30px; border-radius: 24px; max-width: 650px; width: 90%; box-shadow: 0 25px 50px rgba(0,0,0,0.2); transform: scale(0.9); transition: transform 0.3s ease; }
+    
+        /* --- จุดที่ 3: ปรับขนาดกล่องป๊อปอัป (Folder) ให้กว้างขึ้นตาม (ถ้าต้องการ) --- */
+    .folder-content { 
+        background: rgba(255, 255, 255, 0.98); 
+        padding: 35px 30px; 
+        border-radius: 24px; 
+        max-width: 1100px; /* 📝 แก้จาก 650px เป็น 1100px เพื่อให้ข้างในเรียง 5 คอลัมน์ได้ */
+        width: 90%; 
+        box-shadow: 0 25px 50px rgba(0,0,0,0.2); 
+        transform: scale(0.9); 
+        transition: transform 0.3s ease; 
+    }
+
     .folder-overlay.active .folder-content { transform: scale(1); }
     .folder-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 25px; }
     .folder-title { margin: 0; font-size: 1.5rem; color: #243b53; font-weight: 700; display: flex; align-items: center; gap: 10px; }
