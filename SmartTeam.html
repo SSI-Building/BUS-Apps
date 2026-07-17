@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Team Builder</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Libraries -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+      font-family: 'Prompt', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 50px;
+    }
+    .app-header {
+      background: #ffffff; padding: 15px 0; box-shadow: 0 2px 15px rgba(0,0,0,0.05); border-bottom: 3px solid #3b82f6; margin-bottom: 20px;
+    }
+    .card {
+      border: none; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); background: rgba(255, 255, 255, 0.95);
+    }
+    .btn-custom-primary {
+      background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; border-radius: 10px; padding: 12px; font-weight: 500; transition: all 0.3s;
+    }
+    .btn-custom-primary:hover {
+      transform: translateY(-2px); box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3); color: white;
+    }
+    .employee-badge {
+      background-color: #ffffff; border-left: 4px solid #10b981; border-radius: 8px; padding: 10px 15px; margin: 6px; display: inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #eee;
+    }
+    .position-text { font-size: 0.85em; color: #6b7280; margin-left: 5px; }
+    
+    /* กล่องรายชื่อที่จัดแบบ Grid */
+    .employee-list-box {
+      max-height: 250px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; background-color: #f8fafc;
+    }
+    .emp-check-card { display: flex; align-items: center; padding: 6px 10px; border-radius: 6px; border: 1px solid transparent; transition: 0.2s; cursor: pointer; }
+    .emp-check-card:hover { background: #eef2ff; border-color: #c7d2fe; }
+    .form-check-input { cursor: pointer; transform: scale(1.1); margin-right: 10px; }
+    
+    .filter-box { background-color: #f1f5f9; border-radius: 10px; padding: 12px; }
+    .pos-btn { font-size: 0.8rem; margin-bottom: 4px; }
+    
+    .selected-summary-box {
+      max-height: 120px; overflow-y: auto; background-color: #eef2ff; border-radius: 8px; padding: 8px; border: 1px dashed #a5b4fc;
+    }
+    .small-badge {
+      font-size: 0.75rem; background-color: #c7d2fe; color: #3730a3; padding: 3px 8px; border-radius: 12px; margin: 2px; display: inline-block;
+    }
+    .summary-counter-box {
+      background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 10px; margin-bottom: 15px;
+    }
+    /* สไตล์ปุ่มพับเก็บ */
+    .collapse-toggle-btn {
+      background: none; border: none; font-size: 1.25rem; font-weight: bold; color: #212529; display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0;
+    }
+    .collapse-toggle-btn:focus { outline: none; }
+    .collapse-toggle-btn i { transition: transform 0.3s; }
+    .collapse-toggle-btn.collapsed i { transform: rotate(-90deg); }
+  </style>
+</head>
+<body>
+
+  <div class="app-header text-center">
+    <h3 class="mb-0 text-primary fw-bold"><i class="bi bi-people-fill me-2"></i>Smart Team Builder</h3>
+    <p class="text-muted mb-0 small mt-1">ระบบสุ่มจัดทีมพนักงานอัจฉริยะ</p>
+  </div>
+
+  <div class="container">
+    <div class="alert alert-info text-center status-box mb-3 shadow-sm" id="loadingStatus" style="border-radius: 10px; font-weight: 500;">
+      <div class="spinner-border spinner-border-sm me-2" role="status"></div>กำลังเชื่อมต่อฐานข้อมูล...
+    </div>
+
+    <!-- แถวที่ 1: กล่องพนักงาน กว้างเต็ม 100% -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card p-4">
+          <!-- หัวข้อที่กดพับได้ -->
+          <button class="collapse-toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#employeeSection" id="btnToggleEmp">
+            <span><i class="bi bi-person-check text-success me-2"></i>1. รายชื่อพนักงาน<span class="badge bg-success rounded-pill fs-6 ms-2" id="availableCountLabel">0 คน</span></span>
+            <i class="bi bi-chevron-down text-muted"></i>
+          </button>
+          
+          <!-- เนื้อหาที่ถูกพับเก็บได้ -->
+          <div class="collapse show mt-3" id="employeeSection">
+            <div class="row g-3">
+              <!-- ค้นหาและกรอง -->
+              <div class="col-md-5">
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                  <input type="text" class="form-control bg-light border-start-0 ps-0" id="searchInput" placeholder="ค้นหาด้วยชื่อพนักงาน..." oninput="renderEmployeeCheckboxes()">
+                </div>
+              </div>
+              <div class="col-md-7">
+                <div id="positionFilters" class="d-flex flex-wrap gap-1 align-items-center h-100"></div>
+              </div>
+            </div>
+            
+            <div class="d-flex justify-content-between my-2 mt-3">
+              <button class="btn btn-sm btn-outline-secondary" onclick="selectAllVisible(true)">ติ๊กเลือกทั้งหมด (ที่แสดงอยู่)</button>
+              <button class="btn btn-sm btn-outline-danger" onclick="selectAllVisible(false)">เอาออกทั้งหมด</button>
+            </div>
+            
+            <div class="employee-list-box mb-3" id="employeeSelectionBox">
+              <div class="text-center text-muted small mt-4">รอโหลดข้อมูล...</div>
+            </div>
+
+            <div>
+              <div class="small fw-bold text-primary mb-1"><i class="bi bi-check2-square me-1"></i>สรุปรายชื่อที่ถูกเลือกไว้:</div>
+              <div class="selected-summary-box" id="selectedSummaryBox">
+                 <span class="text-muted small">ยังไม่มีผู้ถูกเลือก</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- แถวที่ 2: แบ่ง 2 คอลัมน์ (ซ้ายงาน-ขวาผลลัพธ์) -->
+    <div class="row g-4">
+      
+      <!-- ฝั่งซ้าย: กำหนดงาน -->
+      <div class="col-lg-5">
+        <div class="card p-4 h-100">
+          <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-list-task text-primary me-2"></i>2. กำหนดงาน</h5>
+          
+          <div class="summary-counter-box text-center">
+             <span class="small fw-bold text-secondary">พร้อมทำงาน: <span id="lblAvail" class="text-primary fs-6">0</span> คน</span> 
+             <span class="mx-2 text-muted">|</span> 
+             <span class="small fw-bold text-secondary">ต้องการใช้: <span id="lblReq" class="text-primary fs-6">0</span> คน</span>
+             <br>
+             <div class="mt-2" id="lblRemainingStatus">
+                <span class="badge bg-secondary fs-6">รอการคำนวณ</span>
+             </div>
+          </div>
+
+          <div id="taskList"></div>
+          <button class="btn btn-outline-primary w-100 mt-3 py-2 border-2" onclick="addTaskRow()" style="border-radius: 10px; border-style: dashed;">
+            <i class="bi bi-plus-circle me-1"></i> เพิ่มงานใหม่
+          </button>
+          
+          <hr class="my-4 text-muted">
+          
+          <button class="btn btn-custom-primary w-100 fs-5 mb-2" id="btnRandom" onclick="randomizeTeams()" disabled>
+            <i class="bi bi-shuffle me-2"></i> เริ่มสุ่มจัดทีมเลย
+          </button>
+          
+          <button class="btn btn-outline-secondary w-100 py-2" onclick="resetForm()">
+            <i class="bi bi-arrow-counterclockwise me-1"></i> ล้างข้อมูล / เริ่มจัดทีมใหม่
+          </button>
+        </div>
+      </div>
+
+      <!-- ฝั่งขวา: ผลลัพธ์ -->
+      <div class="col-lg-7">
+        <div class="card p-4 h-100" style="min-height: 400px;">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold text-dark mb-0"><i class="bi bi-trophy text-warning me-2"></i>3. ผลการจัดทีม</h5>
+            <div id="actionButtons" style="display:none;">
+              <button class="btn btn-sm btn-outline-success me-1" onclick="copyResults()" id="btnCopy">
+                <i class="bi bi-clipboard"></i> คัดลอก
+              </button>
+              <button class="btn btn-sm btn-success" onclick="exportToExcel()">
+                <i class="bi bi-file-earmark-excel"></i> Excel
+              </button>
+            </div>
+          </div>
+          
+          <div id="resultArea" class="mt-2 text-center text-muted d-flex flex-column justify-content-center h-100">
+            <i class="bi bi-inboxes display-4 mb-2 opacity-50"></i>
+            <p>รายชื่อทีมจะแสดงที่นี่หลังจากกดสุ่ม</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let allEmployees = []; 
+    let uniquePositions = [];
+    let selectedPositions = new Set(); 
+    let generatedTasksData = []; 
+    
+    // 👇 URL ของ Apps Script 👇
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxXBx3J64GaNQORciPtSiYcLA87q3x9fzAM1Jqhv4rZ24EbNDH1gZz3ip4tFFkdFXor/exec?action=getEmployees";
+
+    window.onload = function() {
+      addTaskRow();
+      
+      fetch(WEB_APP_URL)
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) throw new Error(data.error);
+          
+          allEmployees = data.map(emp => ({ ...emp, selected: false }));
+          uniquePositions = [...new Set(allEmployees.map(emp => emp.position))].filter(p => p !== "");
+          
+          renderPositionFilters();
+          renderEmployeeCheckboxes();
+          
+          const status = document.getElementById('loadingStatus');
+          status.className = 'alert alert-success text-center mb-3 shadow-sm';
+          status.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>โหลดข้อมูลสำเร็จ มีพนักงานทั้งหมด <strong>${allEmployees.length}</strong> คน`;
+          document.getElementById('btnRandom').disabled = false;
+        })
+        .catch(error => {
+          const status = document.getElementById('loadingStatus');
+          status.className = 'alert alert-danger text-center mb-3 shadow-sm';
+          status.innerHTML = `<i class="bi bi-x-circle-fill me-2"></i>เกิดข้อผิดพลาด: ${error.message}`;
+        });
+    };
+
+    function renderPositionFilters() {
+      const container = document.getElementById('positionFilters');
+      container.innerHTML = '<span class="text-muted small me-2"><i class="bi bi-funnel"></i> ตำแหน่ง:</span>';
+      uniquePositions.forEach(pos => {
+        const btn = document.createElement('button');
+        btn.className = 'btn pos-btn btn-outline-primary rounded-pill';
+        btn.innerText = pos;
+        btn.onclick = () => {
+          if (selectedPositions.has(pos)) {
+            selectedPositions.delete(pos);
+            btn.classList.remove('btn-primary', 'text-white');
+            btn.classList.add('btn-outline-primary');
+          } else {
+            selectedPositions.add(pos);
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-primary', 'text-white');
+          }
+          renderEmployeeCheckboxes();
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function getFilteredEmployees() {
+      const searchText = document.getElementById('searchInput').value.toLowerCase();
+      return allEmployees.filter(emp => {
+        const matchName = emp.name.toLowerCase().includes(searchText);
+        const matchPos = selectedPositions.size === 0 || selectedPositions.has(emp.position);
+        return matchName && matchPos;
+      });
+    }
+
+    function renderEmployeeCheckboxes() {
+      const container = document.getElementById('employeeSelectionBox');
+      container.innerHTML = '';
+      const filtered = getFilteredEmployees();
+      
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="text-center text-danger small mt-3 w-100">❌ ไม่พบพนักงานที่ค้นหา</div>';
+      }
+
+      let html = '<div class="row g-2">';
+      filtered.forEach((emp) => {
+        const originalIndex = allEmployees.indexOf(emp);
+        const checkedStr = emp.selected ? 'checked' : '';
+        html += `
+          <div class="col-12 col-sm-6 col-lg-3">
+            <label class="emp-check-card" for="emp_${originalIndex}">
+              <input class="form-check-input" type="checkbox" id="emp_${originalIndex}" ${checkedStr} onchange="toggleEmployee(${originalIndex}, this.checked)">
+              <div class="text-truncate">
+                <span class="fw-bold text-dark text-truncate">${emp.name}</span><br>
+                <span class="text-muted small">${emp.position}</span>
+              </div>
+            </label>
+          </div>
+        `;
+      });
+      html += '</div>';
+      container.innerHTML = html;
+      updateAvailableCount();
+    }
+
+    function toggleEmployee(index, isChecked) {
+      allEmployees[index].selected = isChecked;
+      updateAvailableCount();
+    }
+
+    function updateAvailableCount() {
+      const selectedEmployees = allEmployees.filter(e => e.selected);
+      document.getElementById('availableCountLabel').innerText = `${selectedEmployees.length} คน`;
+      
+      const summaryBox = document.getElementById('selectedSummaryBox');
+      if(selectedEmployees.length === 0) {
+        summaryBox.innerHTML = '<span class="text-danger small">ไม่มีผู้ถูกเลือก</span>';
+      } else {
+        summaryBox.innerHTML = '';
+        selectedEmployees.forEach(emp => {
+          summaryBox.innerHTML += `<span class="small-badge">${emp.name}</span>`;
+        });
+      }
+      calculateTaskSummary();
+    }
+
+    function selectAllVisible(isSelect) {
+      getFilteredEmployees().forEach(emp => { emp.selected = isSelect; });
+      renderEmployeeCheckboxes(); 
+    }
+
+    function addTaskRow() {
+      const container = document.getElementById('taskList');
+      const row = document.createElement('div');
+      row.className = 'row g-2 mt-2 task-row align-items-center';
+      row.innerHTML = `
+        <div class="col-7"><input type="text" class="form-control task-input task-name" placeholder="ใส่ชื่องาน"></div>
+        <div class="col-3"><input type="number" class="form-control task-input task-count" placeholder="คน" min="1" oninput="calculateTaskSummary()"></div>
+        <div class="col-2 text-center"><button class="btn btn-outline-danger btn-sm w-100 rounded-3" onclick="this.parentElement.parentElement.remove(); calculateTaskSummary();"><i class="bi bi-trash3"></i></button></div>
+      `;
+      container.appendChild(row);
+      calculateTaskSummary();
+    }
+
+    function calculateTaskSummary() {
+      const availableCount = allEmployees.filter(emp => emp.selected).length;
+      let requiredCount = 0;
+      document.querySelectorAll('.task-count').forEach(row => {
+        requiredCount += parseInt(row.value) || 0;
+      });
+
+      const remaining = availableCount - requiredCount;
+      document.getElementById('lblAvail').innerText = availableCount;
+      document.getElementById('lblReq').innerText = requiredCount;
+
+      const statusBox = document.getElementById('lblRemainingStatus');
+      if (requiredCount === 0 && availableCount === 0) {
+              statusBox.innerHTML = `<span class="badge bg-secondary fs-6">รอระบุจำนวน</span>`;
+            } else if (remaining > 0) {
+              // 👇 แก้ตรงนี้: เปลี่ยนเป็น bg-warning text-dark (สีเหลือง)
+              statusBox.innerHTML = `<span class="badge bg-warning text-dark fs-6"><i class="bi bi-exclamation-triangle me-1"></i>เหลือคนว่าง ${remaining} คน</span>`;
+            } else if (remaining === 0) {
+              // 👇 แก้ตรงนี้: เปลี่ยนเป็น bg-success (สีเขียว)
+              statusBox.innerHTML = `<span class="badge bg-success fs-6"><i class="bi bi-emoji-sunglasses me-1"></i>จัดกำลังคนพอดีเป๊ะ</span>`;
+            } else {
+              statusBox.innerHTML = `<span class="badge bg-danger fs-6"><i class="bi bi-exclamation-circle me-1"></i>คนขาด ${Math.abs(remaining)} คน (ไม่พอจัด!)</span>`;
+            }
+    }
+
+    function resetForm() {
+      if(confirm('คุณต้องการล้างการกำหนดงาน และเคลียร์ผลการจัดทีมทั้งหมดใช่หรือไม่?')) {
+        document.getElementById('taskList').innerHTML = ''; addTaskRow(); 
+        
+        const resultArea = document.getElementById('resultArea');
+        resultArea.className = 'mt-2 text-center text-muted d-flex flex-column justify-content-center h-100';
+        resultArea.innerHTML = `<i class="bi bi-inboxes display-4 mb-2 opacity-50"></i><p>รายชื่อทีมจะแสดงที่นี่หลังจากกดสุ่ม</p>`;
+        document.getElementById('actionButtons').style.display = 'none';
+
+        allEmployees.forEach(emp => emp.selected = true);
+        document.getElementById('searchInput').value = '';
+        selectedPositions.clear();
+        
+        document.querySelectorAll('.pos-btn').forEach(btn => {
+          btn.classList.remove('btn-primary', 'text-white');
+          btn.classList.add('btn-outline-primary');
+        });
+        
+        renderEmployeeCheckboxes();
+        generatedTasksData = [];
+      }
+    }
+
+    function shuffleArray(array) {
+      let currentIndex = array.length, randomIndex;
+      while (currentIndex != 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex); currentIndex--;
+        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+      }
+      return array;
+    }
+
+    function randomizeTeams() {
+      const availableEmployees = allEmployees.filter(emp => emp.selected);
+      const taskRows = document.querySelectorAll('.task-row');
+      let tasks = [];
+      let totalRequired = 0;
+
+      taskRows.forEach(row => {
+        const name = row.querySelector('.task-name').value.trim();
+        const count = parseInt(row.querySelector('.task-count').value) || 0;
+        if (name && count > 0) {
+          tasks.push({ taskName: name, required: count, assigned: [] });
+          totalRequired += count;
+        }
+      });
+
+      if (tasks.length === 0) { alert('⚠️ กรุณาระบุชื่องานและจำนวนคนอย่างน้อย 1 งานครับ'); return; }
+      if (availableEmployees.length === 0) { alert('❌ กรุณาเลือกพนักงานที่พร้อมทำงานอย่างน้อย 1 คน'); return; }
+      if (totalRequired > availableEmployees.length) { alert(`❌ จำนวนคนไม่พอ! ต้องการ ${totalRequired} คน แต่มีคนพร้อมทำงาน ${availableEmployees.length} คน`); return; }
+
+      let shuffledEmployees = shuffleArray([...availableEmployees]); 
+      let empIndex = 0;
+      
+      tasks.forEach(task => {
+        for (let i = 0; i < task.required; i++) {
+          task.assigned.push(shuffledEmployees[empIndex]);
+          empIndex++;
+        }
+      });
+
+      generatedTasksData = tasks;
+
+      const resultArea = document.getElementById('resultArea');
+      resultArea.innerHTML = '';
+      resultArea.className = 'mt-2 text-start'; 
+
+      tasks.forEach((task) => {
+        let teamHTML = `
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+              <h6 class="text-primary fw-bold mb-0">📌 ${task.taskName}</h6>
+              <span class="badge bg-primary rounded-pill px-3">${task.required} คน</span>
+            </div>
+            <div>`;
+        
+        task.assigned.forEach(emp => {
+          // แสดงเฉพาะชื่อ ไม่มีวงเล็บตำแหน่งแล้ว
+          teamHTML += `<div class="employee-badge"><i class="bi bi-person-fill text-secondary me-1"></i><span class="fw-bold">${emp.name}</span></div>`;
+        });
+        teamHTML += `</div></div>`;
+        resultArea.innerHTML += teamHTML;
+      });
+
+      const remaining = availableEmployees.length - totalRequired;
+      if (remaining > 0) {
+        resultArea.innerHTML += `
+          <div class="alert alert-secondary mt-4 border-0" style="background-color: #f1f5f9;">
+            <i class="bi bi-info-circle-fill me-2 text-secondary"></i>
+            <span class="small">มีพนักงานที่ว่างงาน (ไม่ได้ถูกจัดทีม) จำนวน <strong>${remaining}</strong> คน</span>
+          </div>`;
+      }
+      
+      document.getElementById('actionButtons').style.display = 'block';
+
+      // พับส่วนที่ 1 เก็บอัตโนมัติเมื่อกดสุ่มเสร็จ
+      const empSection = document.getElementById('employeeSection');
+      if (empSection.classList.contains('show')) {
+        const bsCollapse = new bootstrap.Collapse(empSection, { toggle: false });
+        bsCollapse.hide();
+        document.getElementById('btnToggleEmp').classList.add('collapsed');
+      }
+    }
+
+    function copyResults() {
+      if(generatedTasksData.length === 0) return;
+      let text = "📋 ผลการจัดทีม\n\n";
+      generatedTasksData.forEach(t => {
+        text += `📌 ${t.taskName} (${t.required} คน):\n`;
+        // คัดลอกเฉพาะชื่อ
+        t.assigned.forEach(e => text += ` - ${e.name}\n`);
+        text += "\n";
+      });
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('btnCopy');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check2"></i> คัดลอกแล้ว';
+        btn.classList.replace('btn-outline-success', 'btn-success');
+        btn.classList.add('text-white');
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.classList.replace('btn-success', 'btn-outline-success');
+          btn.classList.remove('text-white');
+        }, 2000);
+      });
+    }
+
+function exportToExcel() {
+      if(generatedTasksData.length === 0) return alert('กรุณาสุ่มจัดทีมก่อนครับ');
+      
+      let excelData = [];
+      
+      // 1. เพิ่มหัวกระดาษรายงานให้ดูมีความเป็นมืออาชีพ
+      let dateStr = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+      excelData.push(["📊 สรุปการจัดทีมพนักงาน"]);
+      excelData.push(["📅 ประจำวันที่: " + dateStr]);
+      excelData.push([""]); // บรรทัดว่างคั่น
+      
+      // 2. จัดรูปแบบ: ชื่องาน 1 บรรทัด ตามด้วยชื่อพนักงานเรียงลงมา
+      generatedTasksData.forEach(task => {
+        // ใส่ชื่องาน
+        excelData.push(["▶️ " + task.taskName]);
+        
+        // ใส่เฉพาะชื่อพนักงาน (ไม่เอาตำแหน่ง) และเคาะวรรคให้ชื่อเยื้องเข้าไปนิดนึง
+        task.assigned.forEach(emp => {
+          excelData.push(["     " + emp.name]); 
+        });
+        
+        // เพิ่มบรรทัดว่าง 1 บรรทัด เพื่อคั่นก่อนจะขึ้นงานถัดไป (ดูไม่ติดกันเกินไป)
+        excelData.push([""]); 
+      });
+
+      let worksheet = XLSX.utils.aoa_to_sheet(excelData);
+      
+      // 3. ปรับความกว้างของคอลัมน์ A ให้กว้างพอดีข้อความ (ดูสวยงามขึ้น ไม่ตกขอบ)
+      worksheet['!cols'] = [ { wch: 45 } ]; 
+
+      let workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Team Assignment");
+      
+      // 4. บันทึกไฟล์
+      let fileDate = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(workbook, `Team_Allocation_${fileDate}.xlsx`);
+    }
+  </script>
+</body>
+</html>
