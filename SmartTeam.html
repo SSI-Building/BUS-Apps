@@ -245,23 +245,31 @@
           return data;
         }
 
-    async function generateTasksWithAI() {
+async function generateTasksWithAI() {
       const input = document.getElementById('aiTaskInput').value.trim();
       if (!input) return alert('กรุณาพิมพ์คำสั่งก่อนครับ เช่น "จัดทีมกวาดถนน 3 คน"');
+
+      // 🌟 ดึงจำนวนพนักงานที่ติ๊กเลือกไว้ ส่งไปให้ AI คำนวณด้วย 🌟
+      const availableCount = allEmployees.filter(emp => emp.selected).length;
 
       const btn = document.getElementById('btnAITask');
       const originalText = btn.innerHTML;
       btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>AI กำลังคิด...';
       btn.disabled = true;
 
+      // 🧠 ปรับ Prompt ใหม่ให้ฉลาดและคิดวิเคราะห์ได้ 🧠
       const promptText = `
-      แปลงข้อความต่อไปนี้ให้อยู่ในรูปแบบ JSON Array โดยมีรูปแบบคือ [{"task": "ชื่องาน", "count": จำนวนคน(ตัวเลข)}]
-      ข้อความ: "${input}"
-      ห้ามตอบอย่างอื่นนอกจาก JSON 
+      ตอนนี้ฉันมีพนักงานที่พร้อมทำงานจำนวน ${availableCount} คน
+      คำสั่งจากหัวหน้างาน: "${input}"
+      
+      หน้าที่ของคุณ:
+      1. วิเคราะห์คำสั่ง ถ้าหัวหน้าสั่งให้ "ตั้งชื่อทีม" หรือ "แบ่งทีม" ให้คุณคิดชื่อทีมเท่ๆ หรือน่ารักๆ มาให้เลย
+      2. กระจายจำนวนคน (count) ลงในแต่ละทีมให้พอดี โดยให้ผลรวมของทุกคนใกล้เคียงหรือเท่ากับ ${availableCount} คนที่สุด (กระจายให้เท่าๆ กันถ้าไม่ได้ระบุเจาะจง)
+      3. ถ้าคำสั่งเป็นงานปกติ (เช่น กวาดถนน 3 คน) ก็ให้ใช้ชื่องานตามนั้นได้เลย
+      4. ตอบกลับมาเป็นโครงสร้าง JSON Array อย่างเดียว ห้ามอธิบายเพิ่มเติม ห้ามมี Markdown รูปแบบคือ [{"task": "ชื่องานหรือชื่อทีม", "count": จำนวนคน}]
       `;
 
       try {
-        // 🌟 เรียก AI ผ่าน Apps Script
         const data = await askGemini(promptText); 
         
         let aiText = data.candidates[0].content.parts[0].text;
