@@ -5,70 +5,60 @@
   <title>Smart Team Builder</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <!-- Libraries -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <!-- 🌟 โหลด Sortable.js สำหรับทำ Drag & Drop 🌟 -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
   <style>
-    body {
-      background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
-      font-family: 'Prompt', sans-serif;
-      min-height: 100vh;
-      padding-bottom: 50px;
-    }
-    .app-header {
-      background: #ffffff; padding: 15px 0; box-shadow: 0 2px 15px rgba(0,0,0,0.05); border-bottom: 3px solid #3b82f6; margin-bottom: 20px;
-    }
-    .card {
-      border: none; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); background: rgba(255, 255, 255, 0.95);
-    }
-    .btn-custom-primary {
-      background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; border-radius: 10px; padding: 12px; font-weight: 500; transition: all 0.3s;
-    }
-    .btn-custom-primary:hover {
-      transform: translateY(-2px); box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3); color: white;
-    }
-    .employee-badge {
-      background-color: #ffffff; border-left: 4px solid #10b981; border-radius: 8px; padding: 10px 15px; margin: 6px; display: inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #eee;
-    }
-    .position-text { font-size: 0.85em; color: #6b7280; margin-left: 5px; }
+    body { background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%); font-family: 'Prompt', sans-serif; min-height: 100vh; padding-bottom: 50px; }
+    .app-header { background: #ffffff; padding: 15px 0; box-shadow: 0 2px 15px rgba(0,0,0,0.05); border-bottom: 3px solid #3b82f6; margin-bottom: 20px; }
+    .card { border: none; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); background: rgba(255, 255, 255, 0.95); }
+    .btn-custom-primary { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; border-radius: 10px; padding: 12px; font-weight: 500; transition: all 0.3s; }
+    .btn-custom-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3); color: white; }
     
-    /* กล่องรายชื่อที่จัดแบบ Grid */
-    .employee-list-box {
-      max-height: 250px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; background-color: #f8fafc;
+    /* สไตล์ป้ายชื่อพนักงานในหน้าผลลัพธ์ */
+    .employee-badge {
+      background-color: #ffffff; border-left: 4px solid #10b981; border-radius: 8px; padding: 10px 15px; margin: 6px; 
+      display: inline-flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #eee;
+      cursor: grab; /* เปลี่ยนเมาส์เป็นรูปมือจับ */
+      user-select: none;
     }
+    .employee-badge:active { cursor: grabbing; }
+    .employee-badge.locked { border-left-color: #ef4444; background-color: #fff5f5; } /* สีตอนโดนล็อค */
+    
+    .lock-btn { background: none; border: none; color: #94a3b8; font-size: 1.1rem; cursor: pointer; padding: 0 5px; transition: 0.2s; }
+    .lock-btn:hover { color: #475569; }
+    .lock-btn.locked { color: #ef4444; }
+
+    .position-text { font-size: 0.85em; color: #6b7280; margin-left: 5px; }
+    .employee-list-box { max-height: 250px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; background-color: #f8fafc; }
     .emp-check-card { display: flex; align-items: center; padding: 6px 10px; border-radius: 6px; border: 1px solid transparent; transition: 0.2s; cursor: pointer; }
     .emp-check-card:hover { background: #eef2ff; border-color: #c7d2fe; }
     .form-check-input { cursor: pointer; transform: scale(1.1); margin-right: 10px; }
-    
     .filter-box { background-color: #f1f5f9; border-radius: 10px; padding: 12px; }
     .pos-btn { font-size: 0.8rem; margin-bottom: 4px; }
-    
-    .selected-summary-box {
-      max-height: 120px; overflow-y: auto; background-color: #eef2ff; border-radius: 8px; padding: 8px; border: 1px dashed #a5b4fc;
-    }
-    .small-badge {
-      font-size: 0.75rem; background-color: #c7d2fe; color: #3730a3; padding: 3px 8px; border-radius: 12px; margin: 2px; display: inline-block;
-    }
-    .summary-counter-box {
-      background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 10px; margin-bottom: 15px;
-    }
-    /* สไตล์ปุ่มพับเก็บ */
-    .collapse-toggle-btn {
-      background: none; border: none; font-size: 1.25rem; font-weight: bold; color: #212529; display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0;
-    }
+    .selected-summary-box { max-height: 120px; overflow-y: auto; background-color: #eef2ff; border-radius: 8px; padding: 8px; border: 1px dashed #a5b4fc; }
+    .small-badge { font-size: 0.75rem; background-color: #c7d2fe; color: #3730a3; padding: 3px 8px; border-radius: 12px; margin: 2px; display: inline-block; }
+    .summary-counter-box { background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 10px; margin-bottom: 15px; }
+    .collapse-toggle-btn { background: none; border: none; font-size: 1.25rem; font-weight: bold; color: #212529; display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0; }
     .collapse-toggle-btn:focus { outline: none; }
     .collapse-toggle-btn i { transition: transform 0.3s; }
     .collapse-toggle-btn.collapsed i { transform: rotate(-90deg); }
+    
+    /* กล่องสำหรับลากวาง */
+    .sortable-list { min-height: 50px; padding: 5px; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1; }
+    .sortable-ghost { opacity: 0.4; background-color: #e2e8f0; border: 2px dashed #94a3b8; }
   </style>
 </head>
 <body>
 
   <div class="app-header text-center">
     <h3 class="mb-0 text-primary fw-bold"><i class="bi bi-people-fill me-2"></i>Smart Team Builder</h3>
-    <p class="text-muted mb-0 small mt-1">ระบบสุ่มจัดทีมพนักงานอัจฉริยะ</p>
+    <p class="text-muted mb-0 small mt-1">ระบบสุ่มจัดทีม (รองรับระบบลากวางสลับคน และ ล็อคตัวพนักงาน)</p>
   </div>
 
   <div class="container">
@@ -80,16 +70,13 @@
     <div class="row mb-4">
       <div class="col-12">
         <div class="card p-4">
-          <!-- หัวข้อที่กดพับได้ -->
           <button class="collapse-toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#employeeSection" id="btnToggleEmp">
             <span><i class="bi bi-person-check text-success me-2"></i>1. รายชื่อพนักงาน<span class="badge bg-success rounded-pill fs-6 ms-2" id="availableCountLabel">0 คน</span></span>
             <i class="bi bi-chevron-down text-muted"></i>
           </button>
           
-          <!-- เนื้อหาที่ถูกพับเก็บได้ -->
           <div class="collapse show mt-3" id="employeeSection">
             <div class="row g-3">
-              <!-- ค้นหาและกรอง -->
               <div class="col-md-5">
                 <div class="input-group">
                   <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
@@ -121,9 +108,8 @@
       </div>
     </div>
 
-    <!-- แถวที่ 2: แบ่ง 2 คอลัมน์ (ซ้ายงาน-ขวาผลลัพธ์) -->
+    <!-- แถวที่ 2: แบ่ง 2 คอลัมน์ -->
     <div class="row g-4">
-      
       <!-- ฝั่งซ้าย: กำหนดงาน -->
       <div class="col-lg-5">
         <div class="card p-4 h-100">
@@ -171,6 +157,11 @@
             </div>
           </div>
           
+          <!-- คำใบ้บอกผู้ใช้ -->
+          <div id="dragHint" class="alert alert-warning py-2 small mb-3" style="display:none;">
+            💡 <b>Tips:</b> สามารถลากสลับชื่อข้ามงานได้ และกดรูป <i class="bi bi-unlock"></i> กุญแจ เพื่อล็อคคนให้อยู่ทีมเดิมตอนสุ่มใหม่ได้
+          </div>
+
           <div id="resultArea" class="mt-2 text-center text-muted d-flex flex-column justify-content-center h-100">
             <i class="bi bi-inboxes display-4 mb-2 opacity-50"></i>
             <p>รายชื่อทีมจะแสดงที่นี่หลังจากกดสุ่ม</p>
@@ -186,8 +177,8 @@
     let uniquePositions = [];
     let selectedPositions = new Set(); 
     let generatedTasksData = []; 
+    let sortableInstances = []; // เก็บตัวลากวาง
     
-    // 👇 URL ของ Apps Script 👇
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxXBx3J64GaNQORciPtSiYcLA87q3x9fzAM1Jqhv4rZ24EbNDH1gZz3ip4tFFkdFXor/exec?action=getEmployees";
 
     window.onload = function() {
@@ -198,7 +189,14 @@
         .then(data => {
           if (data.error) throw new Error(data.error);
           
-          allEmployees = data.map(emp => ({ ...emp, selected: false }));
+          // โหลดมาตอนแรก เพิ่มคุณสมบัติ locked: false ให้ทุกคน
+          allEmployees = data.map((emp, index) => ({ 
+            ...emp, 
+            originalIndex: index, 
+            selected: false, 
+            lockedToTaskIndex: null 
+          }));
+          
           uniquePositions = [...new Set(allEmployees.map(emp => emp.position))].filter(p => p !== "");
           
           renderPositionFilters();
@@ -259,12 +257,11 @@
 
       let html = '<div class="row g-2">';
       filtered.forEach((emp) => {
-        const originalIndex = allEmployees.indexOf(emp);
         const checkedStr = emp.selected ? 'checked' : '';
         html += `
           <div class="col-12 col-sm-6 col-lg-3">
-            <label class="emp-check-card" for="emp_${originalIndex}">
-              <input class="form-check-input" type="checkbox" id="emp_${originalIndex}" ${checkedStr} onchange="toggleEmployee(${originalIndex}, this.checked)">
+            <label class="emp-check-card" for="emp_${emp.originalIndex}">
+              <input class="form-check-input" type="checkbox" id="emp_${emp.originalIndex}" ${checkedStr} onchange="toggleEmployee(${emp.originalIndex}, this.checked)">
               <div class="text-truncate">
                 <span class="fw-bold text-dark text-truncate">${emp.name}</span><br>
                 <span class="text-muted small">${emp.position}</span>
@@ -280,6 +277,10 @@
 
     function toggleEmployee(index, isChecked) {
       allEmployees[index].selected = isChecked;
+      // ถ้ายกเลิกการเลือก ให้ปลดล็อคด้วย
+      if(!isChecked) {
+        allEmployees[index].lockedToTaskIndex = null;
+      }
       updateAvailableCount();
     }
 
@@ -300,7 +301,10 @@
     }
 
     function selectAllVisible(isSelect) {
-      getFilteredEmployees().forEach(emp => { emp.selected = isSelect; });
+      getFilteredEmployees().forEach(emp => { 
+        emp.selected = isSelect; 
+        if(!isSelect) emp.lockedToTaskIndex = null;
+      });
       renderEmployeeCheckboxes(); 
     }
 
@@ -330,16 +334,14 @@
 
       const statusBox = document.getElementById('lblRemainingStatus');
       if (requiredCount === 0 && availableCount === 0) {
-              statusBox.innerHTML = `<span class="badge bg-secondary fs-6">รอระบุจำนวน</span>`;
-            } else if (remaining > 0) {
-              // 👇 แก้ตรงนี้: เปลี่ยนเป็น bg-warning text-dark (สีเหลือง)
-              statusBox.innerHTML = `<span class="badge bg-warning text-dark fs-6"><i class="bi bi-exclamation-triangle me-1"></i>เหลือคนว่าง ${remaining} คน</span>`;
-            } else if (remaining === 0) {
-              // 👇 แก้ตรงนี้: เปลี่ยนเป็น bg-success (สีเขียว)
-              statusBox.innerHTML = `<span class="badge bg-success fs-6"><i class="bi bi-emoji-sunglasses me-1"></i>จัดกำลังคนพอดีเป๊ะ</span>`;
-            } else {
-              statusBox.innerHTML = `<span class="badge bg-danger fs-6"><i class="bi bi-exclamation-circle me-1"></i>คนขาด ${Math.abs(remaining)} คน (ไม่พอจัด!)</span>`;
-            }
+        statusBox.innerHTML = `<span class="badge bg-secondary fs-6">รอระบุจำนวน</span>`;
+      } else if (remaining > 0) {
+        statusBox.innerHTML = `<span class="badge bg-warning text-dark fs-6"><i class="bi bi-exclamation-triangle me-1"></i>เหลือคนว่าง ${remaining} คน</span>`;
+      } else if (remaining === 0) {
+        statusBox.innerHTML = `<span class="badge bg-success fs-6"><i class="bi bi-emoji-sunglasses me-1"></i>จัดกำลังคนพอดีเป๊ะ</span>`;
+      } else {
+        statusBox.innerHTML = `<span class="badge bg-danger fs-6"><i class="bi bi-exclamation-circle me-1"></i>คนขาด ${Math.abs(remaining)} คน (ไม่พอจัด!)</span>`;
+      }
     }
 
     function resetForm() {
@@ -350,8 +352,13 @@
         resultArea.className = 'mt-2 text-center text-muted d-flex flex-column justify-content-center h-100';
         resultArea.innerHTML = `<i class="bi bi-inboxes display-4 mb-2 opacity-50"></i><p>รายชื่อทีมจะแสดงที่นี่หลังจากกดสุ่ม</p>`;
         document.getElementById('actionButtons').style.display = 'none';
+        document.getElementById('dragHint').style.display = 'none';
 
-        allEmployees.forEach(emp => emp.selected = true);
+        allEmployees.forEach(emp => {
+          emp.selected = false;
+          emp.lockedToTaskIndex = null; // ปลดล็อคทุกคน
+        });
+        
         document.getElementById('searchInput').value = '';
         selectedPositions.clear();
         
@@ -374,70 +381,127 @@
       return array;
     }
 
+    // 🌟 ระบบสุ่มที่คำนึงถึงคนโดนล็อค 🌟
     function randomizeTeams() {
-      const availableEmployees = allEmployees.filter(emp => emp.selected);
       const taskRows = document.querySelectorAll('.task-row');
       let tasks = [];
       let totalRequired = 0;
 
-      taskRows.forEach(row => {
+      taskRows.forEach((row, index) => {
         const name = row.querySelector('.task-name').value.trim();
         const count = parseInt(row.querySelector('.task-count').value) || 0;
         if (name && count > 0) {
-          tasks.push({ taskName: name, required: count, assigned: [] });
+          tasks.push({ taskIndex: index, taskName: name, required: count, assigned: [] });
           totalRequired += count;
         }
       });
+
+      const availableEmployees = allEmployees.filter(emp => emp.selected);
 
       if (tasks.length === 0) { alert('⚠️ กรุณาระบุชื่องานและจำนวนคนอย่างน้อย 1 งานครับ'); return; }
       if (availableEmployees.length === 0) { alert('❌ กรุณาเลือกพนักงานที่พร้อมทำงานอย่างน้อย 1 คน'); return; }
       if (totalRequired > availableEmployees.length) { alert(`❌ จำนวนคนไม่พอ! ต้องการ ${totalRequired} คน แต่มีคนพร้อมทำงาน ${availableEmployees.length} คน`); return; }
 
-      let shuffledEmployees = shuffleArray([...availableEmployees]); 
-      let empIndex = 0;
+      // 1. แยกคนที่ถูกล็อค ออกจาก คนที่ยังว่าง
+      let freePool = [];
       
+      availableEmployees.forEach(emp => {
+        let isLocked = false;
+        if (emp.lockedToTaskIndex !== null) {
+          // หา Task ที่ตรงกับ Index ที่โดนล็อคไว้
+          const targetTask = tasks.find(t => t.taskIndex === emp.lockedToTaskIndex);
+          if (targetTask && targetTask.assigned.length < targetTask.required) {
+            targetTask.assigned.push(emp);
+            isLocked = true;
+          } else {
+            // ถ้างานโดนลบ หรือ คนล้นเกินจำนวนที่กำหนด ให้ปลดล็อคกลับมาเป็นคนว่าง
+            emp.lockedToTaskIndex = null;
+          }
+        }
+        if (!isLocked) {
+          freePool.push(emp);
+        }
+      });
+
+      // 2. สุ่มคนว่างที่เหลือ
+      let shuffledEmployees = shuffleArray([...freePool]); 
+      
+      // 3. แจกจ่ายคนว่างลงไปในที่ว่างของแต่ละงาน
       tasks.forEach(task => {
-        for (let i = 0; i < task.required; i++) {
-          task.assigned.push(shuffledEmployees[empIndex]);
-          empIndex++;
+        while (task.assigned.length < task.required && shuffledEmployees.length > 0) {
+          task.assigned.push(shuffledEmployees.shift());
         }
       });
 
       generatedTasksData = tasks;
+      renderResultsDOM();
+    }
 
+    // 🌟 ฟังก์ชันวาดหน้าจอผลลัพธ์ (รองรับลากวางและล็อค) 🌟
+    function renderResultsDOM() {
       const resultArea = document.getElementById('resultArea');
       resultArea.innerHTML = '';
       resultArea.className = 'mt-2 text-start'; 
+      sortableInstances.forEach(ins => ins.destroy()); // ล้างตัวลากวางเก่า
+      sortableInstances = [];
 
-      tasks.forEach((task) => {
+      generatedTasksData.forEach((task) => {
         let teamHTML = `
           <div class="mb-4">
             <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
               <h6 class="text-primary fw-bold mb-0">📌 ${task.taskName}</h6>
-              <span class="badge bg-primary rounded-pill px-3">${task.required} คน</span>
+              <span class="badge bg-primary rounded-pill px-3" id="count-badge-${task.taskIndex}">${task.assigned.length} / ${task.required} คน</span>
             </div>
-            <div>`;
+            <div class="sortable-list" id="task-list-${task.taskIndex}" data-task-index="${task.taskIndex}">`;
         
         task.assigned.forEach(emp => {
-          // แสดงเฉพาะชื่อ ไม่มีวงเล็บตำแหน่งแล้ว
-          teamHTML += `<div class="employee-badge"><i class="bi bi-person-fill text-secondary me-1"></i><span class="fw-bold">${emp.name}</span></div>`;
+          const isLocked = emp.lockedToTaskIndex === task.taskIndex;
+          const lockClass = isLocked ? 'locked' : '';
+          const lockIcon = isLocked ? 'bi-lock-fill' : 'bi-unlock';
+          
+          teamHTML += `
+            <div class="employee-badge ${lockClass}" data-emp-index="${emp.originalIndex}">
+              <div>
+                <i class="bi bi-grip-vertical text-muted me-1" style="cursor: grab;"></i>
+                <span class="fw-bold">${emp.name}</span>
+              </div>
+              <button class="lock-btn ${lockClass}" onclick="toggleLock(${emp.originalIndex}, ${task.taskIndex}, this)" title="ล็อคให้อยู่ทีมนี้">
+                <i class="bi ${lockIcon}"></i>
+              </button>
+            </div>`;
         });
         teamHTML += `</div></div>`;
         resultArea.innerHTML += teamHTML;
       });
 
-      const remaining = availableEmployees.length - totalRequired;
+      const remaining = allEmployees.filter(emp => emp.selected).length - generatedTasksData.reduce((acc, t) => acc + t.required, 0);
       if (remaining > 0) {
         resultArea.innerHTML += `
           <div class="alert alert-secondary mt-4 border-0" style="background-color: #f1f5f9;">
             <i class="bi bi-info-circle-fill me-2 text-secondary"></i>
-            <span class="small">มีพนักงานที่ว่างงาน (ไม่ได้ถูกจัดทีม) จำนวน <strong>${remaining}</strong> คน</span>
+            <span class="small">มีพนักงานที่ว่างงาน จำนวน <strong>${remaining}</strong> คน</span>
           </div>`;
       }
       
       document.getElementById('actionButtons').style.display = 'block';
+      document.getElementById('dragHint').style.display = 'block';
 
-      // พับส่วนที่ 1 เก็บอัตโนมัติเมื่อกดสุ่มเสร็จ
+      // 🌟 เปิดระบบลากวาง (Drag & Drop) 🌟
+      generatedTasksData.forEach(task => {
+        const el = document.getElementById(`task-list-${task.taskIndex}`);
+        const sortable = new Sortable(el, {
+          group: 'shared', // ให้ลากข้ามกล่องกันได้
+          animation: 150,
+          ghostClass: 'sortable-ghost',
+          handle: '.bi-grip-vertical', // จับตรงจุดไข่ปลาเพื่อลาก
+          filter: '.locked', // ห้ามลากคนที่โดนล็อค
+          onEnd: function (evt) {
+            syncDataFromDOM(); // เมื่อวางเสร็จ ให้อัปเดตข้อมูลเบื้องหลัง
+          }
+        });
+        sortableInstances.push(sortable);
+      });
+
       const empSection = document.getElementById('employeeSection');
       if (empSection.classList.contains('show')) {
         const bsCollapse = new bootstrap.Collapse(empSection, { toggle: false });
@@ -446,12 +510,65 @@
       }
     }
 
+    // 🌟 ระบบล็อคตัว 🌟
+    function toggleLock(empIndex, taskIndex, btnElement) {
+      const emp = allEmployees[empIndex];
+      const badge = btnElement.parentElement;
+      const icon = btnElement.querySelector('i');
+
+      if (emp.lockedToTaskIndex === taskIndex) {
+        // ปลดล็อค
+        emp.lockedToTaskIndex = null;
+        badge.classList.remove('locked');
+        btnElement.classList.remove('locked');
+        icon.classList.replace('bi-lock-fill', 'bi-unlock');
+      } else {
+        // ล็อค
+        emp.lockedToTaskIndex = taskIndex;
+        badge.classList.add('locked');
+        btnElement.classList.add('locked');
+        icon.classList.replace('bi-unlock', 'bi-lock-fill');
+      }
+    }
+
+    // 🌟 ระบบอัปเดตข้อมูลเมื่อมีการลากวาง 🌟
+    function syncDataFromDOM() {
+      generatedTasksData.forEach(task => {
+        const listEl = document.getElementById(`task-list-${task.taskIndex}`);
+        const badges = listEl.querySelectorAll('.employee-badge');
+        
+        task.assigned = []; // ล้างของเดิม
+        badges.forEach(badge => {
+          const empIdx = parseInt(badge.getAttribute('data-emp-index'));
+          const emp = allEmployees[empIdx];
+          
+          // ถ้าโดนย้ายทีม และเดิมล็อคอยู่ ให้ปลดล็อคอัตโนมัติ
+          if(emp.lockedToTaskIndex !== null && emp.lockedToTaskIndex !== task.taskIndex) {
+            emp.lockedToTaskIndex = null;
+            badge.classList.remove('locked');
+            badge.querySelector('.lock-btn').classList.remove('locked');
+            badge.querySelector('.lock-btn i').classList.replace('bi-lock-fill', 'bi-unlock');
+          }
+          task.assigned.push(emp);
+        });
+
+        // อัปเดตตัวเลขจำนวนคนบนหัวกล่อง
+        const countBadge = document.getElementById(`count-badge-${task.taskIndex}`);
+        countBadge.innerText = `${task.assigned.length} / ${task.required} คน`;
+        
+        if(task.assigned.length > task.required) {
+          countBadge.classList.replace('bg-primary', 'bg-danger');
+        } else {
+          countBadge.classList.replace('bg-danger', 'bg-primary');
+        }
+      });
+    }
+
     function copyResults() {
       if(generatedTasksData.length === 0) return;
       let text = "📋 ผลการจัดทีม\n\n";
       generatedTasksData.forEach(t => {
-        text += `📌 ${t.taskName} (${t.required} คน):\n`;
-        // คัดลอกเฉพาะชื่อ
+        text += `📌 ${t.taskName} (${t.assigned.length} คน):\n`;
         t.assigned.forEach(e => text += ` - ${e.name}\n`);
         text += "\n";
       });
@@ -469,40 +586,29 @@
       });
     }
 
-function exportToExcel() {
+    function exportToExcel() {
       if(generatedTasksData.length === 0) return alert('กรุณาสุ่มจัดทีมก่อนครับ');
       
       let excelData = [];
-      
-      // 1. เพิ่มหัวกระดาษรายงานให้ดูมีความเป็นมืออาชีพ
       let dateStr = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
       excelData.push(["📊 สรุปการจัดทีมพนักงาน"]);
       excelData.push(["📅 ประจำวันที่: " + dateStr]);
-      excelData.push([""]); // บรรทัดว่างคั่น
+      excelData.push([""]); 
       
-      // 2. จัดรูปแบบ: ชื่องาน 1 บรรทัด ตามด้วยชื่อพนักงานเรียงลงมา
       generatedTasksData.forEach(task => {
-        // ใส่ชื่องาน
         excelData.push(["▶️ " + task.taskName]);
-        
-        // ใส่เฉพาะชื่อพนักงาน (ไม่เอาตำแหน่ง) และเคาะวรรคให้ชื่อเยื้องเข้าไปนิดนึง
         task.assigned.forEach(emp => {
           excelData.push(["     " + emp.name]); 
         });
-        
-        // เพิ่มบรรทัดว่าง 1 บรรทัด เพื่อคั่นก่อนจะขึ้นงานถัดไป (ดูไม่ติดกันเกินไป)
         excelData.push([""]); 
       });
 
       let worksheet = XLSX.utils.aoa_to_sheet(excelData);
-      
-      // 3. ปรับความกว้างของคอลัมน์ A ให้กว้างพอดีข้อความ (ดูสวยงามขึ้น ไม่ตกขอบ)
       worksheet['!cols'] = [ { wch: 45 } ]; 
 
       let workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Team Assignment");
       
-      // 4. บันทึกไฟล์
       let fileDate = new Date().toISOString().slice(0, 10);
       XLSX.writeFile(workbook, `Team_Allocation_${fileDate}.xlsx`);
     }
