@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>Smart Team Builder + AI</title>
+  <title>Smart Team Builder</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -52,6 +52,13 @@
     .ai-box { background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border: 1px solid #ddd6fe; border-radius: 10px; padding: 12px; margin-bottom: 15px; }
     .btn-ai { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; border: none; }
     .btn-ai:hover { background: linear-gradient(135deg, #7c3aed, #5b21b6); color: white; }
+
+    /* จัดการสถานะโหลด */
+    .status-box { transition: opacity 0.5s ease; }
+    
+    /* สไตล์ไอคอน Groq และ Version */
+    .footer-info { font-size: 0.75rem; color: #94a3b8; text-align: center; margin-top: 20px; }
+    .ai-badge { font-size: 0.65rem; color: #6d28d9; border: 1px solid #c4b5fd; padding: 2px 6px; border-radius: 4px; background: #ede9fe; float: right; }
   </style>
 </head>
 <body>
@@ -61,8 +68,8 @@
   </div>
 
   <div class="container">
-    <div class="alert alert-info text-center status-box mb-3 shadow-sm" id="loadingStatus" style="border-radius: 10px; font-weight: 500;">
-      <div class="spinner-border spinner-border-sm me-2" role="status"></div>กำลังเชื่อมต่อฐานข้อมูล...
+    <div class="alert alert-info text-center status-box mb-3 shadow-sm" id="loadingStatus" style="border-radius: 10px; font-weight: 500; padding: 10px; font-size: 0.9rem;">
+      <div class="spinner-border spinner-border-sm me-2" role="status"></div>กำลังโหลดข้อมูล...
     </div>
 
     <!-- แถวที่ 1: กล่องพนักงาน -->
@@ -116,7 +123,8 @@
           <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-list-task text-primary me-2"></i>2. กำหนดงาน</h5>
           
           <!-- 🌟 กล่อง AI 🌟 -->
-          <div class="ai-box">
+        <div class="ai-box">
+            <span class="ai-badge">⚡ Groq API</span> <!-- เพิ่มบรรทัดนี้ -->
             <label class="form-label small fw-bold text-purple" style="color: #6d28d9;"><i class="bi bi-magic me-1"></i> สั่ง AI สร้างตารางงาน</label>
             <textarea id="aiTaskInput" class="form-control form-control-sm mb-2" rows="2" placeholder="เขียนคำสั่งสำหรับ AI..."></textarea>
             <button class="btn btn-sm btn-ai w-100" id="btnAITask" onclick="generateTasksWithAI()">
@@ -141,7 +149,12 @@
           
           <hr class="my-4 text-muted">
           <button class="btn btn-custom-primary w-100 fs-5 mb-2" id="btnRandom" onclick="randomizeTeams()" disabled>
-            <i class="bi bi-shuffle me-2"></i> เริ่มสุ่มจัดทีมเลย
+            <i class="bi bi-shuffle me-2"></i> เริ่มสุ่มจัดทีม (แบบปกติ)
+          </button>
+          
+          <!-- 🌟 เพิ่มปุ่ม AI จัดทีมตรงนี้ 🌟 -->
+          <button class="btn btn-ai w-100 fs-5 mb-2 shadow-sm" id="btnAIAllocate" onclick="runAIAllocation()">
+            <i class="bi bi-robot me-2"></i> ให้ AI จัดทีมให้เลย
           </button>
           <button class="btn btn-outline-secondary w-100 py-2" onclick="resetForm()">
             <i class="bi bi-arrow-counterclockwise me-1"></i> ล้างข้อมูล / เริ่มจัดทีมใหม่
@@ -256,6 +269,10 @@ async function generateTasksWithAI() {
       btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>AI กำลังคิด...';
       btn.disabled = true;
 
+      const status = document.getElementById('loadingStatus');
+          status.style.opacity = '0'; // ทำให้จางลง
+          setTimeout(() => status.style.display = 'none', 500); // ซ่อนหลังจากผ่านไป 0.5 วิ
+
       // 🧠 ปรับ Prompt ใหม่ให้ฉลาดและคิดวิเคราะห์ได้ 🧠
       const promptText = `
       ตอนนี้ฉันมีพนักงานที่พร้อมทำงานจำนวน ${availableCount} คน
@@ -340,6 +357,65 @@ async function generateTasksWithAI() {
         alert('เกิดข้อผิดพลาด: ' + err.message);
         btn.innerHTML = originalText;
       } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // ==========================================
+    // 🧠 ฟังก์ชัน: ให้ AI จัดทีม (เลือกคนตรงกับงาน)
+    // ==========================================
+    async function runAIAllocation() {
+      const taskRows = document.querySelectorAll('.task-row');
+      let tasks = [];
+      taskRows.forEach((row, index) => {
+        const name = row.querySelector('.task-name').value.trim();
+        const count = parseInt(row.querySelector('.task-count').value) || 0;
+        if (name && count > 0) tasks.push({ name, count });
+      });
+
+      const availableEmployees = allEmployees.filter(emp => emp.selected);
+      if (tasks.length === 0 || availableEmployees.length === 0) return alert('กรุณาระบุงานและเลือกพนักงานก่อนครับ');
+
+      const btn = document.getElementById('btnAIAllocate');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>AI กำลังวิเคราะห์และจัดทีม...';
+      btn.disabled = true;
+
+      // 👇 นี่คือ Prompt สำหรับให้ AI จัดทีมครับ 👇
+      const promptText = `
+      จัดทีมพนักงานให้หน่อยตามงานที่กำหนด
+      รายชื่อพนักงานที่มี: ${availableEmployees.map(e => e.name + "(" + e.position + ")").join(', ')}
+      งานที่ต้องทำ: ${JSON.stringify(tasks)}
+      กฎ: 
+      1. ให้เลือกคนที่มีตำแหน่ง (position) ตรงกับงานก่อน 
+      2. ถ้าคนไม่พอ ให้สุ่มคนอื่นเติมให้ครบ 
+      3. ตอบกลับมาเป็น JSON format อย่างเดียว: [{"task": "ชื่องาน", "members": ["ชื่อพนักงาน1", "ชื่อพนักงาน2"]}]
+      `;
+
+      try {
+        // ส่ง Prompt ไปให้ Apps Script จัดการแบบปลอดภัย
+        const data = await askGemini(promptText); 
+        
+        let aiText = data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim();
+        const result = JSON.parse(aiText);
+
+        // นำรายชื่อที่ AI จัดให้ มาแปลงลงในระบบหน้าเว็บ
+        generatedTasksData = result.map((t, index) => {
+           // หา Object พนักงานจากชื่อที่ AI ส่งมา
+           const assignedEmps = t.members.map(name => allEmployees.find(e => e.name === name)).filter(e => e !== undefined);
+           return {
+             taskIndex: index,
+             taskName: t.task,
+             required: t.members.length,
+             assigned: assignedEmps
+           };
+        });
+
+        renderResultsDOM(); // สั่งให้หน้าเว็บวาดรายชื่อทีมออกมา
+      } catch (err) {
+        alert('AI จัดทีมไม่สำเร็จ: ' + err.message);
+      } finally {
+        btn.innerHTML = originalText;
         btn.disabled = false;
       }
     }
@@ -681,5 +757,9 @@ async function generateTasksWithAI() {
     }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+      <div class="footer-info">
+      Smart Team Builder v1.2.0 | Powered by Groq AI
+      </div>
 </body>
 </html>
