@@ -57,8 +57,7 @@
 <body>
 
   <div class="app-header text-center">
-    <h3 class="mb-0 text-primary fw-bold"><i class="bi bi-robot me-2"></i>Smart Team Builder (AI Edition)</h3>
-    <p class="text-muted mb-0 small mt-1">สุ่มจัดทีม, ลากวาง, ล็อคคน และผู้ช่วย AI</p>
+    <h3 class="mb-0 text-primary fw-bold"><i class="bi bi-robot me-2"></i>Smart Team Builder</h3>
   </div>
 
   <div class="container">
@@ -119,7 +118,7 @@
           <!-- 🌟 กล่อง AI 🌟 -->
           <div class="ai-box">
             <label class="form-label small fw-bold text-purple" style="color: #6d28d9;"><i class="bi bi-magic me-1"></i> สั่ง AI สร้างตารางงาน</label>
-            <textarea id="aiTaskInput" class="form-control form-control-sm mb-2" rows="2" placeholder="เช่น วันนี้จัดทีมกวาดถนน 3 คน ตัดหญ้าพื้นที่ A 4 คน และขอช่างไปซ่อมท่อ 2 คน"></textarea>
+            <textarea id="aiTaskInput" class="form-control form-control-sm mb-2" rows="2" placeholder="เขียนคำสั่งสำหรับ AI..."></textarea>
             <button class="btn btn-sm btn-ai w-100" id="btnAITask" onclick="generateTasksWithAI()">
               ✨ ให้ AI แปลงเป็นตารางงาน
             </button>
@@ -681,5 +680,6 @@ async function generateTasksWithAI() {
       let fileDate = new Date().toISOString().slice(0, 10); XLSX.writeFile(workbook, `Team_Allocation_${fileDate}.xlsx`);
     }
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
