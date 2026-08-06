@@ -41,8 +41,8 @@
     #login-open-btn { background: #34495e; color: white; }
     #login-open-btn.logged-in { background: #2ecc71; color: white; }
 
-    .mobile-bottom-sheet { position: fixed; left: 0; right: 0; bottom: 0; height: 52vh; display: none; flex-direction: column; background: rgba(255, 255, 255, .96); backdrop-filter: blur(25px); border-radius: 28px 28px 0 0; box-shadow: 0 -15px 40px rgba(0,0,0,.18); overflow: hidden; z-index: 999; }
-    .sheet-handle { width: 100%; height: 32px; display: flex; justify-content: center; align-items: center; cursor: ns-resize; }
+    .mobile-bottom-sheet { position: fixed; left: 0; right: 0; bottom: 0; height: 52vh; min-height: 100px; max-height: 85vh; display: none; flex-direction: column; background: rgba(255, 255, 255, .96); backdrop-filter: blur(25px); border-radius: 28px 28px 0 0; box-shadow: 0 -15px 40px rgba(0,0,0,.18); z-index: 999; }
+    .sheet-handle { width: 100%; height: 32px; display: flex; justify-content: center; align-items: center; cursor: ns-resize; touch-action: none; }
     .sheet-line { width: 70px; height: 6px; border-radius: 30px; background: #D6D8DC; }
     .sheet-header { padding: 4px 24px 12px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #F0F2F5; }
     .sheet-title { font-size: 18px; font-weight: 700; color: #2d3748; }
@@ -50,7 +50,7 @@
     .sheet-content-wrapper { overflow-y: auto; padding: 12px 24px 24px 24px; flex: 1; }
     
     #data-table { width: 100%; border-collapse: collapse; font-size: 15px; }
-    #data-table th { padding: 12px 10px; text-align: left; background: #fff; color: #888; border-bottom: 2px solid #f9f9f9; }
+    #data-table th { padding: 12px 10px; text-align: left; background: #fff; color: #888; border-bottom: 2px solid #f9f9f9; position: sticky; top: 0; }
     #data-table td { padding: 15px 10px; border-bottom: 1px solid #f1f1f1; color: #333; cursor: pointer; }
     #data-table tr { transition: .2s; cursor: pointer; }
     #data-table tr:not(.selected-row):active { background: #f7fafc; }
@@ -78,6 +78,12 @@
 </head>
 <body>
 
+<!-- ================= หน้าจอ Loading ================= -->
+<div id="loading-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.85); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+    <i class="fas fa-spinner fa-spin" style="font-size: 45px; color: #1677FF; margin-bottom: 15px;"></i>
+    <span id="loading-text" style="font-size: 16px; font-weight: bold; color: #333;">กำลังเตรียมระบบแผนที่...</span>
+</div>
+
 <div id="map"></div>
 
 <div class="fab-container" id="fab-box">
@@ -86,8 +92,8 @@
     <button class="fab fab-table" id="table-open-btn" title="ตารางข้อมูล"><i class="fas fa-list-ul"></i></button>
 </div>
 
-<!-- Login Sheet (ซ่อนโค้ดไว้เหมือนเดิม) -->
-<div id="login-sheet" class="mobile-bottom-sheet" style="height: auto; max-height: 70vh;">
+<!-- Login Sheet -->
+<div id="login-sheet" class="mobile-bottom-sheet" style="height: auto;">
     <div class="sheet-handle" id="login-drag-handle"><div class="sheet-line"></div></div>
     <div class="sheet-header">
         <span class="sheet-title" id="login-sheet-title">ระบบสมาชิกพนักงาน</span>
@@ -119,7 +125,6 @@
     <div class="sheet-header">
         <div style="display: flex; align-items: center; gap: 10px;">
             <span class="sheet-title">Landscape Zones</span>
-            <!-- ปุ่มสลับโหมดที่เพิ่มเข้ามา -->
             <button id="table-view-toggle" style="background: #1677FF; color: white; border: none; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s;">
                 <i class="fas fa-layer-group"></i> <span id="table-view-text">ทีม</span>
             </button>
@@ -134,8 +139,8 @@
     </div>
 </div>
 
-<!-- ================= Form Sheet (อัปเดตระบบ 2 โหมด) ================= -->
-<div id="form-sheet" class="mobile-bottom-sheet" style="height: auto; max-height: 85vh;">
+<!-- ================= Form Sheet ================= -->
+<div id="form-sheet" class="mobile-bottom-sheet" style="height: auto;">
     <div class="sheet-handle" id="form-drag-handle"><div class="sheet-line"></div></div>
     <div class="sheet-header">
         <span class="sheet-title" id="form-sheet-title">อัปเดตสถานะงาน</span>
@@ -147,7 +152,6 @@
                 <i class="fas fa-balance-scale"></i> สัดส่วนโซน: หญ้า <span id="badge-grass">100</span>% / พุ่มไม้ <span id="badge-shrub">0</span>%
             </div>
 
-            <!-- ตัวเลือกโหมดการทำงาน -->
             <div class="form-group">
                 <label style="color:#1677FF;"><i class="fas fa-tasks"></i> สถานะการทำงานวันนี้:</label>
                 <div class="radio-mode">
@@ -162,11 +166,9 @@
                 </div>
             </div>
 
-            <!-- คอนเทนเนอร์ใส่ตัวเลข (จะถูกซ่อนถ้าเลือก ปิดจ๊อบ 100%) -->
             <div id="report-inputs-container">
                 <div class="form-group">
                     <div id="grass-visual-cue" style="font-size:12px; color:#4a5568; background:#f0fdf4; border: 1px solid #c6f6d5; padding:8px; border-radius:8px; margin-bottom:4px; line-height: 1.5;">
-                        <!-- ข้อความดึงจาก JS -->
                     </div>
                     <label for="input-percent">ระบุตัวเลขเฉพาะ <span style="color:#1677FF; text-decoration: underline;">% ที่เพิ่งทำเสร็จไปวันนี้</span> (ถ้าไม่ได้ทำ ให้เว้นว่างไว้)</label>
                     <input type="number" id="input-percent" placeholder="ตัวอย่าง: ตัดเพิ่ม 20%" min="0" pattern="\d*">
@@ -174,7 +176,6 @@
 
                 <div class="form-group" id="group-shrub-input" style="display: none; margin-top: 5px;">
                     <div id="shrub-visual-cue" style="font-size:12px; color:#4a5568; background:#fffaf0; border: 1px solid #feebc8; padding:8px; border-radius:8px; margin-bottom:4px; line-height: 1.5;">
-                        <!-- ข้อความดึงจาก JS -->
                     </div>
                     <label for="input-shrub-percent" style="color: #e67e22;">ระบุตัวเลขเฉพาะ <span style="text-decoration: underline;">% ที่เพิ่งทำเสร็จไปวันนี้</span> (ถ้าไม่ได้ทำ ให้เว้นว่างไว้)</label>
                     <input type="number" id="input-shrub-percent" placeholder="ตัวอย่าง: ตัดเพิ่ม 10%" min="0" pattern="\d*">
@@ -290,6 +291,17 @@ const draw = new MapboxDraw({ displayControlsDefault: false, controls: { polygon
 let currentFeature = null; let editingZoneId = null; let totalZonesCount = 0;
 let globalZonesArray = []; let viewMode = 'team'; let selectedZone = null; let isBusy = false;
 
+// ========================================================
+// ฟังก์ชัน เปิด/ปิด หน้าจอ Loading
+// ========================================================
+function showLoading(text) {
+    document.getElementById('loading-text').innerText = text || "กำลังประมวลผล...";
+    document.getElementById('loading-overlay').style.display = 'flex';
+}
+function hideLoading() {
+    document.getElementById('loading-overlay').style.display = 'none';
+}
+
 // =================== น้ำหนัก 100% Save Panel ===================
 const chkGrass = document.getElementById('chk-has-grass'); const grassSettings = document.getElementById('grass-settings'); const weightGrass = document.getElementById('weight-grass');
 const chkShrub = document.getElementById('chk-has-shrub'); const shrubSettings = document.getElementById('shrub-settings'); const weightShrub = document.getElementById('weight-shrub');
@@ -324,6 +336,8 @@ document.getElementById('btn-save-zone').onclick = async () => {
     
     const btn = document.getElementById('btn-save-zone'); btn.disabled = true; btn.innerText = "กำลังบันทึก...";
     document.getElementById('save-panel').style.display = 'none';
+    
+    showLoading("กำลังบันทึกโซนใหม่ลงฐานข้อมูล...");
 
     await sendData({
         action: "saveZone", zone_name: name, coordinates_data: JSON.stringify(currentFeature.geometry.coordinates[0]), area_size: turf.area(currentFeature).toFixed(2) + " ตร.ม.", color: color,
@@ -335,13 +349,70 @@ document.getElementById('btn-save-zone').onclick = async () => {
 };
 
 async function sendData(payload) {
-    try { const response = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) }); const res = await response.json(); if(res.status === "success") location.reload();
-    } catch (e) { alert("เชื่อมต่อผิดพลาด"); document.getElementById('btn-save-zone').disabled = false; document.getElementById('btn-save-zone').innerText = "บันทึก"; document.getElementById('save-panel').style.display = 'block'; }
+    try { 
+        const response = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) }); 
+        const res = await response.json(); 
+        if(res.status === "success") location.reload();
+    } catch (e) { 
+        alert("เชื่อมต่อผิดพลาด"); 
+        hideLoading();
+        document.getElementById('btn-save-zone').disabled = false; document.getElementById('btn-save-zone').innerText = "บันทึก"; document.getElementById('save-panel').style.display = 'block'; 
+        document.getElementById('btn-submit-data').disabled = false; document.getElementById('btn-submit-data').innerText = "บันทึกส่งรายงาน"; 
+    }
 }
 
-const tableSheet = document.getElementById('table-sheet'); const formSheet = document.getElementById('form-sheet'); const loginSheet = document.getElementById('login-sheet');
-function loadSavedHeight(sheetElem, defaultHeight) { const savedHeight = localStorage.getItem(sheetElem.id + '_height'); if (savedHeight) { sheetElem.style.height = savedHeight; } else { sheetElem.style.height = defaultHeight; } }
-function setupDragLogic(sheetElem, handleElem) { /* omitted for brevity, standard drag logic */ }
+// ========================================================
+// ฟังก์ชันลากย่อ/ขยาย หน้าต่างตาราง (รองรับ Pointer Events ลื่นๆ)
+// ========================================================
+function setupDragLogic(sheetElem, handleElem) {
+    let isDragging = false;
+    let startY, startHeight;
+
+    handleElem.addEventListener('pointerdown', (e) => {
+        isDragging = true;
+        startY = e.clientY;
+        startHeight = parseInt(document.defaultView.getComputedStyle(sheetElem).height, 10);
+        handleElem.setPointerCapture(e.pointerId);
+        e.preventDefault();
+    });
+
+    handleElem.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        let deltaY = startY - e.clientY;
+        let newHeight = startHeight + deltaY;
+        
+        if (newHeight >= 100 && newHeight <= window.innerHeight * 0.85) {
+            sheetElem.style.height = newHeight + 'px';
+        }
+    });
+
+    const stopDrag = (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        handleElem.releasePointerCapture(e.pointerId);
+        localStorage.setItem(sheetElem.id + '_height', sheetElem.style.height);
+    };
+
+    handleElem.addEventListener('pointerup', stopDrag);
+    handleElem.addEventListener('pointercancel', stopDrag);
+}
+
+// ========================================================
+// เรียกใช้งานฟังก์ชันย่อขยายให้กับทุกหน้าต่าง (ตามที่ GPT แนะนำ)
+// ========================================================
+const tableSheet = document.getElementById('table-sheet');
+const formSheet = document.getElementById('form-sheet');
+const loginSheet = document.getElementById('login-sheet');
+
+setupDragLogic(tableSheet, document.getElementById('table-drag-handle'));
+setupDragLogic(formSheet, document.getElementById('form-drag-handle'));
+setupDragLogic(loginSheet, document.getElementById('login-drag-handle'));
+
+function loadSavedHeight(sheetElem, defaultHeight) { 
+    const savedHeight = localStorage.getItem(sheetElem.id + '_height'); 
+    if (savedHeight) { sheetElem.style.height = savedHeight; } else { sheetElem.style.height = defaultHeight; } 
+}
+
 document.getElementById('table-open-btn').onclick = () => { formSheet.style.display = 'none'; loginSheet.style.display = 'none'; tableSheet.style.display = 'flex'; loadSavedHeight(tableSheet, '52vh'); document.getElementById('fab-box').classList.add('fab-hidden'); };
 document.getElementById('table-close-btn').onclick = () => { tableSheet.style.display = 'none'; document.getElementById('fab-box').classList.remove('fab-hidden'); resetHighlights(); };
 document.getElementById('form-close-btn').onclick = () => { formSheet.style.display = 'none'; document.getElementById('fab-box').classList.remove('fab-hidden'); resetHighlights(); };
@@ -375,7 +446,6 @@ window.showTools = function(index) {
         msg += `✂️ แต่งพุ่ม: ${z.Shrub_Tools || 'ไม่ได้ระบุ'}\n`;
     }
     
-    // แสดง Popup แจ้งเตือนบนมือถือ
     alert(msg);
 };
 
@@ -383,14 +453,11 @@ window.showTools = function(index) {
 // ฟังก์ชันสร้างตาราง (แยกโหมด ทีม / หญ้า)
 // ========================================================
 function renderTable() {
-    // กำหนดเป้าหมายไปที่หัวตาราง และเนื้อหาตาราง
     const thead = document.querySelector('#data-table thead');
     const tbody = document.getElementById('table-tbody');
     const isVip = currentUserRole === 'VIP';
     
     if (viewMode === 'team') {
-        // --- โหมดทีม ---
-        // เปลี่ยนหัวตาราง
         thead.innerHTML = `
             <tr>
                 <th>ชื่อพื้นที่โซน</th>
@@ -400,12 +467,10 @@ function renderTable() {
             </tr>
         `;
         
-        // วาดข้อมูล
         tbody.innerHTML = globalZonesArray.map((z, i) => {
             const hasGrass = Number(z.Grass_Weight) > 0;
             const hasShrub = Number(z.Shrub_Weight) > 0;
             
-            // เช็คว่ามีงานอะไรบ้างเพื่อแสดงผล (ตัดหญ้า / แต่งพุ่ม)
             let taskText = [];
             if (hasGrass) taskText.push("ตัดหญ้า");
             if (hasShrub) taskText.push("แต่งพุ่ม");
@@ -414,7 +479,6 @@ function renderTable() {
                 <td><span class="color-dot" style="background:${z.Color || '#2ecc71'}"></span>${z.zone_name}</td>
                 <td style="font-size: 13px;">${taskText.join(' / ') || 'ไม่ระบุ'}</td>
                 <td style="text-align:center;">
-                    <!-- ปุ่มกดดูเครื่องมือ -->
                     <button style="background:#f0f2f5; border:1px solid #ddd; padding:5px 12px; border-radius:8px; color:#555; cursor:pointer;" onclick="event.stopPropagation(); showTools(${i})">
                         <i class="fas fa-toolbox"></i>
                     </button>
@@ -426,8 +490,6 @@ function renderTable() {
         }).join('');
         
     } else {
-        // --- โหมดหญ้า ---
-        // เปลี่ยนหัวตาราง
         thead.innerHTML = `
             <tr>
                 <th>ชื่อพื้นที่โซน</th>
@@ -437,7 +499,6 @@ function renderTable() {
             </tr>
         `;
         
-        // วาดข้อมูล
         tbody.innerHTML = globalZonesArray.map((z, i) => {
             const grassPct = z.grass_left_only || 0;
             const shrubPct = z.shrub_left_only || 0;
@@ -465,11 +526,9 @@ function renderTable() {
 function toggleViewMode() {
     viewMode = (viewMode === 'team') ? 'grass' : 'team';
     
-    // 1. อัปเดตปุ่มกลม (FAB)
     document.getElementById('view-badge').innerText = viewMode === 'team' ? "ทีม" : "หญ้า";
     document.getElementById('view-mode-btn').style.background = viewMode === 'team' ? "#1677FF" : "linear-gradient(135deg, #e74c3c, #c0392b)";
     
-    // 2. อัปเดตปุ่มเล็กบนหัวตาราง
     const tableBtn = document.getElementById('table-view-toggle');
     const tableBtnText = document.getElementById('table-view-text');
     if (tableBtn && tableBtnText) {
@@ -477,15 +536,12 @@ function toggleViewMode() {
         tableBtn.style.background = viewMode === 'team' ? "#1677FF" : "#e74c3c";
     }
 
-    // สั่งโหลดข้อมูลตารางและแผนที่ใหม่
-    updateColors(); 
-    renderTable(); 
-    resetHighlights();
+    updateColors(); renderTable(); resetHighlights();
 }
 
-// ผูกคำสั่งคลิกให้กับปุ่มทั้ง 2 ตัว
 document.getElementById('view-mode-btn').onclick = () => { toggleViewMode(); formSheet.style.display = 'none'; };
 document.getElementById('table-view-toggle').onclick = () => { toggleViewMode(); };
+
 function focusOnZoneFromTable(index, element) {
     document.querySelectorAll('#data-table tr').forEach(r => r.classList.remove('selected-row')); element.classList.add('selected-row');
     const zone = globalZonesArray[index]; const bounds = new maplibregl.LngLatBounds(); zone.coords.forEach(c => bounds.extend(c));
@@ -500,7 +556,7 @@ const inputsContainer = document.getElementById('report-inputs-container');
 modeRadios.forEach(r => {
     r.addEventListener('change', (e) => {
         if(e.target.value === 'finish') {
-            inputsContainer.style.display = 'none'; // ซ่อนฟอร์มถ้าจะปิดจ๊อบ
+            inputsContainer.style.display = 'none';
         } else {
             inputsContainer.style.display = 'block';
         }
@@ -511,23 +567,20 @@ function activateReportingForm(zone, index) {
     selectedZone = zone; tableSheet.style.display = 'none';
     document.getElementById('form-sheet-title').innerText = `รายงานผล: ${zone.zone_name}`;
     
-    // เคลียร์และเซ็ตค่าเริ่มต้นฟอร์ม
     document.getElementById('input-percent').value = '';
     document.getElementById('input-shrub-percent').value = '';
     document.getElementById('input-name').value = currentUserName; 
     
-    // บังคับสลับกลับมาโหมดตัดต่องานเดิมเสมอตอนเปิดฟอร์ม
     modeRadios[0].checked = true;
     inputsContainer.style.display = 'block';
     
     const grassWeight = Number(zone.Grass_Weight) || 100;
     const shrubWeight = Number(zone.Shrub_Weight) || 0;
     
-    // คำนวณ Visual Cue หญ้า
     const gLeft = zone.grass_left_only || 0;
     const gDone = 100 - gLeft;
     document.getElementById('grass-visual-cue').innerHTML = `<b>🌱 งานตัดหญ้า</b><br>ความคืบหน้าเดิม: ทำแล้ว ${gDone}% | <span style="color:#e74c3c;">เหลือให้ทำอีก ${gLeft}%</span>`;
-    document.getElementById('input-percent').max = gLeft; // ล็อก Max
+    document.getElementById('input-percent').max = gLeft;
     
     if (shrubWeight > 0) {
         document.getElementById('weight-info-badge').style.display = 'block';
@@ -535,11 +588,10 @@ function activateReportingForm(zone, index) {
         document.getElementById('badge-shrub').innerText = shrubWeight;
         document.getElementById('group-shrub-input').style.display = 'block';
         
-        // คำนวณ Visual Cue พุ่มไม้
         const sLeft = zone.shrub_left_only || 0;
         const sDone = 100 - sLeft;
         document.getElementById('shrub-visual-cue').innerHTML = `<b>✂️ งานแต่งพุ่มไม้</b><br>ความคืบหน้าเดิม: ทำแล้ว ${sDone}% | <span style="color:#e74c3c;">เหลือให้ทำอีก ${sLeft}%</span>`;
-        document.getElementById('input-shrub-percent').max = sLeft; // ล็อก Max
+        document.getElementById('input-shrub-percent').max = sLeft;
     } else {
         document.getElementById('weight-info-badge').style.display = 'none';
         document.getElementById('group-shrub-input').style.display = 'none';
@@ -580,11 +632,13 @@ document.getElementById('btn-submit-data').onclick = async () => {
     const btn = document.getElementById('btn-submit-data');
     btn.disabled = true; btn.innerText = "กำลังส่งข้อมูล...";
     
+    showLoading("กำลังอัปเดตรายงานของคุณ...");
+
     await sendData({
         action: "reportProgress", 
         zone_id: selectedZone.zone_id, zone_name: selectedZone.zone_name, 
         report_mode: mode,
-        grass_work_add: pctGrass, // ส่งแค่เลขที่เพิ่งทำเพิ่มไป
+        grass_work_add: pctGrass, 
         shrub_work_add: pctShrub, 
         worker_name: name
     });
@@ -619,7 +673,13 @@ map.on('load', async () => {
             map.addLayer({ 'id': lyrId, 'type': 'fill', 'source': srcId, 'paint': { 'fill-color': c, 'fill-opacity': 0.5 } });
             map.addLayer({ 'id': `${lyrId}-stroke`, 'type': 'line', 'source': srcId, 'paint': { 'line-color': c, 'line-width': 2 } });
         });
-    } catch (err) {}
+        
+        hideLoading();
+        
+    } catch (err) {
+        hideLoading();
+        alert("ไม่สามารถติดต่อเซิร์ฟเวอร์ได้ กรุณารีเฟรชใหม่อีกครั้งครับ"); 
+    }
 });
 </script>
 </body>
