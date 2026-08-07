@@ -74,6 +74,17 @@
     .radio-mode input[type="radio"] { display: none; }
     .radio-mode input[type="radio"]:checked + span { color: #1677FF; font-weight: bold; }
     .radio-mode label:has(input:checked) { background: #EAF3FF; border-color: #1677FF; }
+
+    /* Setup Section Styles */
+    .setup-section { margin-bottom: 25px; background: #fff; border-radius: 12px; border: 1px solid #eee; overflow: hidden; }
+    .setup-header { background: #f8f9fa; padding: 12px 15px; font-weight: bold; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 8px; }
+    .setup-add-box { display: flex; gap: 8px; padding: 15px; border-bottom: 1px solid #eee; }
+    .setup-add-box input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-family: 'Prompt'; }
+    .setup-add-box button { background: #1677FF; color: white; border: none; border-radius: 8px; padding: 0 15px; font-family: 'Prompt'; font-weight: bold; cursor: pointer; }
+    .setup-list { list-style: none; padding: 0; margin: 0; max-height: 200px; overflow-y: auto; }
+    .setup-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #f5f5f5; font-size: 14px; }
+    .setup-item:last-child { border-bottom: none; }
+    .setup-item .btn-del { color: #e74c3c; background: #fee2e2; border: none; cursor: pointer; padding: 5px 10px; border-radius: 6px; font-size: 12px; }
 </style>
 </head>
 <body>
@@ -191,6 +202,42 @@
     </div>
 </div>
 
+<!-- ================= Setup Data Sheet ================= -->
+<div id="setup-sheet" class="mobile-bottom-sheet" style="height: auto;">
+    <div class="sheet-handle" id="setup-drag-handle"><div class="sheet-line"></div></div>
+    <div class="sheet-header">
+        <span class="sheet-title">ตั้งค่าข้อมูลพื้นฐาน</span>
+        <button id="setup-close-btn" class="btn-close-sheet">&times;</button>
+    </div>
+    <div class="sheet-content-wrapper">
+        
+        <!-- หมวดพนักงาน -->
+        <div class="setup-section">
+            <div class="setup-header" style="color: #1677FF;"><i class="fas fa-users"></i> รายชื่อพนักงาน (Gardener)</div>
+            <div class="setup-add-box">
+                <input type="text" id="input-new-gardener" placeholder="ระบุชื่อพนักงานใหม่...">
+                <button onclick="addMasterItem('gardener', 'input-new-gardener')">เพิ่ม</button>
+            </div>
+            <ul class="setup-list" id="list-gardener">
+                <li class="setup-item" style="color: #999;">กำลังโหลด...</li>
+            </ul>
+        </div>
+
+        <!-- หมวดเครื่องมือ -->
+        <div class="setup-section">
+            <div class="setup-header" style="color: #e67e22;"><i class="fas fa-toolbox"></i> รายการเครื่องมือ (Tool)</div>
+            <div class="setup-add-box">
+                <input type="text" id="input-new-tool" placeholder="ระบุชื่อเครื่องมือใหม่...">
+                <button style="background: #e67e22;" onclick="addMasterItem('Tool', 'input-new-tool')">เพิ่ม</button>
+            </div>
+            <ul class="setup-list" id="list-tool">
+                <li class="setup-item" style="color: #999;">กำลังโหลด...</li>
+            </ul>
+        </div>
+
+    </div>
+</div>
+
 <!-- ================= Save Panel ================= -->
 <div id="save-panel">
     <h3 id="panel-title">บันทึกพื้นที่ใหม่</h3>
@@ -286,7 +333,35 @@ const map = new maplibregl.Map({
     center: [targetLngLat[0] - (-0.0010), targetLngLat[1] - 0.0010], zoom: 15.58, bearing: -45.6, maxZoom: 21
 });
 map.touchZoomRotate.enable({ around: "center" }); map.dragPan.enable(); map.dragRotate.disable(); map.doubleClickZoom.disable();
-const draw = new MapboxDraw({ displayControlsDefault: false, controls: { polygon: true, trash: true } }); map.addControl(draw, 'top-right');
+
+// 🟢 ปิดปุ่มถังขยะเดิม (trash: false)
+const draw = new MapboxDraw({ displayControlsDefault: false, controls: { polygon: true, trash: false } }); 
+map.addControl(draw, 'top-right');
+
+// 🟢 สร้างปุ่มฟันเฟืองสำหรับตั้งค่า 
+class SetupControl {
+    onAdd(map) {
+        this._map = map;
+        this._container = document.createElement('div');
+        this._container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
+        
+        const btn = document.createElement('button');
+        btn.className = 'mapboxgl-ctrl-icon';
+        btn.type = 'button';
+        btn.title = 'ตั้งค่าพนักงานและเครื่องมือ';
+        btn.innerHTML = '<i class="fas fa-cog" style="font-size:16px; color:#555;"></i>';
+        btn.onclick = () => openSetupSheet();
+        
+        this._container.appendChild(btn);
+        return this._container;
+    }
+    onRemove() {
+        this._container.parentNode.removeChild(this._container);
+        this._map = undefined;
+    }
+}
+// 🟢 ผูกปุ่มฟันเฟืองเข้าไปในมุมขวาบนของแผนที่
+map.addControl(new SetupControl(), 'top-right');
 
 let currentFeature = null; let editingZoneId = null; let totalZonesCount = 0;
 let globalZonesArray = []; let viewMode = 'team'; let selectedZone = null; let isBusy = false;
@@ -398,32 +473,83 @@ function setupDragLogic(sheetElem, handleElem) {
 }
 
 // ========================================================
-// เรียกใช้งานฟังก์ชันย่อขยายให้กับทุกหน้าต่าง (ตามที่ GPT แนะนำ)
+// เรียกใช้งานฟังก์ชันย่อขยายให้กับทุกหน้าต่าง
 // ========================================================
 const tableSheet = document.getElementById('table-sheet');
 const formSheet = document.getElementById('form-sheet');
 const loginSheet = document.getElementById('login-sheet');
+const setupSheet = document.getElementById('setup-sheet'); // 🟢 เพิ่มตัวแปรหน้าต่างใหม่
 
 setupDragLogic(tableSheet, document.getElementById('table-drag-handle'));
 setupDragLogic(formSheet, document.getElementById('form-drag-handle'));
 setupDragLogic(loginSheet, document.getElementById('login-drag-handle'));
+setupDragLogic(setupSheet, document.getElementById('setup-drag-handle')); // 🟢 สั่งให้หน้าต่างใหม่ลากได้
 
 function loadSavedHeight(sheetElem, defaultHeight) { 
     const savedHeight = localStorage.getItem(sheetElem.id + '_height'); 
     if (savedHeight) { sheetElem.style.height = savedHeight; } else { sheetElem.style.height = defaultHeight; } 
 }
 
-document.getElementById('table-open-btn').onclick = () => { formSheet.style.display = 'none'; loginSheet.style.display = 'none'; tableSheet.style.display = 'flex'; loadSavedHeight(tableSheet, '52vh'); document.getElementById('fab-box').classList.add('fab-hidden'); };
+// ปิดทุกหน้าต่างเมื่อเปิดหน้าต่างอื่น
+document.getElementById('table-open-btn').onclick = () => { formSheet.style.display = 'none'; loginSheet.style.display = 'none'; setupSheet.style.display = 'none'; tableSheet.style.display = 'flex'; loadSavedHeight(tableSheet, '52vh'); document.getElementById('fab-box').classList.add('fab-hidden'); };
 document.getElementById('table-close-btn').onclick = () => { tableSheet.style.display = 'none'; document.getElementById('fab-box').classList.remove('fab-hidden'); resetHighlights(); };
 document.getElementById('form-close-btn').onclick = () => { formSheet.style.display = 'none'; document.getElementById('fab-box').classList.remove('fab-hidden'); resetHighlights(); };
 document.getElementById('login-close-btn').onclick = () => { loginSheet.style.display = 'none'; document.getElementById('fab-box').classList.remove('fab-hidden'); };
+document.getElementById('setup-close-btn').onclick = () => { setupSheet.style.display = 'none'; document.getElementById('fab-box').classList.remove('fab-hidden'); };
 
 document.getElementById('login-open-btn').onclick = () => {
-    tableSheet.style.display = 'none'; formSheet.style.display = 'none'; document.getElementById('fab-box').classList.add('fab-hidden');
+    tableSheet.style.display = 'none'; formSheet.style.display = 'none'; setupSheet.style.display = 'none'; document.getElementById('fab-box').classList.add('fab-hidden');
     document.getElementById('login-state-connecting').style.display = 'none'; document.getElementById('login-state-register').style.display = 'none'; document.getElementById('login-state-profile').style.display = 'block';
     document.getElementById('user-info-display').innerHTML = `👋 สวัสดีครับ <b>คุณ ${currentUserName}</b><br>💼 ตำแหน่ง: ${currentUserPos || 'ไม่ระบุ'}<br>🔐 สิทธิ์การใช้งาน: <span style="color:#1677FF;font-weight:700;">${currentUserRole}</span>`;
     loginSheet.style.display = 'flex';
 };
+
+// 🟢 ฟังก์ชันสำหรับหน้าต่างตั้งค่าพนักงาน & เครื่องมือ
+async function openSetupSheet() {
+    formSheet.style.display = 'none'; tableSheet.style.display = 'none'; loginSheet.style.display = 'none';
+    setupSheet.style.display = 'flex'; loadSavedHeight(setupSheet, '70vh');
+    document.getElementById('fab-box').classList.add('fab-hidden');
+    
+    showLoading("กำลังดึงข้อมูลพื้นฐาน...");
+    try {
+        const res = await fetchWithRetry(`${WEB_APP_URL}?action=getMasterData`);
+        renderList('list-gardener', res.gardeners, 'gardener');
+        renderList('list-tool', res.tools, 'Tool');
+        hideLoading();
+    } catch(e) {
+        hideLoading(); alert("โหลดข้อมูลล้มเหลว");
+    }
+}
+
+function renderList(elementId, items, sheetName) {
+    const ul = document.getElementById(elementId);
+    if(items.length === 0) {
+        ul.innerHTML = '<li class="setup-item" style="color:#999; justify-content:center;">ไม่มีข้อมูล</li>'; return;
+    }
+    ul.innerHTML = items.map(item => `
+        <li class="setup-item">
+            <span>${item}</span>
+            <button class="btn-del" onclick="deleteMasterItem('${sheetName}', '${item}')"><i class="fas fa-trash"></i> ลบ</button>
+        </li>
+    `).join('');
+}
+
+async function addMasterItem(sheetName, inputId) {
+    const input = document.getElementById(inputId);
+    const name = input.value.trim();
+    if(!name) { alert("กรุณาพิมพ์ข้อมูลก่อนกดเพิ่มครับ"); return; }
+    
+    showLoading("กำลังบันทึกข้อมูล...");
+    await sendData({ action: "addMaster", sheetName: sheetName, name: name });
+    input.value = ""; 
+}
+
+async function deleteMasterItem(sheetName, itemName) {
+    if(!confirm(`ยืนยันการลบ "${itemName}" ใช่หรือไม่?`)) return;
+    showLoading("กำลังลบข้อมูล...");
+    await sendData({ action: "deleteMaster", sheetName: sheetName, name: itemName });
+}
+// -----------------------------------------------------------------
 
 function getGrassColor(pct) { if (pct <= 40) return '#2ecc71'; if (pct <= 75) return '#f1c40f'; return '#e74c3c'; }
 function updateColors() { globalZonesArray.forEach((z, i) => { if(map.getLayer(`layer-zone-${i}`)) { const c = (viewMode === 'team') ? (z.Color || '#2ecc71') : getGrassColor(z.current_grass_percentage); map.setPaintProperty(`layer-zone-${i}`, 'fill-color', c); map.setPaintProperty(`layer-zone-${i}-stroke`, 'line-color', c); } }); }
@@ -504,7 +630,7 @@ function renderTable() {
         tbody.innerHTML = globalZonesArray.map((z, i) => {
             const grassPct = z.grass_left_only || 0;
             const shrubPct = z.shrub_left_only || 0;
-            const overallPct = z.current_grass_percentage || 0; // ดึงค่าภาพรวมที่ถ่วงน้ำหนักแล้วมาใช้
+            const overallPct = z.current_grass_percentage || 0;
             const hasShrub = Number(z.Shrub_Weight) > 0;
             
             const shrubDisplay = hasShrub 
@@ -514,13 +640,10 @@ function renderTable() {
             return `<tr id="tr-zone-${i}" onclick="focusOnZoneFromTable(${i}, this)">
                 <td><span class="color-dot" style="background:${getGrassColor(overallPct)}"></span>${z.zone_name}</td>
                 
-                <!-- คอลัมน์ ภาพรวม (ใหม่) -->
                 <td style="text-align:center; font-weight:bold; color:${getGrassColor(overallPct)}">${overallPct}%</td>
                 
-                <!-- คอลัมน์ หญ้ารก -->
                 <td style="text-align:center; font-weight:bold; color:${getGrassColor(grassPct)}">${grassPct}%</td>
                 
-                <!-- คอลัมน์ ความยาวพุ่ม -->
                 <td style="text-align:center;">${shrubDisplay}</td>
                 
                 <td style="text-align:right; ${isVip ? '' : 'display:none;'}">
@@ -658,8 +781,8 @@ document.getElementById('btn-submit-data').onclick = async () => {
 function handlePolygonClick(lngLat) {
     if(isBusy || editingZoneId) return; isBusy = true; let foundIndex = -1; const point = turf.point([lngLat.lng, lngLat.lat]);
     for(let i = 0; i < globalZonesArray.length; i++) { const zone = globalZonesArray[i]; if(zone.turfBuffered && turf.booleanPointInPolygon(point, zone.turfBuffered)) { foundIndex = i; break; } }
-    if(foundIndex === -1) { resetHighlights(); formSheet.style.display = "none"; tableSheet.style.display = "none"; loginSheet.style.display = "none"; document.getElementById("fab-box").classList.remove("fab-hidden"); isBusy = false; return; }
-    formSheet.style.display = "none"; loginSheet.style.display = "none"; tableSheet.style.display = "flex"; loadSavedHeight(tableSheet, "52vh"); document.getElementById("fab-box").classList.add("fab-hidden"); document.querySelectorAll("#data-table tr").forEach(r => r.classList.remove("selected-row"));
+    if(foundIndex === -1) { resetHighlights(); formSheet.style.display = "none"; tableSheet.style.display = "none"; loginSheet.style.display = "none"; setupSheet.style.display = "none"; document.getElementById("fab-box").classList.remove("fab-hidden"); isBusy = false; return; }
+    formSheet.style.display = "none"; loginSheet.style.display = "none"; setupSheet.style.display = "none"; tableSheet.style.display = "flex"; loadSavedHeight(tableSheet, "52vh"); document.getElementById("fab-box").classList.add("fab-hidden"); document.querySelectorAll("#data-table tr").forEach(r => r.classList.remove("selected-row"));
     for(let i=0; i<totalZonesCount; i++) { map.setPaintProperty(`layer-zone-${i}`, "fill-opacity", i === foundIndex ? 0.85 : 0.15); map.setPaintProperty(`layer-zone-${i}-stroke`, "line-width", i === foundIndex ? 5 : 2); }
     const row = document.getElementById(`tr-zone-${foundIndex}`); if(row) { row.classList.add("selected-row"); row.scrollIntoView({ behavior: "smooth", block: "start" }); }
     setTimeout(() => { isBusy = false; }, 300);
@@ -671,7 +794,19 @@ async function fetchWithRetry(url, retries = 3, delay = 2000) { for (let i = 0; 
 
 map.on('load', async () => {
     const drawCtrl = document.querySelector('.mapboxgl-ctrl-top-right');
-    if (currentUserRole === 'VIP') { if(drawCtrl) drawCtrl.style.display = 'block'; document.getElementById('login-open-btn').classList.add('logged-in'); document.getElementById('login-icon').className = 'fas fa-user-check'; } else { if(drawCtrl) drawCtrl.style.display = 'none'; if(currentUserRole === 'User') { document.getElementById('login-open-btn').classList.add('logged-in'); document.getElementById('login-icon').className = 'fas fa-user-tie'; } }
+    // 🟢 ซ่อนหรือโชว์กลุ่มปุ่มวาดรูปและฟันเฟือง ตามสิทธิ์พนักงาน
+    if (currentUserRole === 'VIP') { 
+        if(drawCtrl) drawCtrl.style.display = 'block'; 
+        document.getElementById('login-open-btn').classList.add('logged-in'); 
+        document.getElementById('login-icon').className = 'fas fa-user-check'; 
+    } else { 
+        if(drawCtrl) drawCtrl.style.display = 'none'; 
+        if(currentUserRole === 'User') { 
+            document.getElementById('login-open-btn').classList.add('logged-in'); 
+            document.getElementById('login-icon').className = 'fas fa-user-tie'; 
+        } 
+    }
+    
     try {
         const zones = await fetchWithRetry(`${WEB_APP_URL}?action=getZones`);
         globalZonesArray = zones; totalZonesCount = zones.length;
