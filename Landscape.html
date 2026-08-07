@@ -490,11 +490,13 @@ function renderTable() {
         }).join('');
         
     } else {
+        // --- โหมดหญ้า (อัปเดตเพิ่มคอลัมน์ ภาพรวม) ---
         thead.innerHTML = `
             <tr>
                 <th>ชื่อพื้นที่โซน</th>
-                <th>หญ้ารก</th>
-                <th>พุ่มรก</th>
+                <th style="text-align:center;">ภาพรวม</th>
+                <th style="text-align:center;">หญ้ารก</th>
+                <th style="text-align:center;">ความยาวพุ่ม</th>
                 <th style="text-align: right; ${isVip ? '' : 'display:none;'}">รายงาน</th>
             </tr>
         `;
@@ -502,6 +504,7 @@ function renderTable() {
         tbody.innerHTML = globalZonesArray.map((z, i) => {
             const grassPct = z.grass_left_only || 0;
             const shrubPct = z.shrub_left_only || 0;
+            const overallPct = z.current_grass_percentage || 0; // ดึงค่าภาพรวมที่ถ่วงน้ำหนักแล้วมาใช้
             const hasShrub = Number(z.Shrub_Weight) > 0;
             
             const shrubDisplay = hasShrub 
@@ -509,9 +512,17 @@ function renderTable() {
                 : `<span style="color:#aaa; font-size:13px;">ไม่มี</span>`;
                 
             return `<tr id="tr-zone-${i}" onclick="focusOnZoneFromTable(${i}, this)">
-                <td><span class="color-dot" style="background:${getGrassColor(z.current_grass_percentage)}"></span>${z.zone_name}</td>
-                <td style="font-weight:bold; color:${getGrassColor(grassPct)}">${grassPct}%</td>
-                <td>${shrubDisplay}</td>
+                <td><span class="color-dot" style="background:${getGrassColor(overallPct)}"></span>${z.zone_name}</td>
+                
+                <!-- คอลัมน์ ภาพรวม (ใหม่) -->
+                <td style="text-align:center; font-weight:bold; color:${getGrassColor(overallPct)}">${overallPct}%</td>
+                
+                <!-- คอลัมน์ หญ้ารก -->
+                <td style="text-align:center; font-weight:bold; color:${getGrassColor(grassPct)}">${grassPct}%</td>
+                
+                <!-- คอลัมน์ ความยาวพุ่ม -->
+                <td style="text-align:center;">${shrubDisplay}</td>
+                
                 <td style="text-align:right; ${isVip ? '' : 'display:none;'}">
                     <button class="btn-table-report" onclick="event.stopPropagation(); triggerReportFromTable(${i})"><i class="fas fa-file-pen"></i></button>
                 </td>
