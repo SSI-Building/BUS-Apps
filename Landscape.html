@@ -319,10 +319,7 @@
             </div>
             <label style="font-size:13px; display:block; margin-bottom:6px; color:#333;">เครื่องมือที่ใช้ (เลือกได้มากกว่า 1):</label>
             <div class="tool-chips" id="grass-tools-container">
-                <div class="tool-chip"><input type="checkbox" id="gt1" value="รถตัดหญ้านั่งขับ"><label for="gt1">รถนั่งขับ</label></div>
-                <div class="tool-chip"><input type="checkbox" id="gt2" value="เครื่องตัดหญ้าสะพาย"><label for="gt2">สะพายบ่า</label></div>
-                <div class="tool-chip"><input type="checkbox" id="gt3" value="รถเข็นตัดหญ้า"><label for="gt3">รถเข็น</label></div>
-                <div class="tool-chip"><input type="checkbox" id="gt4" value="พร้า"><label for="gt4">พร้า</label></div>
+
             </div>
         </div>
     </div>
@@ -343,9 +340,7 @@
             </div>
             <label style="font-size:13px; display:block; margin-bottom:6px; color:#333;">เครื่องมือที่ใช้ (เลือกได้มากกว่า 1):</label>
             <div class="tool-chips" id="shrub-tools-container">
-                <div class="tool-chip"><input type="checkbox" id="st1" value="เครื่องตัดแต่งพุ่มไม้"><label for="st1">เครื่องแต่งพุ่ม</label></div>
-                <div class="tool-chip"><input type="checkbox" id="st2" value="กรรไกรตัดแต่งกิ่ง"><label for="st2">กรรไกรแต่งกิ่ง</label></div>
-                <div class="tool-chip"><input type="checkbox" id="st3" value="เลื่อยตัดกิ่งไม้"><label for="st3">เลื่อย</label></div>
+
             </div>
         </div>
     </div>
@@ -481,7 +476,44 @@ map.addControl(new SetupControl(), 'top-right');
 let currentFeature = null; let editingZoneId = null; let totalZonesCount = 0;
 let globalZonesArray = []; let viewMode = 'team'; let selectedZone = null; let isBusy = false;
 let globalGardeners = []; 
+let globalTools = []; // 🟢 1. เพิ่มตัวแปรเก็บรายการเครื่องมือ
 let currentWorkerSelectType = ''; 
+
+// 🟢 2. สร้างฟังก์ชันวาดปุ่มเครื่องมือ
+function renderToolChips() {
+    const grassContainer = document.getElementById('grass-tools-container');
+    const shrubContainer = document.getElementById('shrub-tools-container');
+    
+    if (globalTools.length === 0) {
+        grassContainer.innerHTML = '<span style="font-size:12px; color:#999;">ไม่มีข้อมูลเครื่องมือ กรุณาเพิ่มในการตั้งค่า</span>';
+        shrubContainer.innerHTML = '<span style="font-size:12px; color:#999;">ไม่มีข้อมูลเครื่องมือ กรุณาเพิ่มในการตั้งค่า</span>';
+        return;
+    }
+
+    // สร้างปุ่มให้ทีมตัดหญ้า (ตั้ง id เป็น gt-...)
+    grassContainer.innerHTML = globalTools.map((tool, index) => `
+        <div class="tool-chip">
+            <input type="checkbox" id="gt-${index}" value="${tool}">
+            <label for="gt-${index}">${tool}</label>
+        </div>
+    `).join('');
+
+    // สร้างปุ่มให้ทีมแต่งพุ่ม (ตั้ง id เป็น st-...)
+    shrubContainer.innerHTML = globalTools.map((tool, index) => `
+        <div class="tool-chip">
+            <input type="checkbox" id="st-${index}" value="${tool}">
+            <label for="st-${index}">${tool}</label>
+        </div>
+    `).join('');
+}
+
+// 🟢 3. อัปเดตตอนเปิดเว็บ ให้ดึงข้อมูลเครื่องมือมาวาดด้วย
+fetchWithRetry(`${WEB_APP_URL}?action=getMasterData`).then(res => {
+    globalGardeners = res.gardeners || [];
+    globalTools = res.tools || []; // เก็บข้อมูลเครื่องมือ
+    renderWorkerSelectionList();
+    renderToolChips(); // สั่งวาดปุ่มเครื่องมือ
+}).catch(e => console.log(e));
 
 // ========================================================
 // ฟังก์ชัน เปิด/ปิด หน้าจอ Loading
@@ -689,9 +721,13 @@ async function refreshMasterList() {
     try {
         const res = await fetchWithRetry(`${WEB_APP_URL}?action=getMasterData`);
         globalGardeners = res.gardeners || [];
+        globalTools = res.tools || []; // 🟢 อัปเดตตัวแปรเครื่องมือ
+        
         renderList('list-gardener', res.gardeners, 'gardener');
         renderList('list-tool', res.tools, 'Tool');
+        
         renderWorkerSelectionList(); 
+        renderToolChips(); // 🟢 สั่งวาดปุ่มเครื่องมือใหม่ทันที (ถ้ามีการกดลบ/เพิ่ม)
     } catch(e) {
         alert("โหลดข้อมูลรายการล้มเหลว");
     }
