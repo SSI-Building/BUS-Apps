@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard รายงานประสิทธิภาพ (Landscape)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    body { margin: 0; padding: 0; font-family: 'Prompt', sans-serif; background: #EEF2F8; color: #333; }
+    * { box-sizing: border-box; }
+    
+    .header { background: #1677FF; color: white; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .header h1 { margin: 0; font-size: 22px; }
+    
+    .container { max-width: 1100px; margin: 20px auto; padding: 0 15px; }
+    
+    /* Control Panel */
+    .control-panel { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: space-between; }
+    .radio-group { display: flex; flex-wrap: wrap; gap: 10px; background: #f0f2f5; padding: 5px; border-radius: 12px; }
+    .radio-group label { padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; color: #666; transition: 0.2s; }
+    .radio-group input[type="radio"] { display: none; }
+    .radio-group input[type="radio"]:checked + span { color: #1677FF; font-weight: bold; }
+    .radio-group label:has(input:checked) { background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    
+    .date-inputs input { padding: 12px 15px; border: 1px solid #ddd; border-radius: 10px; font-family: 'Prompt'; font-size: 15px; outline: none; }
+    .date-inputs input:focus { border-color: #1677FF; }
+
+    /* KPI Cards */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .kpi-card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 15px; position: relative; }
+    .kpi-icon { width: 55px; height: 55px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 26px; color: white; flex-shrink: 0; }
+    .kpi-data { flex: 1; }
+    .kpi-data h3 { margin: 0; font-size: 13px; color: #888; font-weight: 600; }
+    .kpi-data p { margin: 5px 0 0 0; font-size: 22px; font-weight: 700; color: #2d3748; }
+    .trend-badge { margin-top: 5px; display: block; }
+    
+    /* Charts & Tables */
+    .chart-container { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    
+    .table-container { background: white; border-radius: 16px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 40px;}
+    table { width: 100%; border-collapse: collapse; text-align: left; min-width: 800px; }
+    th { background: #f8f9fa; padding: 15px; font-size: 14px; color: #666; border-bottom: 2px solid #eee; }
+    td { padding: 15px; border-bottom: 1px solid #eee; font-size: 15px; color: #333; }
+    tr:last-child td { border-bottom: none; }
+    
+    .loading { text-align: center; padding: 50px; font-size: 18px; color: #1677FF; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1><i class="fas fa-chart-line"></i> Dashboard วิเคราะห์ประสิทธิภาพทีม</h1>
+</div>
+
+<div class="container" id="main-content" style="display: none;">
+    
+    <!-- แผงควบคุม -->
+    <div class="control-panel">
+        <div class="radio-group">
+            <label><input type="radio" name="mode" value="daily" checked> <span><i class="fas fa-calendar-day"></i> รายวัน</span></label>
+            <label><input type="radio" name="mode" value="weekly"> <span><i class="fas fa-calendar-week"></i> รายสัปดาห์</span></label>
+            <label><input type="radio" name="mode" value="monthly"> <span><i class="fas fa-calendar-alt"></i> รายเดือน</span></label>
+            <label><input type="radio" name="mode" value="yearly"> <span><i class="fas fa-calendar"></i> รายปี</span></label>
+        </div>
+        
+        <div class="date-inputs">
+            <input type="date" id="input-daily">
+            <input type="week" id="input-weekly" style="display: none;">
+            <input type="month" id="input-monthly" style="display: none;">
+            <input type="number" id="input-yearly" style="display: none;" min="2020" max="2050" placeholder="ปี ค.ศ. เช่น 2026">
+        </div>
+    </div>
+
+    <!-- กล่องสรุปตัวเลข (KPI) -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background: #95a5a6;"><i class="fas fa-calendar-check"></i></div>
+            <div class="kpi-data">
+                <h3 id="kpi-day-label">จำนวนวันทำงานจริง</h3>
+                <p id="kpi-working-days">0 วัน</p>
+                <div class="trend-badge" style="font-size:12px; color:#aaa;">หักวันหยุด DayOff แล้ว</div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background: #1677FF;"><i class="fas fa-chart-area"></i></div>
+            <div class="kpi-data">
+                <h3>ผลงานรวมทีม (ตร.ม.)</h3>
+                <p id="kpi-total-sqm">0</p>
+                <div class="trend-badge" id="trend-total"></div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background: #2ecc71;"><i class="fas fa-tachometer-alt"></i></div>
+            <div class="kpi-data">
+                <h3>ประสิทธิภาพเฉลี่ย (ตร.ม./วัน)</h3>
+                <p id="kpi-avg-sqm">0</p>
+                <div class="trend-badge" id="trend-avg"></div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background: #f1c40f;"><i class="fas fa-trophy"></i></div>
+            <div class="kpi-data">
+                <h3>พนักงานดีเด่นรอบนี้</h3>
+                <p id="kpi-best-worker" style="color: #d35400;">-</p>
+                <div class="trend-badge" style="font-size:12px; color:#aaa;">ประเมินจากพื้นที่ทำได้</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- กราฟ Chart.js -->
+    <div class="chart-container">
+        <h3 style="margin-top: 0; color: #444;"><i class="fas fa-chart-bar"></i> เปรียบเทียบประสิทธิภาพเฉลี่ยต่อวันรายบุคคล</h3>
+        <canvas id="perfChart" height="100"></canvas>
+    </div>
+
+    <!-- ตารางสรุปรายบุคคล -->
+    <div class="table-container" style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 20%;">ชื่อพนักงาน</th>
+                    <th style="width: 20%;">งานที่ทำ</th>
+                    <th style="width: 30%;">พื้นที่โซนที่เข้าปฏิบัติงาน</th>
+                    <th style="width: 15%; text-align: right;">ผลงานรวม (ตร.ม.)</th>
+                    <th style="width: 15%; text-align: right; color: #2ecc71;">ประสิทธิภาพ/วัน</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <!-- ข้อมูลถูกเติมด้วย JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="loading-div" class="loading">
+    <i class="fas fa-spinner fa-spin" style="font-size: 40px; margin-bottom: 15px;"></i><br>
+    กำลังดึงข้อมูลและประมวลผลสถิติ...
+</div>
+
+<script>
+// ⚠️ เปลี่ยน URL เป็น Web App URL ล่าสุดของคุณ
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzZ9MH7fONCkaqgmqWLOM8yAoRm2e4j82x79Lwhpju9k3gz1Uzi9Y4s4ibhwv_bhCnX/exec";
+
+let allLogs = [];
+let dayOffs = [];
+let chartInstance = null;
+
+// ==========================================
+// 1. ฟังก์ชันตัวช่วยคำนวณวันและสัปดาห์ (ISO Week)
+// ==========================================
+function getISOWeekString(dateStr) {
+    const d = new Date(dateStr);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+    const week1 = new Date(d.getFullYear(), 0, 4);
+    const weekNumber = 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+    return `${d.getFullYear()}-W${String(weekNumber).padStart(2, '0')}`;
+}
+
+function getDateOfISOWeek(w, y) {
+    const simple = new Date(y, 0, 1 + (w - 1) * 7);
+    const dow = simple.getDay();
+    const ISOweekStart = simple;
+    if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+    else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+    return ISOweekStart;
+}
+
+function getPrevPeriodStr(mode, pStr) {
+    if(mode === 'daily') {
+        let d = new Date(pStr); d.setDate(d.getDate() - 1);
+        return d.toISOString().split('T')[0];
+    } else if (mode === 'weekly') {
+        let [y, w] = pStr.split('-W');
+        let d = getDateOfISOWeek(Number(w), Number(y));
+        d.setDate(d.getDate() - 7); 
+        return getISOWeekString(d);
+    } else if (mode === 'monthly') {
+        let [y, m] = pStr.split('-');
+        let d = new Date(y, Number(m) - 2, 1);
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    } else if (mode === 'yearly') {
+        return String(Number(pStr) - 1);
+    }
+}
+
+// ==========================================
+// 2. โหลดข้อมูลเมื่อเปิดหน้าเว็บ
+// ==========================================
+window.onload = async () => {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    
+    document.getElementById('input-daily').value = todayStr;
+    document.getElementById('input-weekly').value = getISOWeekString(todayStr);
+    document.getElementById('input-monthly').value = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0');
+    document.getElementById('input-yearly').value = today.getFullYear();
+
+    try {
+        const res = await fetch(`${WEB_APP_URL}?action=getReportData`);
+        const data = await res.json();
+        
+        allLogs = data.logs.map(log => ({ ...log, weekStr: getISOWeekString(log.dateStr) }));
+        dayOffs = data.holidays; 
+        
+        document.getElementById('loading-div').style.display = 'none';
+        document.getElementById('main-content').style.display = 'block';
+        
+        processData(); 
+    } catch (e) { alert('โหลดข้อมูลล้มเหลว กรุณารีเฟรช'); }
+};
+
+// ==========================================
+// 3. จัดการ UI เปลี่ยนโหมด
+// ==========================================
+document.querySelectorAll('input[name="mode"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+        const mode = e.target.value;
+        document.getElementById('input-daily').style.display = mode === 'daily' ? 'block' : 'none';
+        document.getElementById('input-weekly').style.display = mode === 'weekly' ? 'block' : 'none';
+        document.getElementById('input-monthly').style.display = mode === 'monthly' ? 'block' : 'none';
+        document.getElementById('input-yearly').style.display = mode === 'yearly' ? 'block' : 'none';
+        processData();
+    });
+});
+
+document.getElementById('input-daily').addEventListener('change', processData);
+document.getElementById('input-weekly').addEventListener('change', processData);
+document.getElementById('input-monthly').addEventListener('change', processData);
+document.getElementById('input-yearly').addEventListener('input', processData);
+
+// ==========================================
+// 4. ฟังก์ชันหลัก: ดึงข้อมูลและคำนวณ
+// ==========================================
+function getWorkingDays(mode, pStr) {
+    let startDate, endDate;
+    if (mode === 'daily') {
+        startDate = new Date(pStr); endDate = new Date(pStr);
+    } else if (mode === 'weekly') {
+        let [y, w] = pStr.split('-W');
+        startDate = getDateOfISOWeek(Number(w), Number(y));
+        endDate = new Date(startDate); endDate.setDate(startDate.getDate() + 6);
+    } else if (mode === 'monthly') {
+        let [y, m] = pStr.split('-');
+        startDate = new Date(y, Number(m) - 1, 1); endDate = new Date(y, Number(m), 0);
+    } else if (mode === 'yearly') {
+        startDate = new Date(pStr, 0, 1); endDate = new Date(pStr, 11, 31);
+    }
+    
+    let count = 0; let cur = new Date(startDate);
+    while(cur <= endDate) {
+        let dow = cur.getDay();
+        let checkStr = cur.getFullYear() + "-" + String(cur.getMonth() + 1).padStart(2, '0') + "-" + String(cur.getDate()).padStart(2, '0');
+        if (dow !== 0 && !dayOffs.includes(checkStr)) count++; 
+        cur.setDate(cur.getDate() + 1);
+    }
+    return count;
+}
+
+function getPeriodStats(mode, pStr) {
+    let filtered = [];
+    if (mode === 'daily') filtered = allLogs.filter(l => l.dateStr === pStr);
+    else if (mode === 'weekly') filtered = allLogs.filter(l => l.weekStr === pStr);
+    else if (mode === 'monthly') filtered = allLogs.filter(l => l.dateStr.startsWith(pStr));
+    else if (mode === 'yearly') filtered = allLogs.filter(l => l.dateStr.startsWith(pStr));
+    
+    let wDays = getWorkingDays(mode, pStr);
+    if(wDays === 0) wDays = 1; 
+
+    let stats = {}; let totalSqm = 0;
+    
+    filtered.forEach(log => {
+        if (!stats[log.gardener_name]) {
+            stats[log.gardener_name] = { sqm: 0, zones: new Set(), tasks: new Set() };
+        }
+        stats[log.gardener_name].sqm += log.sqm;
+        stats[log.gardener_name].zones.add(log.zone_name);
+        
+        let taskParts = (log.task_type || "").split('+').map(t => t.trim());
+        taskParts.forEach(t => { if(t) stats[log.gardener_name].tasks.add(t); });
+        
+        totalSqm += log.sqm;
+    });
+    
+    let resultArr = Object.keys(stats).map(name => ({
+        name: name, 
+        total_sqm: stats[name].sqm, 
+        avg_per_day: stats[name].sqm / wDays,
+        zones: Array.from(stats[name].zones).join(', '),
+        tasks: Array.from(stats[name].tasks).join(', ') 
+    })).sort((a,b) => b.total_sqm - a.total_sqm);
+    
+    return {
+        totalSqm: totalSqm,
+        teamAvgPerDay: totalSqm / wDays, 
+        wDays: getWorkingDays(mode, pStr), 
+        workerStats: resultArr
+    };
+}
+
+// ==========================================
+// 5. คำนวณและวาดหน้าจอ (Render)
+// ==========================================
+function processData() {
+    const mode = document.querySelector('input[name="mode"]:checked').value;
+    const currentPeriodStr = document.getElementById(`input-${mode}`).value;
+    const prevPeriodStr = getPrevPeriodStr(mode, currentPeriodStr);
+
+    const currentStats = getPeriodStats(mode, currentPeriodStr);
+    const prevStats = getPeriodStats(mode, prevPeriodStr);
+
+    document.getElementById('kpi-working-days').innerText = currentStats.wDays + " วัน";
+    document.getElementById('kpi-total-sqm').innerText = currentStats.totalSqm.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('kpi-avg-sqm').innerText = currentStats.teamAvgPerDay.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('kpi-best-worker').innerText = currentStats.workerStats.length > 0 ? currentStats.workerStats[0].name : "-";
+
+    renderTrend(currentStats.totalSqm, prevStats.totalSqm, 'trend-total', mode);
+    renderTrend(currentStats.teamAvgPerDay, prevStats.teamAvgPerDay, 'trend-avg', mode);
+
+    updateTableAndChart(currentStats.workerStats);
+}
+
+function renderTrend(currentVal, prevVal, elementId, mode) {
+    const el = document.getElementById(elementId);
+    let periodName = mode === 'daily' ? 'วัน' : mode === 'weekly' ? 'สัปดาห์' : mode === 'monthly' ? 'เดือน' : 'ปี';
+    
+    if (prevVal === 0 && currentVal > 0) {
+        el.innerHTML = `<span style="color:#2ecc71; font-size:12px; font-weight:bold;">▲ +100%</span> <span style="font-size:11px; color:#888;">จาก${periodName}ก่อน</span>`;
+        return;
+    } else if (prevVal === 0 && currentVal === 0) {
+        el.innerHTML = `<span style="color:#aaa; font-size:12px;">(ไม่มีข้อมูลก่อนหน้า)</span>`;
+        return;
+    }
+    
+    const diff = currentVal - prevVal;
+    const pct = (diff / prevVal) * 100;
+    
+    let color = '#aaa'; let icon = '-';
+    if (pct > 0) { color = '#2ecc71'; icon = '▲'; }
+    else if (pct < 0) { color = '#e74c3c'; icon = '▼'; }
+    
+    el.innerHTML = `<span style="color:${color}; font-size:13px; font-weight:bold;">${icon} ${Math.abs(pct).toFixed(1)}%</span> <span style="font-size:11px; color:#888;">จาก${periodName}ก่อน</span>`;
+}
+
+// ==========================================
+// 6. วาดตารางและกราฟ
+// ==========================================
+function updateTableAndChart(dataArr) {
+    const tbody = document.getElementById('table-body');
+    if (dataArr.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#999; padding:30px;">ไม่มีผลการปฏิบัติงานในช่วงเวลานี้</td></tr>';
+    } else {
+        tbody.innerHTML = dataArr.map(d => `
+            <tr>
+                <td style="font-weight: 500; color: #1677FF;">${d.name}</td>
+                <td style="font-size: 13px; color: #666; line-height: 1.4;">${d.tasks || "-"}</td>
+                <td style="font-size: 13px; color: #666; line-height: 1.4;">${d.zones}</td>
+                <td style="text-align: right;">${d.total_sqm.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td style="text-align: right; color: #2ecc71; font-weight: bold;">${d.avg_per_day.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+            </tr>
+        `).join('');
+    }
+
+    const labels = dataArr.map(d => d.name);
+    const chartData = dataArr.map(d => d.avg_per_day); 
+
+    if (chartInstance) { chartInstance.destroy(); } 
+
+    const ctx = document.getElementById('perfChart').getContext('2d');
+    chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'ประสิทธิภาพเฉลี่ย (ตร.ม. / วัน)',
+                data: chartData,
+                backgroundColor: 'rgba(22, 119, 255, 0.7)',
+                borderColor: '#1677FF',
+                borderWidth: 1,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            indexAxis: 'y', 
+            scales: { x: { beginAtZero: true } },
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+</script>
+</body>
+</html>
