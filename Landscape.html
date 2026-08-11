@@ -103,6 +103,11 @@
 <div id="map"></div>
 
 <div class="fab-container" id="fab-box">
+    <!-- 🟢 เพิ่มปุ่ม Dashboard ตรงนี้ (อยู่บนปุ่มล็อคอิน) -->
+    <button class="fab" id="dashboard-btn" title="แดชบอร์ดสถิติ" style="color: #9b59b6;" onclick="window.open('https://ssi-building.github.io/BUS-Apps/Landscape-Dashboard.html', '_blank')">
+        <i class="fas fa-chart-pie"></i>
+    </button>
+    
     <button class="fab" id="login-open-btn" title="ระบบสมาชิกพนักงาน"><i class="fas fa-user-lock" id="login-icon"></i></button>
     <button class="fab fab-toggle-view" id="view-mode-btn" title="สลับมุมมองสี"><i class="fas fa-layer-group"></i><span class="badge" id="view-badge">ทีม</span></button>
     <button class="fab fab-table" id="table-open-btn" title="ตารางข้อมูล"><i class="fas fa-list-ul"></i></button>
@@ -369,7 +374,75 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzZ9MH7fONCkaqgmqWL
 const LIFF_ID = "2007956727-tmpCUfRZ";
 
 // โหมดทดสอบ (VIP เสมอ)
-let currentUserRole = 'VIP'; let currentUserName = 'แอดมิน (โหมดทดสอบ)'; let currentUserPos = 'นักพัฒนา';
+//let currentUserRole = 'VIP'; let currentUserName = 'แอดมิน (โหมดทดสอบ)'; let currentUserPos = 'นักพัฒนา';
+let currentUserRole = ''; 
+let currentUserName = ''; 
+let currentUserPos = '';
+let currentLineId = '';
+
+// 🟢 โหมดใช้งานจริง: เริ่มต้นระบบ LINE LIFF ทันทีที่เปิดเว็บ
+async function initLIFF() {
+    try {
+        await liff.init({ liffId: LIFF_ID });
+        if (liff.isLoggedIn()) {
+            const profile = await liff.getProfile();
+            currentLineId = profile.userId;
+            checkLogin(currentLineId, false); // แอบเช็คสิทธิ์เงียบๆ เบื้องหลัง
+        }
+    } catch (e) {
+        console.error("LIFF Init Failed", e);
+    }
+}
+initLIFF(); // สั่งให้ทำงานทันที
+
+async function checkLogin(lineId, showSheet = true) {
+    if (showSheet) {
+        document.getElementById('login-state-connecting').style.display = 'block';
+        document.getElementById('login-state-profile').style.display = 'none';
+        document.getElementById('login-state-register').style.display = 'none';
+    }
+    
+    try {
+        const res = await sendData({ action: "liffLoginCheck", line_user_id: lineId }, false);
+        if (res && res.status === "success") {
+            currentUserRole = res.role;
+            currentUserName = res.name;
+            currentUserPos = res.position;
+            
+            document.getElementById('user-info-display').innerHTML = `👋 สวัสดีครับ <b>คุณ ${currentUserName}</b><br>💼 ตำแหน่ง: ${currentUserPos || 'ไม่ระบุ'}<br>🔐 สิทธิ์การใช้งาน: <span style="color:#1677FF;font-weight:700;">${currentUserRole}</span>`;
+            
+            if (showSheet) {
+                document.getElementById('login-state-connecting').style.display = 'none';
+                document.getElementById('login-state-profile').style.display = 'block';
+            }
+            
+            // เปิดปุ่มแผนที่ตามสิทธิ์ (VIP วาดแผนที่ได้ / User ทำได้แค่อ่าน)
+            const drawCtrl = document.querySelector('.mapboxgl-ctrl-top-right');
+            if (currentUserRole === 'VIP') { 
+                if(drawCtrl) drawCtrl.style.display = 'block'; 
+                document.getElementById('login-open-btn').classList.add('logged-in'); 
+                document.getElementById('login-icon').className = 'fas fa-user-check'; 
+            } else { 
+                if(drawCtrl) drawCtrl.style.display = 'none'; 
+                document.getElementById('login-open-btn').classList.add('logged-in'); 
+                document.getElementById('login-icon').className = 'fas fa-user-tie'; 
+            }
+            
+            // โหลดตารางใหม่เพื่อให้ปุ่มปากกาปรากฏตามสิทธิ์ (VIP)
+            renderTable();
+            
+        } else {
+            // ไม่เจอข้อมูล แปลว่ายังไม่เคยลงทะเบียน
+            if (showSheet) {
+                document.getElementById('login-state-connecting').style.display = 'none';
+                document.getElementById('login-state-register').style.display = 'block';
+                document.getElementById('reg-line-id').value = lineId;
+            }
+        }
+    } catch(e) {
+        if (showSheet) alert("ตรวจสอบสิทธิ์ล้มเหลว");
+    }
+}
 
 const targetLngLat = [99.535692, 11.231666];
 const map = new maplibregl.Map({
@@ -558,11 +631,55 @@ document.getElementById('login-close-btn').onclick = () => { loginSheet.style.di
 document.getElementById('setup-close-btn').onclick = () => { setupSheet.style.display = 'none'; document.getElementById('fab-box').classList.remove('fab-hidden'); };
 document.getElementById('worker-close-btn').onclick = () => { workerSheet.style.display = 'none'; };
 
+// 1. ปุ่มเปิดหน้าต่าง Login
 document.getElementById('login-open-btn').onclick = () => {
     tableSheet.style.display = 'none'; formSheet.style.display = 'none'; setupSheet.style.display = 'none'; workerSheet.style.display = 'none'; document.getElementById('fab-box').classList.add('fab-hidden');
-    document.getElementById('login-state-connecting').style.display = 'none'; document.getElementById('login-state-register').style.display = 'none'; document.getElementById('login-state-profile').style.display = 'block';
-    document.getElementById('user-info-display').innerHTML = `👋 สวัสดีครับ <b>คุณ ${currentUserName}</b><br>💼 ตำแหน่ง: ${currentUserPos || 'ไม่ระบุ'}<br>🔐 สิทธิ์การใช้งาน: <span style="color:#1677FF;font-weight:700;">${currentUserRole}</span>`;
     loginSheet.style.display = 'flex';
+    loadSavedHeight(loginSheet, 'auto');
+
+    if (!liff.isLoggedIn()) {
+        liff.login(); // ยังไม่ล็อกอินไลน์ ให้เด้งหน้าล็อกอิน
+    } else {
+        if (currentUserName) {
+            // เคยล็อกอินและดึงข้อมูลโปรไฟล์สำเร็จแล้ว โชว์ได้เลย
+            document.getElementById('login-state-connecting').style.display = 'none';
+            document.getElementById('login-state-register').style.display = 'none';
+            document.getElementById('login-state-profile').style.display = 'block';
+        } else {
+            // กำลังโหลด หรือยังไม่มีข้อมูล ดึงให้ใหม่
+            checkLogin(currentLineId, true);
+        }
+    }
+};
+
+// 2. ปุ่มสมัครสมาชิก
+document.getElementById('btn-submit-register').onclick = async () => {
+    const empId = document.getElementById('reg-emp-id').value;
+    const name = document.getElementById('reg-emp-name').value;
+    const pos = document.getElementById('reg-emp-pos').value;
+    const lineId = document.getElementById('reg-line-id').value;
+
+    if(!empId || !name) { alert("กรุณากรอกรหัสและชื่อให้ครบถ้วน"); return; }
+    
+    document.getElementById('btn-submit-register').innerText = "กำลังบันทึก...";
+    
+    const res = await sendData({ action: "registerEmployee", emp_id: empId, name: name, position: pos, line_user_id: lineId }, false);
+
+    if(res && res.status === "success") {
+        alert("ลงทะเบียนสำเร็จ! กรุณารอแอดมินอนุมัติสิทธิ์ในระบบ (เปลี่ยน User เป็น VIP) แล้วเปิดแอปใหม่อีกครั้ง");
+        window.location.reload();
+    } else {
+        alert("ลงทะเบียนไม่สำเร็จ");
+        document.getElementById('btn-submit-register').innerText = "บันทึกการลงทะเบียน";
+    }
+};
+
+// 3. ปุ่มออกจากระบบ
+document.getElementById('btn-logout').onclick = () => {
+    if(liff.isLoggedIn()) {
+        liff.logout();
+        window.location.reload();
+    }
 };
 
 // ========================================================
@@ -928,17 +1045,7 @@ async function fetchWithRetry(url, retries = 3, delay = 2000) { for (let i = 0; 
 
 map.on('load', async () => {
     const drawCtrl = document.querySelector('.mapboxgl-ctrl-top-right');
-    if (currentUserRole === 'VIP') { 
-        if(drawCtrl) drawCtrl.style.display = 'block'; 
-        document.getElementById('login-open-btn').classList.add('logged-in'); 
-        document.getElementById('login-icon').className = 'fas fa-user-check'; 
-    } else { 
-        if(drawCtrl) drawCtrl.style.display = 'none'; 
-        if(currentUserRole === 'User') { 
-            document.getElementById('login-open-btn').classList.add('logged-in'); 
-            document.getElementById('login-icon').className = 'fas fa-user-tie'; 
-        } 
-    }
+    if(drawCtrl) drawCtrl.style.display = 'none'; // 🟢 ซ่อนไว้ก่อนจนกว่าจะล็อกอิน LIFF ผ่าน
     
     try {
         const zones = await fetchWithRetry(`${WEB_APP_URL}?action=getZones`);
