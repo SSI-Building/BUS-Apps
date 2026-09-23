@@ -49,12 +49,12 @@
     .btn-close-sheet { background: #F0F2F5; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 22px; color: #666; cursor: pointer; }
     .sheet-content-wrapper { overflow-y: auto; padding: 12px 24px 24px 24px; flex: 1; }
     
-    #data-table { width: 100%; border-collapse: collapse; font-size: 15px; }
-    #data-table th { padding: 12px 10px; text-align: left; background: #fff; color: #888; border-bottom: 2px solid #f9f9f9; position: sticky; top: -12px; z-index: 10; }
-    #data-table td { padding: 15px 10px; border-bottom: 1px solid #f1f1f1; color: #333; cursor: pointer; }
-    #data-table tr { transition: .2s; cursor: pointer; }
-    #data-table tr:not(.selected-row):active { background: #f7fafc; }
-    #data-table tr.selected-row { background: #EAF3FF !important; border-left: 5px solid #1677FF; }
+    #data-table, #tool-data-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+    #data-table th, #tool-data-table th { padding: 12px 10px; text-align: left; background: #fff; color: #888; border-bottom: 2px solid #f9f9f9; position: sticky; top: -12px; z-index: 10; }
+    #data-table td, #tool-data-table td { padding: 15px 10px; border-bottom: 1px solid #f1f1f1; color: #333; cursor: pointer; }
+    #data-table tr, #tool-data-table tr { transition: .2s; cursor: pointer; }
+    #data-table tr:not(.selected-row):active, #tool-data-table tr:not(.selected-row):active { background: #f7fafc; }
+    #data-table tr.selected-row, #tool-data-table tr.selected-row { background: #EAF3FF !important; border-left: 5px solid #1677FF; }
     .color-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
     .btn-table-report { background: #EAF3FF; border: none; color: #1677FF; font-size: 16px; cursor: pointer; padding: 8px 12px; border-radius: 10px; transition: .2s; }
     .btn-table-report:active { transform: scale(0.9); background: #1677FF; color: white; }
@@ -104,6 +104,11 @@
 
 <div class="fab-container" id="fab-box">
     <!-- 🟢 เพิ่มปุ่ม Dashboard ตรงนี้ (อยู่บนปุ่มล็อคอิน) -->
+    <!-- ปุ่มตารางเครื่องมือ -->
+    <button class="fab" id="tool-table-btn" title="ตารางเครื่องมือตัดหญ้า" style="color: #e67e22;" onclick="openToolTableSheet()">
+        <i class="fas fa-toolbox"></i>
+    </button>
+
     <button class="fab" id="dashboard-btn" title="แดชบอร์ดสถิติ" style="color: #9b59b6;" onclick="window.open('https://ssi-building.github.io/BUS-Apps/Landscape-Dashboard.html', '_blank')">
         <i class="fas fa-chart-pie"></i>
     </button>
@@ -359,10 +364,69 @@
     </div>
 </div>
 
+<!-- ================= Tool Table Sheet ================= -->
+<div id="tool-table-sheet" class="mobile-bottom-sheet">
+    <div class="sheet-handle" id="tool-table-drag-handle"><div class="sheet-line"></div></div>
+    <div class="sheet-header">
+        <span class="sheet-title"><i class="fas fa-toolbox" style="color:#e67e22;"></i> ตารางเครื่องมือ</span>
+        <button id="tool-table-close-btn" class="btn-close-sheet">&times;</button>
+    </div>
+    <div class="sheet-content-wrapper">
+        <table id="tool-data-table">
+            <thead>
+                <tr>
+                    <th>เครื่องมือ</th>
+                    <th>สภาพ</th>
+                    <th style="text-align: right;">จัดการ</th>
+                </tr>
+            </thead>
+            <tbody id="tool-table-tbody">
+                <tr><td colspan="3" style="text-align:center; color:#999; padding:20px;">กำลังโหลด...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ================= Tool Edit Sheet ================= -->
+<div id="tool-edit-sheet" class="mobile-bottom-sheet" style="height: auto; z-index: 1050;">
+    <div class="sheet-handle" id="tool-edit-drag-handle"><div class="sheet-line"></div></div>
+    <div class="sheet-header">
+        <span class="sheet-title" id="tool-edit-title">อัปเดตเครื่องมือ</span>
+        <button id="tool-edit-close-btn" class="btn-close-sheet">&times;</button>
+    </div>
+    <div class="sheet-content-wrapper">
+        <div class="mobile-report-form">
+            <input type="hidden" id="edit-tool-name">
+            <div class="form-group">
+                <label>สภาพเครื่องมือ <span style="color:red;">*</span></label>
+                <select id="edit-tool-condition">
+                    <option value="พร้อมใช้งาน">พร้อมใช้งาน</option>
+                    <option value="ชำรุด">ชำรุด</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>รายละเอียดปัญหา</label>
+                <input type="text" id="edit-tool-problem" placeholder="เช่น สตาร์ทไม่ติด, ใบมีดบิ่น">
+            </div>
+            <div class="form-group">
+                <label>รายการอะไหล่ที่ต้องซื้อ</label>
+                <input type="text" id="edit-tool-parts" placeholder="เช่น หัวเทียน, น้ำมันเครื่อง">
+            </div>
+            <div class="form-group">
+                <label>วันที่พบปัญหา</label>
+                <input type="date" id="edit-tool-date">
+            </div>
+            <button class="btn-update-main" id="btn-save-tool-edit" style="background:#e67e22;" onclick="saveToolEdit()">บันทึกอัปเดตเครื่องมือ</button>
+        </div>
+    </div>
+</div>
+
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
 <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+
+
 
 <script>
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzZ9MH7fONCkaqgmqWLOM8yAoRm2e4j82x79Lwhpju9k3gz1Uzi9Y4s4ibhwv_bhCnX/exec";
@@ -477,6 +541,7 @@ let currentFeature = null; let editingZoneId = null; let totalZonesCount = 0;
 let globalZonesArray = []; let viewMode = 'team'; let selectedZone = null; let isBusy = false;
 let globalGardeners = []; 
 let globalTools = []; // 🟢 1. เพิ่มตัวแปรเก็บรายการเครื่องมือ
+let globalToolDetails = []; // เก็บข้อมูลเครื่องมือแบบละเอียด
 let currentWorkerSelectType = ''; 
 
 // 🟢 2. สร้างฟังก์ชันวาดปุ่มเครื่องมือ
@@ -511,6 +576,7 @@ function renderToolChips() {
 fetchWithRetry(`${WEB_APP_URL}?action=getMasterData`).then(res => {
     globalGardeners = res.gardeners || [];
     globalTools = res.tools || []; // เก็บข้อมูลเครื่องมือ
+    globalToolDetails = res.toolDetails || [];
     renderWorkerSelectionList();
     renderToolChips(); // สั่งวาดปุ่มเครื่องมือ
 }).catch(e => console.log(e));
@@ -529,6 +595,8 @@ function hideLoading() {
 // ดึงข้อมูลรายชื่อมาเก็บไว้ทันทีตอนเปิดแอป
 fetchWithRetry(`${WEB_APP_URL}?action=getMasterData`).then(res => {
     globalGardeners = res.gardeners || [];
+    globalToolDetails = res.toolDetails || [];
+    
     renderWorkerSelectionList();
 }).catch(e => console.log(e));
 
@@ -644,6 +712,15 @@ const loginSheet = document.getElementById('login-sheet');
 const setupSheet = document.getElementById('setup-sheet');
 const workerSheet = document.getElementById('worker-sheet');
 
+const toolTableSheet = document.getElementById('tool-table-sheet');
+const toolEditSheet = document.getElementById('tool-edit-sheet');
+
+setupDragLogic(toolTableSheet, document.getElementById('tool-table-drag-handle'));
+setupDragLogic(toolEditSheet, document.getElementById('tool-edit-drag-handle'));
+
+document.getElementById('tool-table-close-btn').onclick = () => { toolTableSheet.style.display = 'none'; document.getElementById('fab-box').classList.remove('fab-hidden'); };
+document.getElementById('tool-edit-close-btn').onclick = () => { toolEditSheet.style.display = 'none'; };
+
 setupDragLogic(tableSheet, document.getElementById('table-drag-handle'));
 setupDragLogic(formSheet, document.getElementById('form-drag-handle'));
 setupDragLogic(loginSheet, document.getElementById('login-drag-handle'));
@@ -722,6 +799,7 @@ async function refreshMasterList() {
         const res = await fetchWithRetry(`${WEB_APP_URL}?action=getMasterData`);
         globalGardeners = res.gardeners || [];
         globalTools = res.tools || []; // 🟢 อัปเดตตัวแปรเครื่องมือ
+        globalToolDetails = res.toolDetails || [];
         
         renderList('list-gardener', res.gardeners, 'gardener');
         renderList('list-tool', res.tools, 'Tool');
@@ -1079,6 +1157,108 @@ map.getCanvas().addEventListener("pointerdown", function(e) { pointerStartX = e.
 map.getCanvas().addEventListener("pointerup", function(e) { if (isBusy || editingZoneId) return; const moveDistanceX = Math.abs(e.clientX - pointerStartX); const moveDistanceY = Math.abs(e.clientY - pointerStartY); if (moveDistanceX > 6 || moveDistanceY > 6) return; if (draw.getMode() === 'simple_select' || draw.getMode() === 'direct_select') { const rect = map.getCanvas().getBoundingClientRect(); const point = [e.clientX - rect.left, e.clientY - rect.top]; handlePolygonClick(map.unproject(point)); } });
 async function fetchWithRetry(url, retries = 3, delay = 2000) { for (let i = 0; i < retries; i++) { try { const response = await fetch(url); if (!response.ok) throw new Error("การตอบรับเน็ตมีปัญหา"); return await response.json(); } catch (err) { if (i === retries - 1) throw err; await new Promise(res => setTimeout(res, delay)); } } }
 
+// ========================================================
+// ฟังก์ชันของตารางเครื่องมือ
+// ========================================================
+function openToolTableSheet() {
+    // ปิดหน้าต่างอื่นที่อาจจะเปิดอยู่
+    tableSheet.style.display = 'none'; formSheet.style.display = 'none'; loginSheet.style.display = 'none'; setupSheet.style.display = 'none'; workerSheet.style.display = 'none';
+    
+    renderToolTable();
+    toolTableSheet.style.display = 'flex'; 
+    loadSavedHeight(toolTableSheet, '52vh');
+    document.getElementById('fab-box').classList.add('fab-hidden');
+}
+
+function renderToolTable() {
+    const tbody = document.getElementById('tool-table-tbody');
+    if (globalToolDetails.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999; padding:20px;">ไม่พบข้อมูลเครื่องมือ</td></tr>';
+        return;
+    }
+    
+        tbody.innerHTML = globalToolDetails.map((t, index) => {
+        let conditionColor = t.condition === 'ชำรุด' ? '#e74c3c' : '#2ecc71';
+        
+        // 🟢 สร้างตัวแปรดักไว้ ถ้าเป็น "พร้อมใช้งาน" ให้แสดงแค่ "พร้อม"
+        let displayCondition = t.condition === 'พร้อมใช้งาน' ? 'พร้อม' : t.condition;
+        
+        // 🟢 เปลี่ยนจาก t.condition มาใช้ displayCondition แทน
+        let conditionText = `<span style="color:${conditionColor}; font-weight:bold; font-size:13px;"><i class="fas fa-circle" style="font-size:10px;"></i> ${displayCondition}</span>`;
+        
+        // ถ้าชำรุด ให้แทรกปุ่ม (ไอคอนสีฟ้า) ต่อท้ายข้อความเลย
+        if (t.condition === 'ชำรุด') {
+            conditionText += ` <button style="background:none; border:none; color:#3498db; cursor:pointer; padding:0 0 0 6px; font-size:16px; vertical-align:middle;" onclick="viewToolDetails(${index})" title="ดูรายละเอียด"><i class="fas fa-info-circle"></i></button>`;
+        }
+
+        return `
+            <tr>
+                <td>${t.name}</td>
+                <td>${conditionText}</td>
+                <td style="text-align:right;">
+                    <button class="btn-table-report" style="background:#fff3e0; color:#e67e22;" onclick="openToolEditSheet(${index})"><i class="fas fa-edit"></i></button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function openToolEditSheet(index) {
+    const tool = globalToolDetails[index];
+    document.getElementById('tool-edit-title').innerText = `อัปเดต: ${tool.name}`;
+    document.getElementById('edit-tool-name').value = tool.name;
+    document.getElementById('edit-tool-condition').value = tool.condition;
+    document.getElementById('edit-tool-problem').value = tool.problem;
+    document.getElementById('edit-tool-parts').value = tool.parts;
+    
+    // แปลงวันที่ให้อยู่ในฟอร์แมต YYYY-MM-DD เพื่อแสดงใน input type="date"
+    let formattedDate = "";
+    if (tool.date) {
+        let d = new Date(tool.date);
+        if (!isNaN(d)) formattedDate = d.toISOString().split('T')[0];
+    }
+    document.getElementById('edit-tool-date').value = formattedDate;
+
+    toolEditSheet.style.display = 'flex';
+    loadSavedHeight(toolEditSheet, 'auto');
+}
+
+async function saveToolEdit() {
+    const toolName = document.getElementById('edit-tool-name').value;
+    const condition = document.getElementById('edit-tool-condition').value;
+    const problem = document.getElementById('edit-tool-problem').value;
+    const parts = document.getElementById('edit-tool-parts').value;
+    const date = document.getElementById('edit-tool-date').value;
+
+    const btn = document.getElementById('btn-save-tool-edit');
+    btn.disabled = true; btn.innerText = "กำลังบันทึก...";
+    showLoading("กำลังอัปเดตข้อมูลเครื่องมือ...");
+
+    const res = await sendData({
+        action: "updateTool",
+        toolName: toolName,
+        condition: condition,
+        problem: problem,
+        parts: parts,
+        date: date
+    }, false); // ส่ง false เพื่อไม่ให้รีเฟรชหน้าเว็บทั้งหน้า
+
+    if (res && res.status === "success") {
+        alert("บันทึกข้อมูลเครื่องมือสำเร็จ");
+        toolEditSheet.style.display = 'none';
+        
+        // โหลดข้อมูลใหม่เพื่ออัปเดตตาราง
+        const fetchRes = await fetchWithRetry(`${WEB_APP_URL}?action=getMasterData`);
+        globalToolDetails = fetchRes.toolDetails || [];
+        renderToolTable();
+        hideLoading();
+    } else {
+        alert("เกิดข้อผิดพลาดในการบันทึก");
+        hideLoading();
+    }
+    btn.disabled = false; btn.innerText = "บันทึกอัปเดตเครื่องมือ";
+}
+
 map.on('load', async () => {
     const drawCtrl = document.querySelector('.mapboxgl-ctrl-top-right');
     if(drawCtrl) drawCtrl.style.display = 'none'; // 🟢 ซ่อนไว้ก่อนจนกว่าจะล็อกอิน LIFF ผ่าน
@@ -1103,6 +1283,28 @@ map.on('load', async () => {
         alert("ไม่สามารถติดต่อเซิร์ฟเวอร์ได้ กรุณารีเฟรชใหม่อีกครั้งครับ"); 
     }
 });
+
+window.viewToolDetails = function(index) {
+    const t = globalToolDetails[index];
+    
+    // จัดรูปแบบวันที่ให้เป็นภาษาไทยอ่านง่าย
+    let formattedDate = t.date || "ไม่ระบุ";
+    if (t.date) {
+        let d = new Date(t.date);
+        if (!isNaN(d)) {
+            formattedDate = d.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+    }
+
+    // สร้างข้อความที่จะแสดง
+    let msg = `🛠️ ข้อมูลเครื่องมือ: ${t.name}\n`;
+    msg += `------------------------------------\n`;
+    msg += `⚠️ รายละเอียดปัญหา: ${t.problem || 'ไม่ได้ระบุไว้'}\n`;
+    msg += `⚙️ อะไหล่ที่ต้องซื้อ: ${t.parts || 'ไม่ได้ระบุไว้'}\n`;
+    msg += `📅 วันที่พบปัญหา: ${formattedDate}\n`;
+    
+    alert(msg); // แสดงข้อความผ่านกล่องเด้งของเบราว์เซอร์
+};
 </script>
 </body>
 </html>
