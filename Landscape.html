@@ -1223,6 +1223,15 @@ function openToolEditSheet(index) {
     loadSavedHeight(toolEditSheet, 'auto');
 }
 
+// ดักจับเวลาเปลี่ยน Dropdown สภาพเครื่องมือ
+document.getElementById('edit-tool-condition').addEventListener('change', function(e) {
+    if (e.target.value === 'พร้อมใช้งาน') {
+        document.getElementById('edit-tool-problem').value = '';
+        document.getElementById('edit-tool-parts').value = '';
+        document.getElementById('edit-tool-date').value = '';
+    }
+});
+
 async function saveToolEdit() {
     const toolName = document.getElementById('edit-tool-name').value;
     const condition = document.getElementById('edit-tool-condition').value;
