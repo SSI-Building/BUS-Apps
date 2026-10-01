@@ -1,765 +1,315 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>Smart Team Builder</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-  
-  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-
-  <style>
-    body { background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%); font-family: 'Prompt', sans-serif; min-height: 100vh; padding-bottom: 50px; }
-    .app-header { background: #ffffff; padding: 15px 0; box-shadow: 0 2px 15px rgba(0,0,0,0.05); border-bottom: 3px solid #3b82f6; margin-bottom: 20px; }
-    .card { border: none; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); background: rgba(255, 255, 255, 0.95); }
-    .btn-custom-primary { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; border-radius: 10px; padding: 12px; font-weight: 500; transition: all 0.3s; }
-    .btn-custom-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3); color: white; }
-    
-    .employee-badge {
-      background-color: #ffffff; border-left: 4px solid #10b981; border-radius: 8px; padding: 10px 15px; margin: 6px; 
-      display: inline-flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #eee;
-      cursor: grab; user-select: none;
-    }
-    .employee-badge:active { cursor: grabbing; }
-    .employee-badge.locked { border-left-color: #ef4444; background-color: #fff5f5; }
-    
-    .lock-btn { background: none; border: none; color: #94a3b8; font-size: 1.1rem; cursor: pointer; padding: 0 5px; transition: 0.2s; }
-    .lock-btn:hover { color: #475569; }
-    .lock-btn.locked { color: #ef4444; }
-
-    .position-text { font-size: 0.85em; color: #6b7280; margin-left: 5px; }
-    .employee-list-box { max-height: 250px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; background-color: #f8fafc; }
-    .emp-check-card { display: flex; align-items: center; padding: 6px 10px; border-radius: 6px; border: 1px solid transparent; transition: 0.2s; cursor: pointer; }
-    .emp-check-card:hover { background: #eef2ff; border-color: #c7d2fe; }
-    .form-check-input { cursor: pointer; transform: scale(1.1); margin-right: 10px; }
-    .filter-box { background-color: #f1f5f9; border-radius: 10px; padding: 12px; }
-    .pos-btn { font-size: 0.8rem; margin-bottom: 4px; }
-    .selected-summary-box { max-height: 120px; overflow-y: auto; background-color: #eef2ff; border-radius: 8px; padding: 8px; border: 1px dashed #a5b4fc; }
-    .small-badge { font-size: 0.75rem; background-color: #c7d2fe; color: #3730a3; padding: 3px 8px; border-radius: 12px; margin: 2px; display: inline-block; }
-    .summary-counter-box { background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 10px; margin-bottom: 15px; }
-    .collapse-toggle-btn { background: none; border: none; font-size: 1.25rem; font-weight: bold; color: #212529; display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0; }
-    .collapse-toggle-btn:focus { outline: none; }
-    .collapse-toggle-btn i { transition: transform 0.3s; }
-    .collapse-toggle-btn.collapsed i { transform: rotate(-90deg); }
-    .sortable-list { min-height: 50px; padding: 5px; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1; }
-    .sortable-ghost { opacity: 0.4; background-color: #e2e8f0; border: 2px dashed #94a3b8; }
-    
-    /* สไตล์กล่อง AI */
-    .ai-box { background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border: 1px solid #ddd6fe; border-radius: 10px; padding: 12px; margin-bottom: 15px; }
-    .btn-ai { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; border: none; }
-    .btn-ai:hover { background: linear-gradient(135deg, #7c3aed, #5b21b6); color: white; }
-
-    /* จัดการสถานะโหลด */
-    .status-box { transition: opacity 0.5s ease; }
-    
-    /* สไตล์ไอคอน Groq และ Version */
-    .footer-info { font-size: 0.75rem; color: #94a3b8; text-align: center; margin-top: 20px; }
-    .ai-badge { font-size: 0.65rem; color: #6d28d9; border: 1px solid #c4b5fd; padding: 2px 6px; border-radius: 4px; background: #ede9fe; float: right; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบวางแผนงานประจำวัน (Drag & Drop)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
 </head>
 <body>
+    <div id="root"></div>
 
-  <div class="app-header text-center">
-    <h3 class="mb-0 text-primary fw-bold"><i class="bi bi-robot me-2"></i>Smart Team Builder</h3>
-  </div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-  <div class="container">
-    <div class="alert alert-info text-center status-box mb-3 shadow-sm" id="loadingStatus" style="border-radius: 10px; font-weight: 500; padding: 10px; font-size: 0.9rem;">
-      <div class="spinner-border spinner-border-sm me-2" role="status"></div>กำลังโหลดข้อมูล...
-    </div>
+        // 🌟 API URL ของคุณ 🌟
+        const API_URL = "https://script.google.com/macros/s/AKfycbwL-PUhAA0TquLsuI6EnmDer9Dvo13xhCz7oIlXdFCzcxf0dFyY_D9GVKDi44gSoP9kpw/exec";
 
-    <!-- แถวที่ 1: กล่องพนักงาน -->
-    <div class="row mb-4">
-      <div class="col-12">
-        <div class="card p-4">
-          <button class="collapse-toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#employeeSection" id="btnToggleEmp">
-            <span><i class="bi bi-person-check text-success me-2"></i>1. รายชื่อพนักงาน<span class="badge bg-success rounded-pill fs-6 ms-2" id="availableCountLabel">0 คน</span></span>
-            <i class="bi bi-chevron-down text-muted"></i>
-          </button>
-          
-          <div class="collapse show mt-3" id="employeeSection">
-            <div class="row g-3">
-              <div class="col-md-5">
-                <div class="input-group">
-                  <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                  <input type="text" class="form-control bg-light border-start-0 ps-0" id="searchInput" placeholder="ค้นหาด้วยชื่อพนักงาน..." oninput="renderEmployeeCheckboxes()">
+        // 🌟 เอาตัวอย่างงานสมชายออก เปลี่ยนเป็นตารางว่างๆ 🌟
+        const initialTasks = [];
+
+        function App() {
+            const [availableEmployees, setAvailableEmployees] = useState([]);
+            const [tasks, setTasks] = useState(initialTasks);
+            const [date, setDate] = useState(new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }));
+            const [isLoading, setIsLoading] = useState(true);
+            const [fetchError, setFetchError] = useState(""); 
+            const [newTaskForm, setNewTaskForm] = useState({ number: '', name: '', owner: '' });
+            const [dragOverTaskId, setDragOverTaskId] = useState(null);
+
+            useEffect(() => { lucide.createIcons(); });
+
+            useEffect(() => {
+                const fetchEmployees = async () => {
+                    try {
+                        setIsLoading(true);
+                        setFetchError("");
+                        
+                        const response = await fetch(`${API_URL}?action=getEmployees&t=${Date.now()}`);
+                        
+                        if (!response.ok) {
+                            throw new Error("การตั้งค่าสิทธิ์ Apps Script ไม่ถูกต้อง (CORS Blocked)");
+                        }
+
+                        const result = await response.json();
+                        
+                        let empList = [];
+                        if (Array.isArray(result)) {
+                            empList = result;
+                        } else if (result.success === false) {
+                            throw new Error(result.message || "เกิดข้อผิดพลาดจากฝั่ง Google Sheets");
+                        } else if (result.data && Array.isArray(result.data)) {
+                            empList = result.data;
+                        }
+
+                        if (empList.length > 0) {
+                            const assignedIds = new Set(tasks.flatMap(t => t.assignees.map(a => a.id)));
+                            const freeEmployees = empList.filter(emp => !assignedIds.has(emp.id));
+                            setAvailableEmployees(freeEmployees);
+                        } else {
+                            setFetchError("ไม่พบรายชื่อพนักงานแผนก Cleaning ในตาราง");
+                        }
+                    } catch (error) {
+                        console.error("ดึงข้อมูลไม่สำเร็จ:", error);
+                        setFetchError(error.message || "เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ");
+                    } finally {
+                        setIsLoading(false);
+                    }
+                };
+
+                fetchEmployees();
+            }, []);
+
+            const handleAddTask = (e) => {
+                e.preventDefault();
+                if (!newTaskForm.number || !newTaskForm.name) return;
+                const newTask = {
+                    id: `task-${Date.now()}`, number: newTaskForm.number,
+                    name: newTaskForm.name, owner: newTaskForm.owner, assignees: []
+                };
+                setTasks([...tasks, newTask]);
+                setNewTaskForm({ number: '', name: '', owner: '' });
+            };
+
+            const handleDeleteTask = (taskId) => {
+                if (confirm('คุณต้องการลบงานนี้ใช่หรือไม่?')) {
+                    const taskToDelete = tasks.find(t => t.id === taskId);
+                    if (taskToDelete && taskToDelete.assignees.length > 0) {
+                        setAvailableEmployees(prev => [...prev, ...taskToDelete.assignees]);
+                    }
+                    setTasks(tasks.filter(t => t.id !== taskId));
+                }
+            };
+
+            const handleDragStart = (e, employee) => {
+                e.dataTransfer.setData('application/json', JSON.stringify(employee));
+                e.dataTransfer.effectAllowed = 'copy';
+            };
+
+            const handleDragOver = (e, taskId) => {
+                e.preventDefault(); 
+                e.dataTransfer.dropEffect = 'copy';
+                if (dragOverTaskId !== taskId) setDragOverTaskId(taskId);
+            };
+
+            const handleDragLeave = (e, taskId) => {
+                e.preventDefault();
+                if (dragOverTaskId === taskId) setDragOverTaskId(null);
+            };
+
+            const handleDrop = (e, taskId) => {
+                e.preventDefault();
+                setDragOverTaskId(null);
+                const employeeDataString = e.dataTransfer.getData('application/json');
+                if (!employeeDataString) return;
+                const employee = JSON.parse(employeeDataString);
+
+                setTasks(prevTasks => prevTasks.map(task => {
+                    if (task.id === taskId) {
+                        const isAlreadyAssigned = task.assignees.some(emp => emp.id === employee.id);
+                        if (!isAlreadyAssigned) return { ...task, assignees: [...task.assignees, employee] };
+                    }
+                    return task;
+                }));
+                setAvailableEmployees(prev => prev.filter(emp => emp.id !== employee.id));
+            };
+
+            const removeAssignee = (taskId, employee) => {
+                setTasks(prevTasks => prevTasks.map(task => {
+                    if (task.id === taskId) {
+                        return { ...task, assignees: task.assignees.filter(emp => emp.id !== employee.id) };
+                    }
+                    return task;
+                }));
+                setAvailableEmployees(prev => [...prev, employee]);
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col">
+                    <header className="bg-white shadow-sm sticky top-0 z-10">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center">
+                            <div className="flex items-center gap-3 mb-4 sm:mb-0">
+                                <div className="bg-blue-600 p-2 rounded-lg shadow-sm">
+                                    <i data-lucide="clipboard-list" className="w-6 h-6 text-white"></i>
+                                </div>
+                                <div>
+                                    <h1 className="text-2xl font-bold text-gray-800 tracking-tight">แผนงานประจำวัน</h1>
+                                    <p className="text-sm text-gray-500">ลากรายชื่อเพื่อมอบหมายงาน</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center bg-gray-50 border border-gray-200 px-4 py-2 rounded-lg shadow-sm">
+                                <i data-lucide="calendar" className="w-5 h-5 text-blue-500 mr-2"></i>
+                                <input 
+                                    type="text" value={date} onChange={(e) => setDate(e.target.value)}
+                                    className="bg-transparent border-none outline-none font-medium text-gray-700 w-32"
+                                />
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex flex-col md:flex-row gap-6 lg:gap-8">
+                        {/* กล่องรายชื่อพนักงาน */}
+                        <div className="w-full md:w-1/3 lg:w-1/4">
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sticky top-24">
+                                <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center border-b border-gray-100 pb-3">
+                                    <i data-lucide="users" className="w-5 h-5 mr-2 text-blue-500"></i>
+                                    รายชื่อพนักงาน
+                                </h2>
+                                
+                                <div className="flex flex-wrap gap-2 max-h-[60vh] overflow-y-auto pb-2 pr-1">
+                                    {isLoading ? (
+                                        <div className="w-full text-center py-8 text-sm text-gray-500 flex flex-col items-center">
+                                            <i data-lucide="loader-2" className="w-8 h-8 animate-spin text-blue-500 mb-3"></i>
+                                            กำลังโหลดข้อมูล...
+                                        </div>
+                                    ) : fetchError ? (
+                                        <div className="w-full text-center py-4 px-2 text-sm text-red-600 bg-red-50 rounded-lg border border-red-100">
+                                            <i data-lucide="alert-circle" className="w-6 h-6 mx-auto mb-2 text-red-500"></i>
+                                            <p className="font-semibold">ข้อผิดพลาด:</p>
+                                            <p>{fetchError}</p>
+                                        </div>
+                                    ) : availableEmployees.length === 0 ? (
+                                        <div className="w-full text-center py-6 text-sm text-green-600 bg-green-50 rounded-lg border border-green-100">
+                                            <i data-lucide="check-circle-2" className="w-6 h-6 mx-auto mb-2 text-green-500"></i>
+                                            มอบหมายงานครบทุกคนแล้ว!
+                                        </div>
+                                    ) : (
+                                        availableEmployees.map(employee => (
+                                            <div
+                                                key={employee.id} draggable
+                                                onDragStart={(e) => handleDragStart(e, employee)}
+                                                className="bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 px-3 py-2.5 rounded-lg cursor-grab active:cursor-grabbing transition-colors flex items-center shadow-sm w-[calc(50%-0.25rem)] lg:w-full group"
+                                            >
+                                                <i data-lucide="grip-vertical" className="w-4 h-4 mr-2 text-blue-400 opacity-50 group-hover:opacity-100"></i>
+                                                <span className="font-medium text-sm truncate">{employee.name}</span>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* กล่องรายการงาน */}
+                        <div className="w-full md:w-2/3 lg:w-3/4 flex flex-col gap-6">
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                                <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center border-b border-gray-100 pb-3">
+                                    <i data-lucide="plus-circle" className="w-5 h-5 mr-2 text-green-500"></i>
+                                    เพิ่มงานใหม่
+                                </h2>
+                                <form onSubmit={handleAddTask} className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+                                    <div className="w-full sm:w-24">
+                                        <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wider">หมายเลข</label>
+                                        <input type="text" required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none transition-all" value={newTaskForm.number} onChange={(e) => setNewTaskForm({...newTaskForm, number: e.target.value})} placeholder="ลำดับ" />
+                                    </div>
+                                    <div className="w-full sm:flex-1">
+                                        <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wider">ชื่องาน</label>
+                                        <input type="text" required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none transition-all" value={newTaskForm.name} onChange={(e) => setNewTaskForm({...newTaskForm, name: e.target.value})} placeholder="รายละเอียดงาน..." />
+                                    </div>
+                                    <div className="w-full sm:w-48">
+                                        <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wider">เจ้าของงาน</label>
+                                        <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none transition-all" value={newTaskForm.owner} onChange={(e) => setNewTaskForm({...newTaskForm, owner: e.target.value})} placeholder="ชื่อ (ไม่บังคับ)" />
+                                    </div>
+                                    <button type="submit" className="w-full sm:w-auto bg-gray-800 hover:bg-gray-900 text-white px-6 py-2 rounded-lg font-medium transition-colors text-sm shadow-md hover:shadow-lg flex justify-center items-center h-[38px]">
+                                        เพิ่มงาน
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div className="space-y-4">
+                                {tasks.map((task) => (
+                                    <div key={task.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden group hover:border-blue-300 transition-colors">
+                                        <div className="flex flex-col sm:flex-row border-b border-gray-100">
+                                            <div className="p-4 sm:p-5 flex-1 flex flex-col justify-center">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex items-start gap-3">
+                                                        <span className="bg-blue-100 text-blue-700 font-bold px-2.5 py-1 rounded-md text-sm mt-0.5 border border-blue-200">
+                                                            #{task.number}
+                                                        </span>
+                                                        <div>
+                                                            <h3 className="font-semibold text-gray-800 text-lg leading-tight">{task.name}</h3>
+                                                            {task.owner && (
+                                                                <p className="text-sm text-gray-500 mt-1.5 flex items-center">
+                                                                    <i data-lucide="briefcase" className="w-3.5 h-3.5 mr-1.5 text-gray-400"></i>
+                                                                    เจ้าของงาน: <span className="ml-1 text-gray-700 font-medium">{task.owner}</span>
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <button onClick={() => handleDeleteTask(task.id)} className="text-gray-400 hover:text-white hover:bg-red-500 p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-all ml-2" title="ลบงาน">
+                                                        <i data-lucide="trash-2" className="w-4 h-4"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div 
+                                                className={`p-4 sm:w-64 border-t sm:border-t-0 sm:border-l border-gray-100 transition-all duration-200 ${dragOverTaskId === task.id ? 'bg-blue-50/50 shadow-[inset_0_0_0_2px_#93c5fd]' : 'bg-gray-50/50'}`}
+                                                onDragOver={(e) => handleDragOver(e, task.id)} onDragLeave={(e) => handleDragLeave(e, task.id)} onDrop={(e) => handleDrop(e, task.id)}
+                                            >
+                                                <div className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide flex justify-between items-center">
+                                                    <span>ผู้ปฏิบัติงาน</span>
+                                                    <span className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-[10px]">{task.assignees.length} คน</span>
+                                                </div>
+                                                
+                                                <div className={`min-h-[70px] rounded-lg border-2 border-dashed transition-colors ${dragOverTaskId === task.id ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-white'} flex flex-wrap gap-2 p-2.5 items-center ${task.assignees.length === 0 ? 'justify-center' : 'justify-start'}`}>
+                                                    {task.assignees.length === 0 && (
+                                                        <span className="text-xs text-gray-400 text-center pointer-events-none flex flex-col items-center">
+                                                            <i data-lucide="download" className="w-4 h-4 mb-1 opacity-50"></i> ลากรายชื่อมาวาง
+                                                        </span>
+                                                    )}
+                                                    {task.assignees.map(emp => (
+                                                        <div key={emp.id} className="bg-white border border-green-200 text-green-700 shadow-sm rounded-full pl-3 pr-1 py-1 text-[13px] font-medium flex items-center gap-1.5 hover:border-green-300 hover:shadow transition-all">
+                                                            {emp.name}
+                                                            <button onClick={() => removeAssignee(task.id, emp)} className="hover:bg-green-100 text-green-500 hover:text-green-700 rounded-full p-0.5 transition-colors">
+                                                                <i data-lucide="x" className="w-3.5 h-3.5"></i>
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {tasks.length === 0 && (
+                                    <div className="text-center py-16 bg-white rounded-xl border-2 border-dashed border-gray-200">
+                                        <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <i data-lucide="clipboard-x" className="w-8 h-8 text-gray-400"></i>
+                                        </div>
+                                        <h3 className="text-lg font-medium text-gray-900 mb-1">ยังไม่มีรายการงาน</h3>
+                                        <p className="text-sm text-gray-500">เริ่มต้นโดยการกรอกรายละเอียดงานด้านบน แล้วกดเพิ่มงาน</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </main>
                 </div>
-              </div>
-              <div class="col-md-7">
-                <div id="positionFilters" class="d-flex flex-wrap gap-1 align-items-center h-100"></div>
-              </div>
-            </div>
-            
-            <div class="d-flex justify-content-between my-2 mt-3">
-              <button class="btn btn-sm btn-outline-secondary" onclick="selectAllVisible(true)">ติ๊กเลือกทั้งหมด (ที่แสดงอยู่)</button>
-              <button class="btn btn-sm btn-outline-danger" onclick="selectAllVisible(false)">เอาออกทั้งหมด</button>
-            </div>
-            
-            <div class="employee-list-box mb-3" id="employeeSelectionBox">
-              <div class="text-center text-muted small mt-4">รอโหลดข้อมูล...</div>
-            </div>
-
-            <div>
-              <div class="small fw-bold text-primary mb-1"><i class="bi bi-check2-square me-1"></i>สรุปรายชื่อที่ถูกเลือกไว้:</div>
-              <div class="selected-summary-box" id="selectedSummaryBox">
-                 <span class="text-muted small">ยังไม่มีผู้ถูกเลือก</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- แถวที่ 2 -->
-    <div class="row g-4">
-      
-      <!-- ฝั่งซ้าย: กำหนดงาน -->
-      <div class="col-lg-5">
-        <div class="card p-4 h-100">
-          <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-list-task text-primary me-2"></i>2. กำหนดงาน</h5>
-          
-          <!-- 🌟 กล่อง AI 🌟 -->
-        <div class="ai-box">
-            <span class="ai-badge">⚡ Groq API</span> <!-- เพิ่มบรรทัดนี้ -->
-            <label class="form-label small fw-bold text-purple" style="color: #6d28d9;"><i class="bi bi-magic me-1"></i> สั่ง AI สร้างตารางงาน</label>
-            <textarea id="aiTaskInput" class="form-control form-control-sm mb-2" rows="2" placeholder="เขียนคำสั่งสำหรับ AI..."></textarea>
-            <button class="btn btn-sm btn-ai w-100" id="btnAITask" onclick="generateTasksWithAI()">
-              ✨ ให้ AI แปลงเป็นตารางงาน
-            </button>
-          </div>
-
-          <div class="summary-counter-box text-center">
-             <span class="small fw-bold text-secondary">พร้อมทำงาน: <span id="lblAvail" class="text-primary fs-6">0</span> คน</span> 
-             <span class="mx-2 text-muted">|</span> 
-             <span class="small fw-bold text-secondary">ต้องการใช้: <span id="lblReq" class="text-primary fs-6">0</span> คน</span>
-             <br>
-             <div class="mt-2" id="lblRemainingStatus">
-                <span class="badge bg-secondary fs-6">รอการคำนวณ</span>
-             </div>
-          </div>
-
-          <div id="taskList"></div>
-          <button class="btn btn-outline-primary w-100 mt-3 py-2 border-2" onclick="addTaskRow()" style="border-radius: 10px; border-style: dashed;">
-            <i class="bi bi-plus-circle me-1"></i> เพิ่มงานด้วยตัวเอง
-          </button>
-          
-          <hr class="my-4 text-muted">
-          <button class="btn btn-custom-primary w-100 fs-5 mb-2" id="btnRandom" onclick="randomizeTeams()" disabled>
-            <i class="bi bi-shuffle me-2"></i> เริ่มสุ่มจัดทีม (แบบปกติ)
-          </button>
-          
-          <!-- 🌟 เพิ่มปุ่ม AI จัดทีมตรงนี้ 🌟 -->
-          <button class="btn btn-ai w-100 fs-5 mb-2 shadow-sm" id="btnAIAllocate" onclick="runAIAllocation()">
-            <i class="bi bi-robot me-2"></i> ให้ AI จัดทีมให้เลย
-          </button>
-          <button class="btn btn-outline-secondary w-100 py-2" onclick="resetForm()">
-            <i class="bi bi-arrow-counterclockwise me-1"></i> ล้างข้อมูล / เริ่มจัดทีมใหม่
-          </button>
-        </div>
-      </div>
-
-      <!-- ฝั่งขวา: ผลลัพธ์ -->
-      <div class="col-lg-7">
-        <div class="card p-4 h-100" style="min-height: 400px;">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="fw-bold text-dark mb-0"><i class="bi bi-trophy text-warning me-2"></i>3. ผลการจัดทีม</h5>
-            <div id="actionButtons" style="display:none;" class="d-flex gap-1 flex-wrap justify-content-end">
-              <button class="btn btn-sm btn-ai shadow-sm" onclick="generateAIReport()" id="btnAIReport">
-                ✨ ให้ AI สรุปรายงาน
-              </button>
-              <button class="btn btn-sm btn-outline-success" onclick="copyResults()" id="btnCopy">
-                <i class="bi bi-clipboard"></i> คัดลอกปกติ
-              </button>
-              <button class="btn btn-sm btn-success" onclick="exportToExcel()">
-                <i class="bi bi-file-earmark-excel"></i> Excel
-              </button>
-            </div>
-          </div>
-          
-          <div id="dragHint" class="alert alert-warning py-2 small mb-3" style="display:none;">
-            💡 <b>Tips:</b> สามารถลากสลับชื่อข้ามงานได้ และกดรูป <i class="bi bi-unlock"></i> เพื่อล็อคคนให้อยู่ทีมเดิมตอนสุ่มใหม่ได้
-          </div>
-
-          <div id="resultArea" class="mt-2 text-center text-muted d-flex flex-column justify-content-center h-100">
-            <i class="bi bi-inboxes display-4 mb-2 opacity-50"></i>
-            <p>รายชื่อทีมจะแสดงที่นี่หลังจากกดสุ่ม</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    let allEmployees = []; 
-    let uniquePositions = [];
-    let selectedPositions = new Set(); 
-    let generatedTasksData = []; 
-    let sortableInstances = []; 
-    
-    // 🔥 ลบ GEMINI_API_KEY ออกไปแล้ว ปลอดภัยจาก GitHub 100% 🔥
-    
-    // URL ของ Web App (ตัด ?action=getEmployees ออก เพื่อให้ใช้ได้ทั้ง GET และ POST)
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxXBx3J64GaNQORciPtSiYcLA87q3x9fzAM1Jqhv4rZ24EbNDH1gZz3ip4tFFkdFXor/exec";
-
-    window.onload = function() {
-      addTaskRow();
-      
-      // ตอนโหลดหน้าเว็บ ให้ต่อท้าย URL ด้วย ?action=getEmployees เพื่อดึงรายชื่อ
-      fetch(WEB_APP_URL + "?action=getEmployees")
-        .then(response => response.json())
-        .then(data => {
-          if (data.error) throw new Error(data.error);
-          allEmployees = data.map((emp, index) => ({ 
-            ...emp, originalIndex: index, selected: false, lockedToTaskIndex: null 
-          }));
-          
-          uniquePositions = [...new Set(allEmployees.map(emp => emp.position))].filter(p => p !== "");
-          renderPositionFilters();
-          renderEmployeeCheckboxes();
-          
-          const status = document.getElementById('loadingStatus');
-          status.className = 'alert alert-success text-center mb-3 shadow-sm';
-          status.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>โหลดข้อมูลสำเร็จ มีพนักงานทั้งหมด <strong>${allEmployees.length}</strong> คน`;
-          document.getElementById('btnRandom').disabled = false;
-        })
-        .catch(error => {
-          const status = document.getElementById('loadingStatus');
-          status.className = 'alert alert-danger text-center mb-3 shadow-sm';
-          status.innerHTML = `<i class="bi bi-x-circle-fill me-2"></i>เกิดข้อผิดพลาด: ${error.message}`;
-        });
-    };
-
-    // ==========================================
-    // 🤖 ส่วนระบบ AI (ปรับใหม่ให้เรียกผ่าน Apps Script)
-    // ==========================================
-
-    // ฟังก์ชันตัวกลางสำหรับคุยกับ AI ช่วยลดโค้ดซ้ำซ้อน
-    async function askGemini(promptText) {
-          const response = await fetch(WEB_APP_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-            body: JSON.stringify({
-              action: "gemini",
-              prompt: promptText
-            })
-          });
-          const data = await response.json();
-          
-          // 👇 ปรับให้มันโชว์ Error ที่แท้จริงออกมาบนหน้าจอ 👇
-          if (data.error) {
-            const errorMsg = typeof data.error === 'string' ? data.error : data.error.message;
-            throw new Error("ระบบแจ้งว่า: " + errorMsg);
-          }
-          return data;
+            );
         }
 
-async function generateTasksWithAI() {
-      const input = document.getElementById('aiTaskInput').value.trim();
-      if (!input) return alert('กรุณาพิมพ์คำสั่งก่อนครับ เช่น "จัดทีมกวาดถนน 3 คน"');
-
-      // 🌟 ดึงจำนวนพนักงานที่ติ๊กเลือกไว้ ส่งไปให้ AI คำนวณด้วย 🌟
-      const availableCount = allEmployees.filter(emp => emp.selected).length;
-
-      const btn = document.getElementById('btnAITask');
-      const originalText = btn.innerHTML;
-      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>AI กำลังคิด...';
-      btn.disabled = true;
-
-      const status = document.getElementById('loadingStatus');
-          status.style.opacity = '0'; // ทำให้จางลง
-          setTimeout(() => status.style.display = 'none', 500); // ซ่อนหลังจากผ่านไป 0.5 วิ
-
-      // 🧠 ปรับ Prompt ใหม่ให้ฉลาดและคิดวิเคราะห์ได้ 🧠
-      const promptText = `
-      ตอนนี้ฉันมีพนักงานที่พร้อมทำงานจำนวน ${availableCount} คน
-      คำสั่งจากหัวหน้างาน: "${input}"
-      
-      หน้าที่ของคุณ:
-      1. วิเคราะห์คำสั่ง ถ้าหัวหน้าสั่งให้ "ตั้งชื่อทีม" หรือ "แบ่งทีม" ให้คุณคิดชื่อทีมเท่ๆ หรือน่ารักๆ มาให้เลย
-      2. กระจายจำนวนคน (count) ลงในแต่ละทีมให้พอดี โดยให้ผลรวมของทุกคนใกล้เคียงหรือเท่ากับ ${availableCount} คนที่สุด (กระจายให้เท่าๆ กันถ้าไม่ได้ระบุเจาะจง)
-      3. ถ้าคำสั่งเป็นงานปกติ (เช่น กวาดถนน 3 คน) ก็ให้ใช้ชื่องานตามนั้นได้เลย
-      4. ตอบกลับมาเป็นโครงสร้าง JSON Array อย่างเดียว ห้ามอธิบายเพิ่มเติม ห้ามมี Markdown รูปแบบคือ [{"task": "ชื่องานหรือชื่อทีม", "count": จำนวนคน}]
-      `;
-
-      try {
-        const data = await askGemini(promptText); 
-        
-        let aiText = data.candidates[0].content.parts[0].text;
-        aiText = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
-        const tasksArr = JSON.parse(aiText);
-
-        if (tasksArr && tasksArr.length > 0) {
-          document.getElementById('taskList').innerHTML = '';
-          tasksArr.forEach(item => {
-            const row = document.createElement('div');
-            row.className = 'row g-2 mt-2 task-row align-items-center';
-            row.innerHTML = `
-              <div class="col-7"><input type="text" class="form-control task-input task-name" value="${item.task}" placeholder="ใส่ชื่องาน"></div>
-              <div class="col-3"><input type="number" class="form-control task-input task-count" value="${item.count}" placeholder="คน" min="1" oninput="calculateTaskSummary()"></div>
-              <div class="col-2 text-center"><button class="btn btn-outline-danger btn-sm w-100 rounded-3" onclick="this.parentElement.parentElement.remove(); calculateTaskSummary();"><i class="bi bi-trash3"></i></button></div>
-            `;
-            document.getElementById('taskList').appendChild(row);
-          });
-          calculateTaskSummary();
-        }
-      } catch (err) {
-        alert('เกิดข้อผิดพลาดจากระบบ AI:\n' + err.message);
-      } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-      }
-    }
-
-    async function generateAIReport() {
-      if(generatedTasksData.length === 0) return alert('กรุณาสุ่มจัดทีมก่อนครับ');
-      
-      const btn = document.getElementById('btnAIReport');
-      const originalText = btn.innerHTML;
-      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>กำลังเขียน...';
-      btn.disabled = true;
-
-      let dataForAI = "ผลการจัดทีมประจำวัน:\n";
-      generatedTasksData.forEach(t => {
-        dataForAI += `งาน: ${t.taskName} (จำนวน ${t.assigned.length} คน)\n`;
-        dataForAI += `พนักงาน: ${t.assigned.map(e => e.name).join(', ')}\n\n`;
-      });
-
-      const promptText = `
-      คุณเป็นหัวหน้างานที่ต้องส่งไลน์สรุปการจัดทีมให้พนักงานอ่าน
-      โปรดนำข้อมูลด้านล่างนี้ไปเขียนสรุปสั้นๆ ให้อ่านง่าย ดูเป็นมืออาชีพ เป็นกันเอง และมีกำลังใจ
-      ขอให้ใส่ Emoji น่ารักๆ ประกอบด้วย 
-      และรักษารายชื่อของทุกคนและชื่องานไว้ให้ครบ ห้ามตกหล่น
-
-      ข้อมูล:
-      ${dataForAI}
-      `;
-
-      try {
-        // 🌟 เรียก AI ผ่าน Apps Script
-        const data = await askGemini(promptText); 
-        
-        let reportText = data.candidates[0].content.parts[0].text;
-        
-        navigator.clipboard.writeText(reportText).then(() => {
-          btn.innerHTML = '<i class="bi bi-check-circle"></i> เขียนและคัดลอกสำเร็จ!';
-          btn.classList.replace('btn-ai', 'btn-success');
-          setTimeout(() => {
-            btn.innerHTML = originalText;
-            btn.classList.replace('btn-success', 'btn-ai');
-          }, 3000);
-        });
-
-      } catch (err) {
-        alert('เกิดข้อผิดพลาด: ' + err.message);
-        btn.innerHTML = originalText;
-      } finally {
-        btn.disabled = false;
-      }
-    }
-
-    // ==========================================
-    // 🧠 ฟังก์ชัน: ให้ AI จัดทีม (เลือกคนตรงกับงาน)
-    // ==========================================
-    async function runAIAllocation() {
-      const taskRows = document.querySelectorAll('.task-row');
-      let tasks = [];
-      taskRows.forEach((row, index) => {
-        const name = row.querySelector('.task-name').value.trim();
-        const count = parseInt(row.querySelector('.task-count').value) || 0;
-        if (name && count > 0) tasks.push({ name, count });
-      });
-
-      const availableEmployees = allEmployees.filter(emp => emp.selected);
-      if (tasks.length === 0 || availableEmployees.length === 0) return alert('กรุณาระบุงานและเลือกพนักงานก่อนครับ');
-
-      const btn = document.getElementById('btnAIAllocate');
-      const originalText = btn.innerHTML;
-      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>AI กำลังวิเคราะห์และจัดทีม...';
-      btn.disabled = true;
-
-      // 👇 นี่คือ Prompt สำหรับให้ AI จัดทีมครับ 👇
-      const promptText = `
-      จัดทีมพนักงานให้หน่อยตามงานที่กำหนด
-      รายชื่อพนักงานที่มี: ${availableEmployees.map(e => e.name + "(" + e.position + ")").join(', ')}
-      งานที่ต้องทำ: ${JSON.stringify(tasks)}
-      กฎ: 
-      1. ให้เลือกคนที่มีตำแหน่ง (position) ตรงกับงานก่อน 
-      2. ถ้าคนไม่พอ ให้สุ่มคนอื่นเติมให้ครบ 
-      3. ตอบกลับมาเป็น JSON format อย่างเดียว: [{"task": "ชื่องาน", "members": ["ชื่อพนักงาน1", "ชื่อพนักงาน2"]}]
-      `;
-
-      try {
-        // ส่ง Prompt ไปให้ Apps Script จัดการแบบปลอดภัย
-        const data = await askGemini(promptText); 
-        
-        let aiText = data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim();
-        const result = JSON.parse(aiText);
-
-        // นำรายชื่อที่ AI จัดให้ มาแปลงลงในระบบหน้าเว็บ
-        generatedTasksData = result.map((t, index) => {
-           // หา Object พนักงานจากชื่อที่ AI ส่งมา
-           const assignedEmps = t.members.map(name => allEmployees.find(e => e.name === name)).filter(e => e !== undefined);
-           return {
-             taskIndex: index,
-             taskName: t.task,
-             required: t.members.length,
-             assigned: assignedEmps
-           };
-        });
-
-        renderResultsDOM(); // สั่งให้หน้าเว็บวาดรายชื่อทีมออกมา
-      } catch (err) {
-        alert('AI จัดทีมไม่สำเร็จ: ' + err.message);
-      } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-      }
-    }
-
-    // ==========================================
-    // ฟังก์ชันเดิม (UI, กรองข้อมูล, Drag&Drop, ฯลฯ)
-    // ==========================================
-
-    function renderPositionFilters() {
-      const container = document.getElementById('positionFilters');
-      container.innerHTML = '<span class="text-muted small me-2"><i class="bi bi-funnel"></i> ตำแหน่ง:</span>';
-      uniquePositions.forEach(pos => {
-        const btn = document.createElement('button');
-        btn.className = 'btn pos-btn btn-outline-primary rounded-pill';
-        btn.innerText = pos;
-        btn.onclick = () => {
-          if (selectedPositions.has(pos)) {
-            selectedPositions.delete(pos);
-            btn.classList.remove('btn-primary', 'text-white');
-            btn.classList.add('btn-outline-primary');
-          } else {
-            selectedPositions.add(pos);
-            btn.classList.remove('btn-outline-primary');
-            btn.classList.add('btn-primary', 'text-white');
-          }
-          renderEmployeeCheckboxes();
-        };
-        container.appendChild(btn);
-      });
-    }
-
-    function getFilteredEmployees() {
-      const searchText = document.getElementById('searchInput').value.toLowerCase();
-      return allEmployees.filter(emp => {
-        const matchName = emp.name.toLowerCase().includes(searchText);
-        const matchPos = selectedPositions.size === 0 || selectedPositions.has(emp.position);
-        return matchName && matchPos;
-      });
-    }
-
-    function renderEmployeeCheckboxes() {
-      const container = document.getElementById('employeeSelectionBox');
-      container.innerHTML = '';
-      const filtered = getFilteredEmployees();
-      
-      if (filtered.length === 0) {
-        container.innerHTML = '<div class="text-center text-danger small mt-3 w-100">❌ ไม่พบพนักงานที่ค้นหา</div>';
-      }
-
-      let html = '<div class="row g-2">';
-      filtered.forEach((emp) => {
-        const checkedStr = emp.selected ? 'checked' : '';
-        html += `
-          <div class="col-12 col-sm-6 col-lg-3">
-            <label class="emp-check-card" for="emp_${emp.originalIndex}">
-              <input class="form-check-input" type="checkbox" id="emp_${emp.originalIndex}" ${checkedStr} onchange="toggleEmployee(${emp.originalIndex}, this.checked)">
-              <div class="text-truncate">
-                <span class="fw-bold text-dark text-truncate">${emp.name}</span><br>
-                <span class="text-muted small">${emp.position}</span>
-              </div>
-            </label>
-          </div>
-        `;
-      });
-      html += '</div>';
-      container.innerHTML = html;
-      updateAvailableCount();
-    }
-
-    function toggleEmployee(index, isChecked) {
-      allEmployees[index].selected = isChecked;
-      if(!isChecked) allEmployees[index].lockedToTaskIndex = null;
-      updateAvailableCount();
-    }
-
-    function updateAvailableCount() {
-      const selectedEmployees = allEmployees.filter(e => e.selected);
-      document.getElementById('availableCountLabel').innerText = `${selectedEmployees.length} คน`;
-      
-      const summaryBox = document.getElementById('selectedSummaryBox');
-      if(selectedEmployees.length === 0) {
-        summaryBox.innerHTML = '<span class="text-danger small">ไม่มีผู้ถูกเลือก</span>';
-      } else {
-        summaryBox.innerHTML = '';
-        selectedEmployees.forEach(emp => {
-          summaryBox.innerHTML += `<span class="small-badge">${emp.name}</span>`;
-        });
-      }
-      calculateTaskSummary();
-    }
-
-    function selectAllVisible(isSelect) {
-      getFilteredEmployees().forEach(emp => { 
-        emp.selected = isSelect; 
-        if(!isSelect) emp.lockedToTaskIndex = null;
-      });
-      renderEmployeeCheckboxes(); 
-    }
-
-    function addTaskRow() {
-      const container = document.getElementById('taskList');
-      const row = document.createElement('div');
-      row.className = 'row g-2 mt-2 task-row align-items-center';
-      row.innerHTML = `
-        <div class="col-7"><input type="text" class="form-control task-input task-name" placeholder="ใส่ชื่องาน"></div>
-        <div class="col-3"><input type="number" class="form-control task-input task-count" placeholder="คน" min="1" oninput="calculateTaskSummary()"></div>
-        <div class="col-2 text-center"><button class="btn btn-outline-danger btn-sm w-100 rounded-3" onclick="this.parentElement.parentElement.remove(); calculateTaskSummary();"><i class="bi bi-trash3"></i></button></div>
-      `;
-      container.appendChild(row);
-      calculateTaskSummary();
-    }
-
-    function calculateTaskSummary() {
-      const availableCount = allEmployees.filter(emp => emp.selected).length;
-      let requiredCount = 0;
-      document.querySelectorAll('.task-count').forEach(row => { requiredCount += parseInt(row.value) || 0; });
-
-      const remaining = availableCount - requiredCount;
-      document.getElementById('lblAvail').innerText = availableCount;
-      document.getElementById('lblReq').innerText = requiredCount;
-
-      const statusBox = document.getElementById('lblRemainingStatus');
-      if (requiredCount === 0 && availableCount === 0) {
-        statusBox.innerHTML = `<span class="badge bg-secondary fs-6">รอระบุจำนวน</span>`;
-      } else if (remaining > 0) {
-        statusBox.innerHTML = `<span class="badge bg-warning text-dark fs-6"><i class="bi bi-exclamation-triangle me-1"></i>เหลือคนว่าง ${remaining} คน</span>`;
-      } else if (remaining === 0) {
-        statusBox.innerHTML = `<span class="badge bg-success fs-6"><i class="bi bi-emoji-sunglasses me-1"></i>จัดกำลังคนพอดีเป๊ะ</span>`;
-      } else {
-        statusBox.innerHTML = `<span class="badge bg-danger fs-6"><i class="bi bi-exclamation-circle me-1"></i>คนขาด ${Math.abs(remaining)} คน (ไม่พอจัด!)</span>`;
-      }
-    }
-
-    function resetForm() {
-      if(confirm('คุณต้องการล้างการกำหนดงาน และเคลียร์ผลการจัดทีมทั้งหมดใช่หรือไม่?')) {
-        document.getElementById('taskList').innerHTML = ''; addTaskRow(); 
-        
-        const resultArea = document.getElementById('resultArea');
-        resultArea.className = 'mt-2 text-center text-muted d-flex flex-column justify-content-center h-100';
-        resultArea.innerHTML = `<i class="bi bi-inboxes display-4 mb-2 opacity-50"></i><p>รายชื่อทีมจะแสดงที่นี่หลังจากกดสุ่ม</p>`;
-        document.getElementById('actionButtons').style.setProperty('display', 'none', 'important');
-        document.getElementById('dragHint').style.display = 'none';
-        document.getElementById('aiTaskInput').value = '';
-
-        allEmployees.forEach(emp => { emp.selected = false; emp.lockedToTaskIndex = null; });
-        document.getElementById('searchInput').value = '';
-        selectedPositions.clear();
-        document.querySelectorAll('.pos-btn').forEach(btn => { btn.classList.remove('btn-primary', 'text-white'); btn.classList.add('btn-outline-primary'); });
-        
-        renderEmployeeCheckboxes();
-        generatedTasksData = [];
-      }
-    }
-
-    function shuffleArray(array) {
-      let cur = array.length, rnd;
-      while (cur != 0) { rnd = Math.floor(Math.random() * cur); cur--; [array[cur], array[rnd]] = [array[rnd], array[cur]]; }
-      return array;
-    }
-
-    function randomizeTeams() {
-      const taskRows = document.querySelectorAll('.task-row');
-      let tasks = [];
-      let totalRequired = 0;
-
-      taskRows.forEach((row, index) => {
-        const name = row.querySelector('.task-name').value.trim();
-        const count = parseInt(row.querySelector('.task-count').value) || 0;
-        if (name && count > 0) {
-          tasks.push({ taskIndex: index, taskName: name, required: count, assigned: [] });
-          totalRequired += count;
-        }
-      });
-
-      const availableEmployees = allEmployees.filter(emp => emp.selected);
-
-      if (tasks.length === 0) return alert('⚠️ กรุณาระบุชื่องานและจำนวนคนอย่างน้อย 1 งานครับ');
-      if (availableEmployees.length === 0) return alert('❌ กรุณาเลือกพนักงานที่พร้อมทำงานอย่างน้อย 1 คน');
-      if (totalRequired > availableEmployees.length) return alert(`❌ จำนวนคนไม่พอ! ต้องการ ${totalRequired} คน แต่มีคนพร้อมทำงาน ${availableEmployees.length} คน`);
-
-      let freePool = [];
-      availableEmployees.forEach(emp => {
-        let isLocked = false;
-        if (emp.lockedToTaskIndex !== null) {
-          const targetTask = tasks.find(t => t.taskIndex === emp.lockedToTaskIndex);
-          if (targetTask && targetTask.assigned.length < targetTask.required) {
-            targetTask.assigned.push(emp);
-            isLocked = true;
-          } else { emp.lockedToTaskIndex = null; }
-        }
-        if (!isLocked) freePool.push(emp);
-      });
-
-      let shuffledEmployees = shuffleArray([...freePool]); 
-      
-      tasks.forEach(task => {
-        while (task.assigned.length < task.required && shuffledEmployees.length > 0) {
-          task.assigned.push(shuffledEmployees.shift());
-        }
-      });
-
-      generatedTasksData = tasks;
-      renderResultsDOM();
-    }
-
-    function renderResultsDOM() {
-      const resultArea = document.getElementById('resultArea');
-      resultArea.innerHTML = '';
-      resultArea.className = 'mt-2 text-start'; 
-      sortableInstances.forEach(ins => ins.destroy());
-      sortableInstances = [];
-
-      generatedTasksData.forEach((task) => {
-        let teamHTML = `
-          <div class="mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
-              <h6 class="text-primary fw-bold mb-0">📌 ${task.taskName}</h6>
-              <span class="badge bg-primary rounded-pill px-3" id="count-badge-${task.taskIndex}">${task.assigned.length} / ${task.required} คน</span>
-            </div>
-            <div class="sortable-list" id="task-list-${task.taskIndex}" data-task-index="${task.taskIndex}">`;
-        
-        task.assigned.forEach(emp => {
-          const isLocked = emp.lockedToTaskIndex === task.taskIndex;
-          const lockClass = isLocked ? 'locked' : '';
-          const lockIcon = isLocked ? 'bi-lock-fill' : 'bi-unlock';
-          
-          teamHTML += `
-            <div class="employee-badge ${lockClass}" data-emp-index="${emp.originalIndex}">
-              <div>
-                <i class="bi bi-grip-vertical text-muted me-1" style="cursor: grab;"></i>
-                <span class="fw-bold">${emp.name}</span>
-              </div>
-              <button class="lock-btn ${lockClass}" onclick="toggleLock(${emp.originalIndex}, ${task.taskIndex}, this)" title="ล็อคให้อยู่ทีมนี้">
-                <i class="bi ${lockIcon}"></i>
-              </button>
-            </div>`;
-        });
-        teamHTML += `</div></div>`;
-        resultArea.innerHTML += teamHTML;
-      });
-
-      const remaining = allEmployees.filter(emp => emp.selected).length - generatedTasksData.reduce((acc, t) => acc + t.required, 0);
-      if (remaining > 0) {
-        resultArea.innerHTML += `
-          <div class="alert alert-secondary mt-4 border-0" style="background-color: #f1f5f9;">
-            <i class="bi bi-info-circle-fill me-2 text-secondary"></i>
-            <span class="small">มีพนักงานที่ว่างงาน จำนวน <strong>${remaining}</strong> คน</span>
-          </div>`;
-      }
-      
-      document.getElementById('actionButtons').style.setProperty('display', 'flex', 'important');
-      document.getElementById('dragHint').style.display = 'block';
-
-      generatedTasksData.forEach(task => {
-        const el = document.getElementById(`task-list-${task.taskIndex}`);
-        const sortable = new Sortable(el, {
-          group: 'shared', animation: 150, ghostClass: 'sortable-ghost', handle: '.bi-grip-vertical', filter: '.locked',
-          onEnd: function () { syncDataFromDOM(); }
-        });
-        sortableInstances.push(sortable);
-      });
-
-      const empSection = document.getElementById('employeeSection');
-      if (empSection.classList.contains('show')) {
-        const bsCollapse = new bootstrap.Collapse(empSection, { toggle: false });
-        bsCollapse.hide();
-        document.getElementById('btnToggleEmp').classList.add('collapsed');
-      }
-    }
-
-    function toggleLock(empIndex, taskIndex, btnElement) {
-      const emp = allEmployees[empIndex];
-      const badge = btnElement.parentElement;
-      const icon = btnElement.querySelector('i');
-
-      if (emp.lockedToTaskIndex === taskIndex) {
-        emp.lockedToTaskIndex = null; badge.classList.remove('locked'); btnElement.classList.remove('locked'); icon.classList.replace('bi-lock-fill', 'bi-unlock');
-      } else {
-        emp.lockedToTaskIndex = taskIndex; badge.classList.add('locked'); btnElement.classList.add('locked'); icon.classList.replace('bi-unlock', 'bi-lock-fill');
-      }
-    }
-
-    function syncDataFromDOM() {
-      generatedTasksData.forEach(task => {
-        const listEl = document.getElementById(`task-list-${task.taskIndex}`);
-        const badges = listEl.querySelectorAll('.employee-badge');
-        
-        task.assigned = []; 
-        badges.forEach(badge => {
-          const empIdx = parseInt(badge.getAttribute('data-emp-index'));
-          const emp = allEmployees[empIdx];
-          
-          if(emp.lockedToTaskIndex !== null && emp.lockedToTaskIndex !== task.taskIndex) {
-            emp.lockedToTaskIndex = null;
-            badge.classList.remove('locked'); badge.querySelector('.lock-btn').classList.remove('locked'); badge.querySelector('.lock-btn i').classList.replace('bi-lock-fill', 'bi-unlock');
-          }
-          task.assigned.push(emp);
-        });
-
-        const countBadge = document.getElementById(`count-badge-${task.taskIndex}`);
-        countBadge.innerText = `${task.assigned.length} / ${task.required} คน`;
-        if(task.assigned.length > task.required) { countBadge.classList.replace('bg-primary', 'bg-danger'); } else { countBadge.classList.replace('bg-danger', 'bg-primary'); }
-      });
-    }
-
-    function copyResults() {
-      if(generatedTasksData.length === 0) return;
-      let text = "📋 ผลการจัดทีม\n\n";
-      generatedTasksData.forEach(t => {
-        text += `📌 ${t.taskName} (${t.assigned.length} คน):\n`;
-        t.assigned.forEach(e => text += ` - ${e.name}\n`);
-        text += "\n";
-      });
-      navigator.clipboard.writeText(text).then(() => {
-        const btn = document.getElementById('btnCopy'); const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="bi bi-check2"></i> คัดลอกแล้ว'; btn.classList.replace('btn-outline-success', 'btn-success'); btn.classList.add('text-white');
-        setTimeout(() => { btn.innerHTML = originalText; btn.classList.replace('btn-success', 'btn-outline-success'); btn.classList.remove('text-white'); }, 2000);
-      });
-    }
-
-    function exportToExcel() {
-      if(generatedTasksData.length === 0) return alert('กรุณาสุ่มจัดทีมก่อนครับ');
-      
-      let excelData = [];
-      let dateStr = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
-      excelData.push(["📊 สรุปการจัดทีมพนักงาน"]); excelData.push(["📅 ประจำวันที่: " + dateStr]); excelData.push([""]); 
-      
-      generatedTasksData.forEach(task => {
-        excelData.push(["▶️ " + task.taskName]);
-        task.assigned.forEach(emp => { excelData.push(["     " + emp.name]); });
-        excelData.push([""]); 
-      });
-
-      let worksheet = XLSX.utils.aoa_to_sheet(excelData);
-      worksheet['!cols'] = [ { wch: 45 } ]; 
-
-      let workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, worksheet, "Team Assignment");
-      let fileDate = new Date().toISOString().slice(0, 10); XLSX.writeFile(workbook, `Team_Allocation_${fileDate}.xlsx`);
-    }
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-      <div class="footer-info">
-      Smart Team Builder v1.2.0 | Powered by Groq AI
-      </div>
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
