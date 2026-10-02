@@ -4,21 +4,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบวางแผนงานประจำวัน (Drag & Drop)</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
+
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; }
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f8fafc;
+        }
+
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+        }
+
+        /* 🌟 แอนิเมชันสำหรับ Loading Screen ของคุณ 🌟 */
+        @keyframes loadingSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes loadingPulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: .45;
+            }
+            50% {
+                transform: scale(1.18);
+                opacity: 1;
+            }
+        }
+
+        .loading-ring { animation: loadingSpin 1s linear infinite; }
+        .loading-dot { animation: loadingPulse 1.1s ease-in-out infinite; }
+        .loading-dot:nth-child(2) { animation-delay: .15s; }
+        .loading-dot:nth-child(3) { animation-delay: .3s; }
     </style>
 </head>
+
 <body>
     <div id="root"></div>
 
@@ -42,20 +77,18 @@
         function App() {
             const [allEmployees, setAllEmployees] = useState([]);
             const [tasks, setTasks] = useState([]);
-            const [date, setDate] = useState(getTodayISO()); 
-            
-            const [activeTab, setActiveTab] = useState("Cleaning"); 
+            const [date, setDate] = useState(getTodayISO());
+            const [activeTab, setActiveTab] = useState("Cleaning");
 
+            const [isInitialLoading, setIsInitialLoading] = useState(true);
             const [isLoadingEmp, setIsLoadingEmp] = useState(true);
-            const [isSaving, setIsSaving] = useState(false);
             const [isFetchingPlan, setIsFetchingPlan] = useState(false);
-            
+            const [isSaving, setIsSaving] = useState(false);
+
             const [newTaskForm, setNewTaskForm] = useState({ number: '', name: '', owner: '', period: 'full' });
             const [dragOverTaskId, setDragOverTaskId] = useState(null);
 
-            useEffect(() => { lucide.createIcons(); });
-
-            // 1. โหลดรายชื่อพนักงานทั้งหมดเมื่อเปิดเว็บ (ทำแค่ครั้งเดียว)
+            // โหลดรายชื่อพนักงาน
             useEffect(() => {
                 const fetchEmployees = async () => {
                     try {
@@ -64,7 +97,7 @@
                         const result = await response.json();
                         if (Array.isArray(result)) setAllEmployees(result);
                     } catch (error) {
-                        console.error(error);
+                        console.error("ไม่สามารถโหลดรายชื่อพนักงานได้", error);
                     } finally {
                         setIsLoadingEmp(false);
                     }
@@ -72,24 +105,25 @@
                 fetchEmployees();
             }, []);
 
-            // 🌟 2. ระบบโหลดแผนงาน "อัตโนมัติ" ทุกครั้งที่เปลี่ยนวันที่ (date เปลี่ยน = ดึงข้อมูลใหม่ทันที) 🌟
+            // โหลดแผนงาน (ทำงานทุกครั้งที่เปลี่ยนวันที่)
             useEffect(() => {
+                let cancelled = false;
                 const loadPlanForDate = async () => {
                     try {
                         setIsFetchingPlan(true);
-                        setTasks([]); // เคลียร์ตารางรอรับข้อมูลใหม่
+                        setTasks([]);
                         
                         const thaiDateStr = formatThaiDate(date);
                         const response = await fetch(`${API_URL}?action=getWorkPlan&date=${encodeURIComponent(thaiDateStr)}&t=${Date.now()}`);
                         const planData = await response.json();
 
+                        if (cancelled) return;
+
                         if (!planData || planData.length === 0) {
-                            // วันที่ยังไม่มีแผนงาน ก็ปล่อยให้ตารางว่างๆ ไว้
                             setTasks([]);
                             return;
                         }
 
-                        // ถอดรหัสข้อมูลมาเรียงในกล่องงาน
                         const taskMap = {};
                         planData.forEach(row => {
                             let pCode = 'full';
@@ -100,51 +134,47 @@
                             if (!taskMap[key]) {
                                 taskMap[key] = {
                                     id: `loaded-${Date.now()}-${Math.random()}`,
-                                    number: row.taskNumber,
-                                    name: row.taskName,
-                                    owner: row.taskOwner,
-                                    period: pCode,
-                                    assignees: []
+                                    number: row.taskNumber, name: row.taskName, owner: row.taskOwner,
+                                    period: pCode, assignees: []
                                 };
                             }
                             taskMap[key].assignees.push({ id: row.empId, name: row.empName, lineId: row.lineId });
                         });
-                        
                         setTasks(Object.values(taskMap));
                     } catch (error) {
-                        console.error("ไม่สามารถดึงข้อมูลแผนงานได้");
+                        console.error("ไม่สามารถดึงข้อมูลแผนงานได้", error);
+                        setTasks([]);
                     } finally {
                         setIsFetchingPlan(false);
+                        setIsInitialLoading(false); 
                     }
                 };
 
                 loadPlanForDate();
-            }, [date]); // <-- เมื่อค่า date เปลี่ยน คำสั่งนี้จะทำงานอัตโนมัติ
+                return () => { cancelled = true; };
+            }, [date]);
 
-            // ฟังก์ชันเช็คสถานะการรับงานของพนักงานแต่ละคน
             const getEmployeeStatus = (empId) => {
                 let status = { full: false, morning: false, afternoon: false };
-                tasks.forEach(t => {
-                    if (t.assignees.some(a => a.id === empId)) {
-                        if (t.period === 'full') status.full = true;
-                        if (t.period === 'morning') status.morning = true;
-                        if (t.period === 'afternoon') status.afternoon = true;
+                tasks.forEach(task => {
+                    if (task.assignees.some(employee => employee.id === empId)) {
+                        if (task.period === 'full') status.full = true;
+                        if (task.period === 'morning') status.morning = true;
+                        if (task.period === 'afternoon') status.afternoon = true;
                     }
                 });
                 return status;
             };
 
-            // กรองพนักงานเพื่อแสดงในฝั่งซ้าย (อิงจากข้อมูลวันที่เลือก)
-            const visibleEmployees = allEmployees.filter(emp => {
-                if (emp.department !== activeTab) return false;
-                const status = getEmployeeStatus(emp.id);
+            const visibleEmployees = allEmployees.filter(employee => {
+                if (employee.department !== activeTab) return false;
+                const status = getEmployeeStatus(employee.id);
                 return !status.full && !(status.morning && status.afternoon);
             });
 
-            // บันทึกและเขียนทับแผนงาน
             const handleSavePlan = async () => {
                 const planData = [];
-                const thaiDateStr = formatThaiDate(date); 
+                const thaiDateStr = formatThaiDate(date);
 
                 tasks.forEach(task => {
                     if (task.assignees.length > 0) {
@@ -155,15 +185,15 @@
                         task.assignees.forEach(emp => {
                             planData.push({
                                 empId: emp.id, empName: emp.name, lineId: emp.lineId || "",
-                                taskNumber: task.number, taskName: task.name,
-                                taskOwner: task.owner, taskPeriod: periodText, workDate: thaiDateStr 
+                                taskNumber: task.number, taskName: task.name, taskOwner: task.owner,
+                                taskPeriod: periodText, workDate: thaiDateStr
                             });
                         });
                     }
                 });
 
                 if (planData.length === 0) {
-                    if(!confirm(`ตารางงานว่างเปล่า ระบบจะลบข้อมูลของวันที่ ${thaiDateStr} ทิ้ง ยืนยันหรือไม่?`)) return;
+                    if (!confirm(`ตารางงานว่างเปล่า ระบบจะลบข้อมูลของวันที่ ${thaiDateStr} ทิ้ง ยืนยันหรือไม่?`)) return;
                 } else {
                     if (!confirm(`ยืนยันการบันทึกแผนงานของวันที่ ${thaiDateStr} ลงระบบ? (ของเก่าจะถูกทับ)`)) return;
                 }
@@ -171,7 +201,8 @@
                 try {
                     setIsSaving(true);
                     const response = await fetch(API_URL, {
-                        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        method: "POST",
+                        headers: { "Content-Type": "text/plain;charset=utf-8" },
                         body: JSON.stringify({ action: "saveWorkPlan", planData: planData, workDate: thaiDateStr })
                     });
                     const result = await response.json();
@@ -187,16 +218,19 @@
             const handleAddTask = (e) => {
                 e.preventDefault();
                 if (!newTaskForm.number || !newTaskForm.name) return;
-                setTasks([...tasks, { id: `task-${Date.now()}`, number: newTaskForm.number, name: newTaskForm.name, owner: newTaskForm.owner, period: newTaskForm.period, assignees: [] }]);
+                setTasks(prev => [...prev, {
+                    id: `task-${Date.now()}`, number: newTaskForm.number, name: newTaskForm.name,
+                    owner: newTaskForm.owner, period: newTaskForm.period, assignees: []
+                }]);
                 setNewTaskForm({ number: '', name: '', owner: '', period: 'full' });
             };
 
             const handleUpdateTaskField = (taskId, field, value) => {
-                setTasks(prev => prev.map(t => t.id === taskId ? { ...t, [field]: value } : t));
+                setTasks(prev => prev.map(task => task.id === taskId ? { ...task, [field]: value } : task));
             };
 
             const handleDeleteTask = (taskId) => {
-                if (confirm('คุณต้องการลบงานนี้ใช่หรือไม่?')) setTasks(tasks.filter(t => t.id !== taskId));
+                if (confirm('คุณต้องการลบงานนี้ใช่หรือไม่?')) setTasks(prev => prev.filter(task => task.id !== taskId));
             };
 
             const handleDragStart = (e, employee) => {
@@ -208,9 +242,11 @@
                 setDragOverTaskId(null);
                 const empStr = e.dataTransfer.getData('application/json');
                 if (!empStr) return;
-                
+
                 const employee = JSON.parse(empStr);
-                const targetTask = tasks.find(t => t.id === taskId);
+                const targetTask = tasks.find(task => task.id === taskId);
+                if (!targetTask) return;
+
                 const empStatus = getEmployeeStatus(employee.id);
 
                 if (targetTask.period === 'full' && (empStatus.morning || empStatus.afternoon)) {
@@ -219,25 +255,59 @@
                 if (targetTask.period === 'morning' && empStatus.morning) { alert(`รับงาน "ช่วงเช้า" ไปแล้ว`); return; }
                 if (targetTask.period === 'afternoon' && empStatus.afternoon) { alert(`รับงาน "ช่วงบ่าย" ไปแล้ว`); return; }
 
-                setTasks(prev => prev.map(t => {
-                    if (t.id === taskId && !t.assignees.some(emp => emp.id === employee.id)) {
-                        return { ...t, assignees: [...t.assignees, employee] };
+                setTasks(prev => prev.map(task => {
+                    if (task.id === taskId && !task.assignees.some(emp => emp.id === employee.id)) {
+                        return { ...task, assignees: [...task.assignees, employee] };
                     }
-                    return t;
+                    return task;
                 }));
             };
 
             const removeAssignee = (taskId, employee) => {
-                setTasks(prev => prev.map(t => t.id === taskId ? { ...t, assignees: t.assignees.filter(emp => emp.id !== employee.id) } : t));
+                setTasks(prev => prev.map(task => task.id === taskId ? { ...task, assignees: task.assignees.filter(emp => emp.id !== employee.id) } : task));
             };
 
             return (
-                <div className="min-h-screen flex flex-col">
+                <div className="min-h-screen flex flex-col relative">
+
+                    {/* 🌟 FULL SCREEN LOADING (ดีไซน์เดิมของคุณ) 🌟 */}
+                    {isInitialLoading && (
+                        <div className="fixed inset-0 z-[9999] bg-slate-50 flex items-center justify-center">
+                            <div className="text-center px-6">
+                                <div className="relative mx-auto w-24 h-24 mb-7">
+                                    <div className="absolute inset-0 rounded-3xl bg-blue-600/10 animate-pulse"></div>
+                                    <div className="absolute inset-2 rounded-2xl bg-white shadow-lg flex items-center justify-center">
+                                        <i className="fa-solid fa-clipboard-list text-blue-600 text-3xl"></i>
+                                    </div>
+                                    <div className="loading-ring absolute -inset-1 rounded-[28px] border-2 border-transparent border-t-blue-600"></div>
+                                </div>
+
+                                <h2 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">
+                                    แผนงานประจำวัน
+                                </h2>
+
+                                <p className="mt-2 text-sm text-slate-500">
+                                    กำลังเตรียมข้อมูลสำหรับการใช้งาน
+                                </p>
+
+                                <div className="mt-6 flex justify-center items-center gap-1.5">
+                                    <span className="loading-dot w-2 h-2 rounded-full bg-blue-600"></span>
+                                    <span className="loading-dot w-2 h-2 rounded-full bg-blue-600"></span>
+                                    <span className="loading-dot w-2 h-2 rounded-full bg-blue-600"></span>
+                                </div>
+
+                                <p className="mt-5 text-xs text-slate-400">
+                                    กำลังโหลดรายชื่อพนักงานและแผนงาน...
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                     <header className="bg-white shadow-sm sticky top-0 z-10">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
                             <div className="flex items-center gap-3">
-                                <div className="bg-blue-600 p-2 rounded-lg shadow-sm">
-                                    <i data-lucide="clipboard-list" className="w-6 h-6 text-white"></i>
+                                <div className="bg-blue-600 p-2.5 rounded-lg shadow-sm">
+                                    <i className="fa-solid fa-clipboard-list text-white text-xl"></i>
                                 </div>
                                 <div>
                                     <h1 className="text-2xl font-bold text-gray-800 tracking-tight">แผนงานประจำวัน</h1>
@@ -246,7 +316,6 @@
                             </div>
                             
                             <div className="flex items-center gap-3 flex-wrap">
-                                {/* 🌟 กล่องเลือกวันที่ เปลี่ยนปุ๊บ โหลดปั๊บ 🌟 */}
                                 <div className="flex items-center bg-gray-50 border border-gray-200 px-3 py-2 rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-blue-100 transition-all">
                                     <input 
                                         type="date" 
@@ -254,10 +323,13 @@
                                         onChange={(e) => setDate(e.target.value)} 
                                         className="bg-transparent border-none outline-none font-medium text-gray-700 w-36 cursor-pointer" 
                                     />
-                                    {isFetchingPlan && <i data-lucide="loader-2" className="w-4 h-4 text-blue-500 animate-spin ml-2"></i>}
                                 </div>
-                                <button onClick={handleSavePlan} disabled={isSaving || isFetchingPlan} className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-md flex items-center gap-2">
-                                    {isSaving ? <i data-lucide="loader-2" className="w-5 h-5 animate-spin"></i> : <i data-lucide="save" className="w-5 h-5"></i>}
+                                <button 
+                                    onClick={handleSavePlan} 
+                                    disabled={isSaving || isFetchingPlan} 
+                                    className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-md flex items-center gap-2"
+                                >
+                                    {isSaving ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-floppy-disk"></i>}
                                     {isSaving ? "กำลังบันทึก..." : "บันทึกอัปเดต"}
                                 </button>
                             </div>
@@ -271,47 +343,42 @@
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-0 sticky top-24 overflow-hidden">
                                 <div className="p-4 border-b border-gray-100 bg-gray-50">
                                     <h2 className="text-lg font-bold text-gray-800 flex items-center">
-                                        <i data-lucide="users" className="w-5 h-5 mr-2 text-blue-500"></i>รายชื่อพนักงาน
+                                        <i className="fa-solid fa-users text-blue-500 mr-2"></i>รายชื่อพนักงาน
                                     </h2>
                                 </div>
 
-                                {/* แท็บเมนู */}
                                 <div className="flex border-b border-gray-200 bg-white">
-                                    <button 
-                                        onClick={() => setActiveTab("Cleaning")}
-                                        className={`flex-1 py-3 text-sm font-semibold text-center border-b-2 transition-colors duration-200 ${activeTab === "Cleaning" ? "border-blue-500 text-blue-600 bg-blue-50/30" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
-                                    >
+                                    <button onClick={() => setActiveTab("Cleaning")} className={`flex-1 py-3 text-sm font-semibold text-center border-b-2 transition-colors duration-200 ${activeTab === "Cleaning" ? "border-blue-500 text-blue-600 bg-blue-50/30" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}>
                                         Cleaning
                                     </button>
-                                    <button 
-                                        onClick={() => setActiveTab("คนสวน")}
-                                        className={`flex-1 py-3 text-sm font-semibold text-center border-b-2 transition-colors duration-200 ${activeTab === "คนสวน" ? "border-green-500 text-green-600 bg-green-50/30" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
-                                    >
+                                    <button onClick={() => setActiveTab("คนสวน")} className={`flex-1 py-3 text-sm font-semibold text-center border-b-2 transition-colors duration-200 ${activeTab === "คนสวน" ? "border-green-500 text-green-600 bg-green-50/30" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}>
                                         คนสวน
                                     </button>
                                 </div>
 
                                 <div className="p-4">
                                     <div className="flex flex-wrap gap-2 max-h-[55vh] overflow-y-auto pb-2 pr-1">
-                                        {isLoadingEmp || isFetchingPlan ? (
-                                            <div className="w-full text-center py-8 text-sm text-gray-500"><i data-lucide="loader-2" className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-3"></i>กำลังโหลด...</div>
-                                        ) : visibleEmployees.length === 0 ? (
+                                        {/* SKELETON สำหรับโหลดรายชื่อพนักงาน */}
+                                        {!isInitialLoading && isLoadingEmp ? (
+                                            Array.from({ length: 6 }).map((_, i) => (
+                                                <div key={i} className="border px-3 py-3 rounded-lg flex items-center w-[calc(50%-0.25rem)] lg:w-full bg-white border-gray-100 shadow-sm animate-pulse">
+                                                    <div className="w-3.5 h-4 bg-slate-200 rounded mr-3"></div>
+                                                    <div className="h-3.5 bg-slate-200 rounded w-2/3"></div>
+                                                </div>
+                                            ))
+                                        ) : visibleEmployees.length === 0 && !isLoadingEmp ? (
                                             <div className="w-full text-center py-6 text-sm text-gray-500 border border-dashed rounded-lg bg-gray-50">
                                                 ไม่มีพนักงานว่างในแผนกนี้
                                             </div>
                                         ) : (
                                             visibleEmployees.map(employee => {
                                                 const status = getEmployeeStatus(employee.id);
-                                                const boxColor = employee.department === "Cleaning" 
-                                                    ? "bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-800" 
-                                                    : "bg-green-50 hover:bg-green-100 border-green-200 text-green-800";
+                                                const boxColor = employee.department === "Cleaning" ? "bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-800" : "bg-green-50 hover:bg-green-100 border-green-200 text-green-800";
                                                 const iconColor = employee.department === "Cleaning" ? "text-blue-400" : "text-green-500";
 
                                                 return (
-                                                    <div key={employee.id} draggable onDragStart={(e) => handleDragStart(e, employee)}
-                                                        className={`border px-3 py-2.5 rounded-lg cursor-grab active:cursor-grabbing flex items-center shadow-sm w-[calc(50%-0.25rem)] lg:w-full group ${boxColor}`}
-                                                    >
-                                                        <i data-lucide="grip-vertical" className={`w-4 h-4 mr-2 opacity-50 group-hover:opacity-100 ${iconColor}`}></i>
+                                                    <div key={employee.id} draggable onDragStart={(e) => handleDragStart(e, employee)} className={`border px-3 py-2.5 rounded-lg cursor-grab active:cursor-grabbing flex items-center shadow-sm w-[calc(50%-0.25rem)] lg:w-full group ${boxColor}`}>
+                                                        <i className={`fa-solid fa-grip-vertical mr-2 opacity-50 group-hover:opacity-100 ${iconColor}`}></i>
                                                         <span className="font-medium text-sm truncate flex-1">{employee.name}</span>
                                                         {status.morning && <span className="ml-2 text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-bold">มีงานเช้า</span>}
                                                         {status.afternoon && <span className="ml-2 text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded font-bold">มีงานบ่าย</span>}
@@ -328,7 +395,7 @@
                         <div className="w-full md:w-2/3 lg:w-3/4 flex flex-col gap-6">
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
                                 <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center border-b border-gray-100 pb-3">
-                                    <i data-lucide="plus-circle" className="w-5 h-5 mr-2 text-blue-500"></i>เพิ่มงานใหม่
+                                    <i className="fa-solid fa-circle-plus text-blue-500 mr-2"></i>เพิ่มงานใหม่
                                 </h2>
                                 <form onSubmit={handleAddTask} className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
                                     <div className="w-full sm:w-20">
@@ -356,27 +423,49 @@
                             </div>
 
                             <div className="space-y-4">
-                                {isFetchingPlan ? (
-                                    <div className="text-center py-16 bg-white rounded-xl border border-gray-100 shadow-sm">
-                                        <i data-lucide="loader-2" className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-3"></i>
-                                        <p className="text-sm text-gray-500">กำลังโหลดแผนงาน...</p>
-                                    </div>
-                                ) : tasks.length === 0 ? (
+                                {/* SKELETON สำหรับโหลดแผนงาน */}
+                                {!isInitialLoading && isFetchingPlan ? (
+                                    Array.from({ length: 2 }).map((_, i) => (
+                                        <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden animate-pulse">
+                                            <div className="flex flex-col sm:flex-row border-b border-gray-100">
+                                                <div className="p-4 sm:p-5 flex-1 flex flex-col justify-center">
+                                                    <div className="flex items-start gap-4">
+                                                        <div className="w-12 h-8 bg-slate-200 rounded-md"></div>
+                                                        <div className="flex-1 space-y-3 mt-1">
+                                                            <div className="h-5 bg-slate-200 rounded w-2/3"></div>
+                                                            <div className="h-3 bg-slate-200 rounded w-1/3"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="p-4 sm:w-64 border-t sm:border-t-0 sm:border-l border-gray-100">
+                                                    <div className="flex justify-between mb-3">
+                                                        <div className="h-3 bg-slate-200 rounded w-20"></div>
+                                                        <div className="h-4 w-10 bg-slate-200 rounded-full"></div>
+                                                    </div>
+                                                    <div className="min-h-[70px] rounded-lg border-2 border-dashed border-gray-200 p-2.5 flex flex-wrap gap-2 items-center">
+                                                        <div className="w-16 h-7 bg-slate-200 rounded-full"></div>
+                                                        <div className="w-20 h-7 bg-slate-200 rounded-full"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : tasks.length === 0 && !isInitialLoading ? (
                                     <div className="text-center py-16 bg-white rounded-xl border-2 border-dashed border-gray-200">
                                         <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                                            <i data-lucide="clipboard-x" className="w-8 h-8 text-gray-400"></i>
+                                            <i className="fa-solid fa-clipboard-question text-gray-400 text-3xl"></i>
                                         </div>
                                         <h3 className="text-lg font-medium text-gray-900 mb-1">ไม่มีแผนงานในวันนี้</h3>
                                         <p className="text-sm text-gray-500">เริ่มต้นโดยการเพิ่มงานใหม่ แล้วลากพนักงานมาลงได้เลย</p>
                                     </div>
-                                ) : tasks.map((task) => {
+                                ) : tasks.map(task => {
                                     let badgeColor = "bg-blue-100 text-blue-700 border-blue-200";
                                     let periodText = "เต็มวัน";
                                     if (task.period === "morning") { badgeColor = "bg-orange-100 text-orange-700 border-orange-200"; periodText = "ครึ่งวันเช้า"; }
                                     if (task.period === "afternoon") { badgeColor = "bg-purple-100 text-purple-700 border-purple-200"; periodText = "ครึ่งวันบ่าย"; }
 
                                     return (
-                                        <div key={task.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden group">
+                                        <div key={task.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden group hover:border-gray-400 transition-colors">
                                             <div className="flex flex-col sm:flex-row border-b border-gray-100">
                                                 <div className="p-4 sm:p-5 flex-1 flex flex-col justify-center">
                                                     <div className="flex items-start justify-between">
@@ -390,14 +479,14 @@
                                                             <div className="flex-1 mr-4">
                                                                 <input type="text" value={task.name} onChange={(e) => handleUpdateTaskField(task.id, 'name', e.target.value)} className="font-semibold text-gray-800 text-lg leading-tight w-full bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none transition-colors mb-1" placeholder="ระบุชื่องาน..." />
                                                                 <div className="flex items-center">
-                                                                    <i data-lucide="briefcase" className="w-3.5 h-3.5 mr-1.5 text-gray-400"></i>
+                                                                    <i className="fa-solid fa-briefcase text-gray-400 mr-1.5 text-sm"></i>
                                                                     <span className="text-sm text-gray-500 mr-1">เจ้าของงาน: </span>
                                                                     <input type="text" value={task.owner} onChange={(e) => handleUpdateTaskField(task.id, 'owner', e.target.value)} className="text-sm text-gray-700 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none w-48 transition-colors" placeholder="เพิ่มเจ้าของงาน..." />
                                                                 </div>
                                                             </div>
                                                         </div>
                                                         <button onClick={() => handleDeleteTask(task.id)} className="text-gray-400 hover:text-white hover:bg-red-500 p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-all ml-2" title="ลบกล่องงานนี้">
-                                                            <i data-lucide="trash-2" className="w-4 h-4"></i>
+                                                            <i className="fa-solid fa-trash-can"></i>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -412,18 +501,17 @@
                                                     </div>
                                                     
                                                     <div className={`min-h-[70px] rounded-lg border-2 border-dashed transition-colors ${dragOverTaskId === task.id ? 'border-gray-400 bg-gray-50' : 'border-gray-300 bg-white'} flex flex-wrap gap-2 p-2.5 items-center ${task.assignees.length === 0 ? 'justify-center' : 'justify-start'}`}>
-                                                        {task.assignees.length === 0 && <span className="text-xs text-gray-400 text-center pointer-events-none flex flex-col items-center"><i data-lucide="download" className="w-4 h-4 mb-1 opacity-50"></i> ลากมาวาง</span>}
+                                                        {task.assignees.length === 0 && <span className="text-xs text-gray-400 text-center pointer-events-none flex flex-col items-center"><i className="fa-solid fa-arrow-down mb-1 opacity-50"></i> ลากมาวาง</span>}
                                                         {task.assignees.map(emp => {
-                                                            // ตรวจจับแผนกเพื่อเปลี่ยนสีคนสวน/Cleaning ให้เห็นชัดๆ ภายในกล่องงาน
                                                             const isGardener = !emp.department || emp.department === "คนสวน";
-                                                            const badgeColor = !isGardener ? "border-blue-200 text-blue-700" : "border-green-200 text-green-700";
+                                                            const empBadgeColor = !isGardener ? "border-blue-200 text-blue-700" : "border-green-200 text-green-700";
                                                             const iconHover = !isGardener ? "hover:bg-blue-100 hover:text-blue-600" : "hover:bg-green-100 hover:text-green-600";
                                                             
                                                             return (
-                                                                <div key={emp.id} className={`bg-white border shadow-sm rounded-full pl-3 pr-1 py-1 text-[13px] font-medium flex items-center gap-1.5 hover:border-gray-400 hover:shadow transition-all ${badgeColor}`}>
+                                                                <div key={emp.id} className={`bg-white border shadow-sm rounded-full pl-3 pr-1 py-1 text-[13px] font-medium flex items-center gap-1.5 hover:border-gray-400 hover:shadow transition-all ${empBadgeColor}`}>
                                                                     {emp.name}
                                                                     <button onClick={() => removeAssignee(task.id, emp)} className={`text-gray-400 rounded-full p-0.5 transition-colors ${iconHover}`}>
-                                                                        <i data-lucide="x" className="w-3.5 h-3.5"></i>
+                                                                        <i className="fa-solid fa-xmark"></i>
                                                                     </button>
                                                                 </div>
                                                             );
