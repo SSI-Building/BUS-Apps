@@ -4,12 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบวางแผนงานประจำวัน (Drag & Drop)</title>
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- 🌟 เพิ่มไลบรารี SheetJS สำหรับสร้างไฟล์ Excel 🌟 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
         body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; }
         ::-webkit-scrollbar { width: 8px; }
@@ -34,13 +45,20 @@
             return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
         };
 
-        // ฟังก์ชันแปลงวันที่กลับเป็นภาษาไทยแค่ตอน "แสดงผล" เท่านั้น 
-        // (ส่วนตอนส่งหลังบ้าน จะใช้ YYYY-MM-DD ล้วนๆ)
-        const displayThaiDate = (isoString) => {
+        const formatThaiDate = (isoString) => {
             if (!isoString) return "";
             const [year, month, day] = isoString.split('-');
             const months = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
             return `${parseInt(day, 10)} ${months[parseInt(month, 10) - 1]} ${parseInt(year, 10) + 543}`;
+        };
+
+        const formatThaiDateFull = (isoString) => {
+            if (!isoString) return "";
+            const dateObj = new Date(isoString);
+            const days = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
+            const [year, month, day] = isoString.split('-');
+            const months = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+            return `${days[dateObj.getDay()]} ที่ ${parseInt(day, 10)} ${months[parseInt(month, 10) - 1]} ${parseInt(year, 10) + 543}`;
         };
 
         function App() {
@@ -50,22 +68,19 @@
             const [activeTab, setActiveTab] = useState("Cleaning");
 
             const [isInitialLoading, setIsInitialLoading] = useState(true);
-            const [isLoadingData, setIsLoadingData] = useState(true); // ใช้ตัวเดียวคุมการโหลดตอนเปลี่ยนวันที่
+            const [isLoadingData, setIsLoadingData] = useState(true);
             const [isSaving, setIsSaving] = useState(false);
 
             const [newTaskForm, setNewTaskForm] = useState({ number: '', name: '', owner: '', period: 'full' });
             const [dragOverTaskId, setDragOverTaskId] = useState(null);
 
-            // 🌟 รวมการดึงข้อมูลเหลือ Request เดียว (Init Data) 🌟
             useEffect(() => {
                 let cancelled = false;
-                
                 const fetchInitData = async () => {
                     try {
                         setIsLoadingData(true);
                         setTasks([]);
                         
-                        // ยิงรอบเดียวได้ทั้ง พนักงาน + แผนงาน
                         const response = await fetch(`${API_URL}?action=init&date=${date}&t=${Date.now()}`);
                         const result = await response.json();
 
@@ -73,14 +88,12 @@
 
                         if (result.success) {
                             if (result.employees) setAllEmployees(result.employees);
-                            
                             if (result.plan && result.plan.length > 0) {
                                 const taskMap = {};
                                 result.plan.forEach(row => {
                                     let pCode = 'full';
                                     if (row.taskPeriod === 'ครึ่งวันเช้า') pCode = 'morning';
                                     if (row.taskPeriod === 'ครึ่งวันบ่าย') pCode = 'afternoon';
-                                    
                                     const key = `${row.taskNumber}-${row.taskName}-${pCode}`;
                                     if (!taskMap[key]) {
                                         taskMap[key] = {
@@ -92,9 +105,7 @@
                                     taskMap[key].assignees.push({ id: row.empId, name: row.empName, lineId: row.lineId, department: row.department });
                                 });
                                 setTasks(Object.values(taskMap));
-                            } else {
-                                setTasks([]);
-                            }
+                            } else setTasks([]);
                         }
                     } catch (error) {
                         console.error("ไม่สามารถดึงข้อมูลได้", error);
@@ -104,7 +115,6 @@
                         setIsInitialLoading(false); 
                     }
                 };
-
                 fetchInitData();
                 return () => { cancelled = true; };
             }, [date]);
@@ -129,16 +139,14 @@
 
             const handleSavePlan = async () => {
                 const planData = [];
-                // ส่งเป็น YYYY-MM-DD แบบตรงไปตรงมา
                 const isoDateStr = date; 
-                const displayThai = displayThaiDate(date);
+                const displayThai = formatThaiDate(date);
 
                 tasks.forEach(task => {
                     if (task.assignees.length > 0) {
                         let periodText = 'เต็มวัน';
                         if (task.period === 'morning') periodText = 'ครึ่งวันเช้า';
                         if (task.period === 'afternoon') periodText = 'ครึ่งวันบ่าย';
-
                         task.assignees.forEach(emp => {
                             planData.push({
                                 empId: emp.id, empName: emp.name, lineId: emp.lineId || "",
@@ -158,8 +166,7 @@
                 try {
                     setIsSaving(true);
                     const response = await fetch(API_URL, {
-                        method: "POST",
-                        headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
                         body: JSON.stringify({ action: "saveWorkPlan", planData: planData, workDate: isoDateStr })
                     });
                     const result = await response.json();
@@ -191,7 +198,6 @@
             };
 
             const handleDragStart = (e, employee) => {
-                // แนบ Department ไปด้วยตอน Drag
                 const empData = { ...employee, department: employee.department || activeTab };
                 e.dataTransfer.setData('application/json', JSON.stringify(empData));
             };
@@ -207,7 +213,6 @@
                 if (!targetTask) return;
 
                 const empStatus = getEmployeeStatus(employee.id);
-
                 if (targetTask.period === 'full' && (empStatus.morning || empStatus.afternoon)) {
                     alert(`ไม่สามารถจัดลงงาน "เต็มวัน" ได้ เนื่องจากมีงานครึ่งวันแล้ว`); return;
                 }
@@ -226,10 +231,131 @@
                 setTasks(prev => prev.map(task => task.id === taskId ? { ...task, assignees: task.assignees.filter(emp => emp.id !== employee.id) } : task));
             };
 
+            // ========================================================
+            // ฟังก์ชันคำนวณการยุบรวมคอลัมน์เหมือนเดิม
+            // ========================================================
+            const computeRowSpans = (taskList) => {
+                let rowSpans = {};
+                let skips = {};
+                for(let i=0; i<taskList.length; i++) {
+                    if(skips[taskList[i].id]) continue;
+                    let span = 1;
+                    let currA = taskList[i].assignees.map(a=>a.name).sort().join(' + ');
+
+                    if (currA !== "") {
+                        for(let j=i+1; j<taskList.length; j++) {
+                            let nextA = taskList[j].assignees.map(a=>a.name).sort().join(' + ');
+                            if(currA === nextA) {
+                                span++;
+                                skips[taskList[j].id] = true;
+                            } else break;
+                        }
+                    }
+                    rowSpans[taskList[i].id] = span;
+                }
+                return { rowSpans, skips };
+            };
+
+            // ========================================================
+            // 🌟 ฟังก์ชันส่งออกเป็นไฟล์ Excel (.xlsx) 🌟
+            // ========================================================
+            const handleExportExcel = () => {
+                if (tasks.length === 0) {
+                    alert("ไม่มีแผนงานให้ส่งออกครับ");
+                    return;
+                }
+
+                // เรียงลำดับงาน และแยกแผนก
+                const sortedTasks = [...tasks].sort((a, b) => parseInt(a.number || 0) - parseInt(b.number || 0));
+                const cleaningTasks = sortedTasks.filter(t => !t.assignees.some(a => a.department === 'คนสวน' || a.department === 'งานคนตัดหญ้า'));
+                const gardenTasks = sortedTasks.filter(t => t.assignees.some(a => a.department === 'คนสวน' || a.department === 'งานคนตัดหญ้า'));
+
+                const aoa = [];    // อาร์เรย์เก็บข้อมูลทีละแถว
+                const merges = []; // เก็บตำแหน่งที่จะรวมเซลล์ (Merge Cells)
+                let currentRow = 0;
+
+                // 1. แถวบนสุด (Header ใหญ่)
+                aoa.push(["Cleaning", "", `แผนงานประจำวัน ${formatThaiDateFull(date)}`, ""]);
+                merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 1 } }); // A1:B1
+                merges.push({ s: { r: currentRow, c: 2 }, e: { r: currentRow, c: 3 } }); // C1:D1
+                currentRow++;
+
+                // 2. แถวหัวตาราง
+                aoa.push(["ลำดับที่", "ชื่องาน", "เจ้าของงาน", "ผู้ปฏิบัติงาน"]);
+                currentRow++;
+
+                // ฟังก์ชันช่วยยัดข้อมูลงานลงตาราง
+                const pushTasksToExcel = (taskList) => {
+                    const { rowSpans, skips } = computeRowSpans(taskList);
+                    taskList.forEach(task => {
+                        const assigneeStr = task.assignees.map(a => a.name).join(' + ');
+                        const periodBadge = task.period === 'morning' ? ' (เช้า)' : task.period === 'afternoon' ? ' (บ่าย)' : '';
+                        
+                        const rowData = [
+                            task.number || "",
+                            task.name + periodBadge,
+                            task.owner || "",
+                            skips[task.id] ? "" : assigneeStr
+                        ];
+                        aoa.push(rowData);
+                        
+                        // ถ้าระบบบอกให้ยุบรวมเซลล์
+                        if (!skips[task.id] && rowSpans[task.id] > 1) {
+                            merges.push({
+                                s: { r: currentRow, c: 3 }, 
+                                e: { r: currentRow + rowSpans[task.id] - 1, c: 3 }
+                            });
+                        }
+                        currentRow++;
+                    });
+                };
+
+                // ใส่ Cleaning
+                pushTasksToExcel(cleaningTasks);
+
+                // ใส่งานคนตัดหญ้า
+                if (gardenTasks.length > 0) {
+                    aoa.push(["", "งานคนตัดหญ้า", "", ""]);
+                    currentRow++;
+                    pushTasksToExcel(gardenTasks);
+                }
+
+                // 3. ใส่ส่วนท้าย (เรื่องแจ้ง/ประเด็น)
+                aoa.push(["เรื่องแจ้ง / ประเด็น", "", "", ""]);
+                merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 3 } });
+                currentRow++;
+
+                aoa.push(["1", "", "", ""]);
+                merges.push({ s: { r: currentRow, c: 1 }, e: { r: currentRow, c: 3 } });
+                currentRow++;
+
+                aoa.push(["2", "", "", ""]);
+                merges.push({ s: { r: currentRow, c: 1 }, e: { r: currentRow, c: 3 } });
+                currentRow++;
+
+                // สร้าง Worksheet จากข้อมูล
+                const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+                // กำหนดความกว้างคอลัมน์ให้สวยงามตอนเปิดไฟล์
+                ws['!cols'] = [
+                    { wch: 10 }, // ลำดับที่
+                    { wch: 45 }, // ชื่องาน
+                    { wch: 25 }, // เจ้าของงาน
+                    { wch: 45 }  // ผู้ปฏิบัติงาน
+                ];
+                
+                // กำหนดเซลล์ที่ต้องถูก Merge
+                ws['!merges'] = merges;
+
+                // สร้าง Workbook และดาวน์โหลดไฟล์
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "WorkPlan");
+                XLSX.writeFile(wb, `แผนงานประจำวัน_${date}.xlsx`);
+            };
+
             return (
                 <div className="min-h-screen flex flex-col relative">
-
-                    {/* 🌟 FULL SCREEN INITIAL LOADING 🌟 */}
+                        
                     {isInitialLoading && (
                         <div className="fixed inset-0 z-[9999] bg-slate-50 flex items-center justify-center">
                             <div className="text-center px-6 flex flex-col items-center">
@@ -238,7 +364,6 @@
                                 </div>
                                 <h2 className="text-2xl font-bold text-slate-800 tracking-tight mb-2">แผนงานประจำวัน</h2>
                                 <p className="text-sm text-slate-500 mb-8">กำลังเตรียมระบบสำหรับการใช้งาน</p>
-                                
                                 <div className="w-48 h-1 bg-gray-200 rounded-full overflow-hidden relative">
                                     <div className="absolute top-0 bottom-0 left-0 w-1/2 bg-blue-600 rounded-full animate-loading-bar"></div>
                                 </div>
@@ -260,18 +385,15 @@
                             
                             <div className="flex items-center gap-3 flex-wrap">
                                 <div className="flex items-center bg-gray-50 border border-gray-200 px-3 py-2 rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-blue-100 transition-all">
-                                    <input 
-                                        type="date" 
-                                        value={date} 
-                                        onChange={(e) => setDate(e.target.value)} 
-                                        className="bg-transparent border-none outline-none font-medium text-gray-700 w-36 cursor-pointer" 
-                                    />
+                                    <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-transparent border-none outline-none font-medium text-gray-700 w-36 cursor-pointer" />
                                 </div>
-                                <button 
-                                    onClick={handleSavePlan} 
-                                    disabled={isSaving || isLoadingData} 
-                                    className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-md flex items-center gap-2"
-                                >
+                                
+                                {/* 🌟 ปุ่มส่งออกเป็น Excel 🌟 */}
+                                <button onClick={handleExportExcel} disabled={isLoadingData || isInitialLoading} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-md flex items-center gap-2">
+                                    <i className="fa-solid fa-file-excel"></i> ส่งออก Excel
+                                </button>
+
+                                <button onClick={handleSavePlan} disabled={isSaving || isLoadingData} className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-md flex items-center gap-2">
                                     {isSaving ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-floppy-disk"></i>}
                                     {isSaving ? "กำลังบันทึก..." : "บันทึกอัปเดต"}
                                 </button>
@@ -280,50 +402,31 @@
                     </header>
 
                     <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex flex-col md:flex-row gap-6 lg:gap-8">
-                        
-                        {/* ฝั่งซ้าย: กล่องรายชื่อพนักงาน */}
                         <div className="w-full md:w-1/3 lg:w-1/4">
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-0 sticky top-24 overflow-hidden">
                                 <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                                    <h2 className="text-lg font-bold text-gray-800 flex items-center">
-                                        <i className="fa-solid fa-users text-blue-500 mr-2"></i>พนักงาน
-                                    </h2>
-                                    {/* ป้ายแสดงวันที่แบบภาษาไทย */}
-                                    <span className="text-xs font-semibold bg-gray-200 text-gray-600 px-2 py-1 rounded-md">
-                                        {displayThaiDate(date)}
-                                    </span>
+                                    <h2 className="text-lg font-bold text-gray-800 flex items-center"><i className="fa-solid fa-users text-blue-500 mr-2"></i>พนักงาน</h2>
+                                    <span className="text-xs font-semibold bg-gray-200 text-gray-600 px-2 py-1 rounded-md">{formatThaiDate(date)}</span>
                                 </div>
-
                                 <div className="flex border-b border-gray-200 bg-white">
-                                    <button onClick={() => setActiveTab("Cleaning")} className={`flex-1 py-3 text-sm font-semibold text-center border-b-2 transition-colors duration-200 ${activeTab === "Cleaning" ? "border-blue-500 text-blue-600 bg-blue-50/30" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}>
-                                        Cleaning
-                                    </button>
-                                    <button onClick={() => setActiveTab("คนสวน")} className={`flex-1 py-3 text-sm font-semibold text-center border-b-2 transition-colors duration-200 ${activeTab === "คนสวน" ? "border-green-500 text-green-600 bg-green-50/30" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}>
-                                        คนสวน
-                                    </button>
+                                    <button onClick={() => setActiveTab("Cleaning")} className={`flex-1 py-3 text-sm font-semibold text-center border-b-2 transition-colors duration-200 ${activeTab === "Cleaning" ? "border-blue-500 text-blue-600 bg-blue-50/30" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}>Cleaning</button>
+                                    <button onClick={() => setActiveTab("คนสวน")} className={`flex-1 py-3 text-sm font-semibold text-center border-b-2 transition-colors duration-200 ${activeTab === "คนสวน" ? "border-green-500 text-green-600 bg-green-50/30" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}>คนสวน</button>
                                 </div>
-
                                 <div className="p-4">
                                     <div className="flex flex-wrap gap-2 max-h-[55vh] overflow-y-auto pb-2 pr-1">
-                                        
-                                        {/* 🌟 SKELETON รายชื่อพนักงาน 🌟 */}
                                         {!isInitialLoading && isLoadingData ? (
                                             Array.from({ length: 6 }).map((_, i) => (
                                                 <div key={i} className="border px-3 py-3 rounded-lg flex items-center w-[calc(50%-0.25rem)] lg:w-full bg-white border-gray-100 shadow-sm animate-pulse">
-                                                    <div className="w-3.5 h-4 bg-slate-200 rounded mr-3"></div>
-                                                    <div className="h-3.5 bg-slate-200 rounded w-2/3"></div>
+                                                    <div className="w-3.5 h-4 bg-slate-200 rounded mr-3"></div><div className="h-3.5 bg-slate-200 rounded w-2/3"></div>
                                                 </div>
                                             ))
                                         ) : visibleEmployees.length === 0 ? (
-                                            <div className="w-full text-center py-6 text-sm text-gray-500 border border-dashed rounded-lg bg-gray-50">
-                                                ไม่มีพนักงานว่างในแผนกนี้
-                                            </div>
+                                            <div className="w-full text-center py-6 text-sm text-gray-500 border border-dashed rounded-lg bg-gray-50">ไม่มีพนักงานว่างในแผนกนี้</div>
                                         ) : (
                                             visibleEmployees.map(employee => {
                                                 const status = getEmployeeStatus(employee.id);
                                                 const boxColor = employee.department === "Cleaning" ? "bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-800" : "bg-green-50 hover:bg-green-100 border-green-200 text-green-800";
                                                 const iconColor = employee.department === "Cleaning" ? "text-blue-400" : "text-green-500";
-
                                                 return (
                                                     <div key={employee.id} draggable onDragStart={(e) => handleDragStart(e, employee)} className={`border px-3 py-2.5 rounded-lg cursor-grab active:cursor-grabbing flex items-center shadow-sm w-[calc(50%-0.25rem)] lg:w-full group ${boxColor}`}>
                                                         <i className={`fa-solid fa-grip-vertical mr-2 opacity-50 group-hover:opacity-100 ${iconColor}`}></i>
@@ -339,12 +442,9 @@
                             </div>
                         </div>
 
-                        {/* ขวา: กล่องรายการงาน */}
                         <div className="w-full md:w-2/3 lg:w-3/4 flex flex-col gap-6">
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-                                <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center border-b border-gray-100 pb-3">
-                                    <i className="fa-solid fa-circle-plus text-blue-500 mr-2"></i>เพิ่มงานใหม่
-                                </h2>
+                                <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center border-b border-gray-100 pb-3"><i className="fa-solid fa-circle-plus text-blue-500 mr-2"></i>เพิ่มงานใหม่</h2>
                                 <form onSubmit={handleAddTask} className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
                                     <div className="w-full sm:w-20">
                                         <label className="block text-xs font-semibold text-gray-600 mb-1">หมายเลข</label>
@@ -371,8 +471,6 @@
                             </div>
 
                             <div className="space-y-4">
-                                
-                                {/* 🌟 SKELETON แผนงาน 🌟 */}
                                 {!isInitialLoading && isLoadingData ? (
                                     Array.from({ length: 2 }).map((_, i) => (
                                         <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden animate-pulse">
@@ -380,34 +478,23 @@
                                                 <div className="p-4 sm:p-5 flex-1 flex flex-col justify-center">
                                                     <div className="flex items-start gap-4">
                                                         <div className="w-12 h-8 bg-slate-200 rounded-md"></div>
-                                                        <div className="flex-1 space-y-3 mt-1">
-                                                            <div className="h-5 bg-slate-200 rounded w-2/3"></div>
-                                                            <div className="h-3 bg-slate-200 rounded w-1/3"></div>
-                                                        </div>
+                                                        <div className="flex-1 space-y-3 mt-1"><div className="h-5 bg-slate-200 rounded w-2/3"></div><div className="h-3 bg-slate-200 rounded w-1/3"></div></div>
                                                     </div>
                                                 </div>
                                                 <div className="p-4 sm:w-64 border-t sm:border-t-0 sm:border-l border-gray-100">
-                                                    <div className="flex justify-between mb-3">
-                                                        <div className="h-3 bg-slate-200 rounded w-20"></div>
-                                                        <div className="h-4 w-10 bg-slate-200 rounded-full"></div>
-                                                    </div>
-                                                    <div className="min-h-[70px] rounded-lg border-2 border-dashed border-gray-200 p-2.5 flex flex-wrap gap-2 items-center">
-                                                        <div className="w-16 h-7 bg-slate-200 rounded-full"></div>
-                                                        <div className="w-20 h-7 bg-slate-200 rounded-full"></div>
-                                                    </div>
+                                                    <div className="flex justify-between mb-3"><div className="h-3 bg-slate-200 rounded w-20"></div><div className="h-4 w-10 bg-slate-200 rounded-full"></div></div>
+                                                    <div className="min-h-[70px] rounded-lg border-2 border-dashed border-gray-200 p-2.5 flex flex-wrap gap-2 items-center"><div className="w-16 h-7 bg-slate-200 rounded-full"></div></div>
                                                 </div>
                                             </div>
                                         </div>
                                     ))
                                 ) : tasks.length === 0 ? (
                                     <div className="text-center py-16 bg-white rounded-xl border-2 border-dashed border-gray-200">
-                                        <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                                            <i className="fa-solid fa-clipboard-question text-gray-400 text-3xl"></i>
-                                        </div>
-                                        <h3 className="text-lg font-medium text-gray-900 mb-1">ไม่มีแผนงานในวันที่ {displayThaiDate(date)}</h3>
+                                        <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i className="fa-solid fa-clipboard-question text-gray-400 text-3xl"></i></div>
+                                        <h3 className="text-lg font-medium text-gray-900 mb-1">ไม่มีแผนงานในวันที่ {formatThaiDate(date)}</h3>
                                         <p className="text-sm text-gray-500">เริ่มต้นโดยการเพิ่มงานใหม่ แล้วลากพนักงานมาลงได้เลย</p>
                                     </div>
-                                ) : tasks.map(task => {
+                                ) : [...tasks].sort((a, b) => parseInt(a.number || 0) - parseInt(b.number || 0)).map(task => {
                                     let badgeColor = "bg-blue-100 text-blue-700 border-blue-200";
                                     let periodText = "เต็มวัน";
                                     if (task.period === "morning") { badgeColor = "bg-orange-100 text-orange-700 border-orange-200"; periodText = "ครึ่งวันเช้า"; }
@@ -434,9 +521,7 @@
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <button onClick={() => handleDeleteTask(task.id)} className="text-gray-400 hover:text-white hover:bg-red-500 p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-all ml-2" title="ลบกล่องงานนี้">
-                                                            <i className="fa-solid fa-trash-can"></i>
-                                                        </button>
+                                                        <button onClick={() => handleDeleteTask(task.id)} className="text-gray-400 hover:text-white hover:bg-red-500 p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-all ml-2" title="ลบกล่องงานนี้"><i className="fa-solid fa-trash-can"></i></button>
                                                     </div>
                                                 </div>
 
@@ -445,23 +530,18 @@
                                                     onDragOver={(e) => { e.preventDefault(); setDragOverTaskId(task.id); }} onDragLeave={() => setDragOverTaskId(null)} onDrop={(e) => handleDrop(e, task.id)}
                                                 >
                                                     <div className="text-xs font-bold text-gray-500 mb-2 uppercase flex justify-between items-center">
-                                                        <span>ผู้ปฏิบัติงาน</span>
-                                                        <span className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-[10px]">{task.assignees.length} คน</span>
+                                                        <span>ผู้ปฏิบัติงาน</span><span className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-[10px]">{task.assignees.length} คน</span>
                                                     </div>
-                                                    
                                                     <div className={`min-h-[70px] rounded-lg border-2 border-dashed transition-colors ${dragOverTaskId === task.id ? 'border-gray-400 bg-gray-50' : 'border-gray-300 bg-white'} flex flex-wrap gap-2 p-2.5 items-center ${task.assignees.length === 0 ? 'justify-center' : 'justify-start'}`}>
                                                         {task.assignees.length === 0 && <span className="text-xs text-gray-400 text-center pointer-events-none flex flex-col items-center"><i className="fa-solid fa-arrow-down mb-1 opacity-50"></i> ลากมาวาง</span>}
                                                         {task.assignees.map(emp => {
                                                             const isGardener = !emp.department || emp.department === "คนสวน";
                                                             const empBadgeColor = !isGardener ? "border-blue-200 text-blue-700" : "border-green-200 text-green-700";
                                                             const iconHover = !isGardener ? "hover:bg-blue-100 hover:text-blue-600" : "hover:bg-green-100 hover:text-green-600";
-                                                            
                                                             return (
                                                                 <div key={emp.id} className={`bg-white border shadow-sm rounded-full pl-3 pr-1 py-1 text-[13px] font-medium flex items-center gap-1.5 hover:border-gray-400 hover:shadow transition-all ${empBadgeColor}`}>
                                                                     {emp.name}
-                                                                    <button onClick={() => removeAssignee(task.id, emp)} className={`text-gray-400 rounded-full p-0.5 transition-colors ${iconHover}`}>
-                                                                        <i className="fa-solid fa-xmark"></i>
-                                                                    </button>
+                                                                    <button onClick={() => removeAssignee(task.id, emp)} className={`text-gray-400 rounded-full p-0.5 transition-colors ${iconHover}`}><i className="fa-solid fa-xmark"></i></button>
                                                                 </div>
                                                             );
                                                         })}
