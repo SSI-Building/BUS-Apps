@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบวางแผนงานประจำวัน (Drag & Drop)</title>
+    <title>ระบบวางแผนงานประจำวัน (Drag & Drop + AI)</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -22,7 +22,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; }
+        body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; overflow-x: hidden; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -30,6 +30,14 @@
         input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
         @keyframes loadingBar { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
         .animate-loading-bar { animation: loadingBar 1.5s infinite ease-in-out; }
+
+        /* 🌟 Animation สำหรับ AI Panel 🌟 */
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes slideLeft { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @media (min-width: 768px) {
+            .md\\:animate-slide-left { animation: slideLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        }
     </style>
 </head>
 <body>
@@ -73,6 +81,12 @@
 
             const [newTaskForm, setNewTaskForm] = useState({ number: '', name: '', owner: '', period: 'full' });
             const [dragOverTaskId, setDragOverTaskId] = useState(null);
+
+            // 🌟 State สำหรับระบบ AI Assistant 🌟
+            const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
+            const [aiPrompt, setAiPrompt] = useState("");
+            const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+            const [aiPreviewTasks, setAiPreviewTasks] = useState([]); // เก็บงานที่ AI วิเคราะห์มาไว้ให้เช็คก่อน
 
             useEffect(() => {
                 let cancelled = false;
@@ -136,6 +150,80 @@
                 const status = getEmployeeStatus(employee.id);
                 return !status.full && !(status.morning && status.afternoon);
             });
+
+            // ==========================================
+            // 🌟 1. ส่งข้อความให้ AI วิเคราะห์ (ได้ Preview)
+            // ==========================================
+            const handleAnalyzeAI = async () => {
+                if (!aiPrompt.trim()) return;
+                setIsGeneratingAI(true);
+                try {
+                    const response = await fetch(API_URL, {
+                        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        body: JSON.stringify({ action: "generateTasksWithAI", promptText: aiPrompt })
+                    });
+                    const result = await response.json();
+                    
+                    if (result.success && result.tasks) {
+                        // แมตช์ชื่อพนักงาน แล้วเก็บเข้า Preview
+                        const preview = result.tasks.map((t, index) => {
+                            const mappedAssignees = [];
+                            if (t.assigneeNames && Array.isArray(t.assigneeNames)) {
+                                t.assigneeNames.forEach(aiName => {
+                                    const matchedEmp = allEmployees.find(emp => 
+                                        emp.name.replace(/\s+/g, '') === aiName.replace(/\s+/g, '') ||
+                                        emp.name.includes(aiName) || aiName.includes(emp.name)
+                                    );
+                                    if (matchedEmp) mappedAssignees.push(matchedEmp);
+                                });
+                            }
+                            return {
+                                id: `preview-task-${Date.now()}-${index}`,
+                                name: t.name || 'งานใหม่',
+                                owner: t.owner || '',
+                                period: t.period || 'full',
+                                assignees: mappedAssignees
+                            };
+                        });
+                        setAiPreviewTasks(preview);
+                    } else {
+                        alert("AI ไม่สามารถสร้างงานได้: " + (result.message || "เกิดข้อผิดพลาด"));
+                    }
+                } catch (error) {
+                    alert("เชื่อมต่อ AI ไม่สำเร็จ กรุณาลองใหม่");
+                } finally {
+                    setIsGeneratingAI(false);
+                }
+            };
+
+            // ==========================================
+            // 🌟 2. ยืนยันเอา Preview ลงตารางงานจริง
+            // ==========================================
+            const handleConfirmAITasks = () => {
+                let currentMaxNumber = tasks.length > 0 
+                    ? Math.max(...tasks.map(t => parseInt(t.number) || 0)) 
+                    : 0;
+
+                const finalTasks = aiPreviewTasks.map(pt => {
+                    currentMaxNumber++;
+                    return {
+                        ...pt,
+                        id: `ai-task-${Date.now()}-${Math.random()}`,
+                        number: currentMaxNumber.toString()
+                    };
+                });
+
+                setTasks(prev => [...prev, ...finalTasks]);
+                
+                // เคลียร์ค่าและปิด Panel
+                setAiPreviewTasks([]);
+                setAiPrompt("");
+                setIsAIPanelOpen(false);
+            };
+
+            const handleCancelAIPreview = () => {
+                setAiPreviewTasks([]);
+            };
 
             const handleSavePlan = async () => {
                 const planData = [];
@@ -231,9 +319,6 @@
                 setTasks(prev => prev.map(task => task.id === taskId ? { ...task, assignees: task.assignees.filter(emp => emp.id !== employee.id) } : task));
             };
 
-            // ========================================================
-            // ฟังก์ชันคำนวณการยุบรวมคอลัมน์เหมือนเดิม
-            // ========================================================
             const computeRowSpans = (taskList) => {
                 let rowSpans = {};
                 let skips = {};
@@ -241,14 +326,10 @@
                     if(skips[taskList[i].id]) continue;
                     let span = 1;
                     let currA = taskList[i].assignees.map(a=>a.name).sort().join(' + ');
-
                     if (currA !== "") {
                         for(let j=i+1; j<taskList.length; j++) {
                             let nextA = taskList[j].assignees.map(a=>a.name).sort().join(' + ');
-                            if(currA === nextA) {
-                                span++;
-                                skips[taskList[j].id] = true;
-                            } else break;
+                            if(currA === nextA) { span++; skips[taskList[j].id] = true; } else break;
                         }
                     }
                     rowSpans[taskList[i].id] = span;
@@ -256,106 +337,60 @@
                 return { rowSpans, skips };
             };
 
-            // ========================================================
-            // 🌟 ฟังก์ชันส่งออกเป็นไฟล์ Excel (.xlsx) 🌟
-            // ========================================================
             const handleExportExcel = () => {
-                if (tasks.length === 0) {
-                    alert("ไม่มีแผนงานให้ส่งออกครับ");
-                    return;
-                }
+                if (tasks.length === 0) { alert("ไม่มีแผนงานให้ส่งออกครับ"); return; }
 
-                // เรียงลำดับงาน และแยกแผนก
                 const sortedTasks = [...tasks].sort((a, b) => parseInt(a.number || 0) - parseInt(b.number || 0));
                 const cleaningTasks = sortedTasks.filter(t => !t.assignees.some(a => a.department === 'คนสวน' || a.department === 'งานคนตัดหญ้า'));
                 const gardenTasks = sortedTasks.filter(t => t.assignees.some(a => a.department === 'คนสวน' || a.department === 'งานคนตัดหญ้า'));
 
-                const aoa = [];    // อาร์เรย์เก็บข้อมูลทีละแถว
-                const merges = []; // เก็บตำแหน่งที่จะรวมเซลล์ (Merge Cells)
-                let currentRow = 0;
+                const aoa = []; const merges = []; let currentRow = 0;
 
-                // 1. แถวบนสุด (Header ใหญ่)
                 aoa.push(["Cleaning", "", `แผนงานประจำวัน ${formatThaiDateFull(date)}`, ""]);
-                merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 1 } }); // A1:B1
-                merges.push({ s: { r: currentRow, c: 2 }, e: { r: currentRow, c: 3 } }); // C1:D1
+                merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 1 } }); merges.push({ s: { r: currentRow, c: 2 }, e: { r: currentRow, c: 3 } });
                 currentRow++;
 
-                // 2. แถวหัวตาราง
-                aoa.push(["ลำดับที่", "ชื่องาน", "เจ้าของงาน", "ผู้ปฏิบัติงาน"]);
-                currentRow++;
+                aoa.push(["ลำดับที่", "ชื่องาน", "เจ้าของงาน", "ผู้ปฏิบัติงาน"]); currentRow++;
 
-                // ฟังก์ชันช่วยยัดข้อมูลงานลงตาราง
                 const pushTasksToExcel = (taskList) => {
                     const { rowSpans, skips } = computeRowSpans(taskList);
+                    let displayCounter = 1;
                     taskList.forEach(task => {
                         const assigneeStr = task.assignees.map(a => a.name).join(' + ');
                         const periodBadge = task.period === 'morning' ? ' (เช้า)' : task.period === 'afternoon' ? ' (บ่าย)' : '';
-                        
-                        const rowData = [
-                            task.number || "",
-                            task.name + periodBadge,
-                            task.owner || "",
-                            skips[task.id] ? "" : assigneeStr
-                        ];
+                        const rowData = [ displayCounter++, task.name + periodBadge, task.owner || "", skips[task.id] ? "" : assigneeStr ];
                         aoa.push(rowData);
-                        
-                        // ถ้าระบบบอกให้ยุบรวมเซลล์
                         if (!skips[task.id] && rowSpans[task.id] > 1) {
-                            merges.push({
-                                s: { r: currentRow, c: 3 }, 
-                                e: { r: currentRow + rowSpans[task.id] - 1, c: 3 }
-                            });
+                            merges.push({ s: { r: currentRow, c: 3 }, e: { r: currentRow + rowSpans[task.id] - 1, c: 3 } });
                         }
                         currentRow++;
                     });
                 };
 
-                // ใส่ Cleaning
                 pushTasksToExcel(cleaningTasks);
 
-                // ใส่งานคนตัดหญ้า
                 if (gardenTasks.length > 0) {
-                    aoa.push(["", "งานคนตัดหญ้า", "", ""]);
-                    currentRow++;
-                    pushTasksToExcel(gardenTasks);
+                    aoa.push(["", "งานคนตัดหญ้า", "", ""]); merges.push({ s: { r: currentRow, c: 1 }, e: { r: currentRow, c: 2 } });
+                    currentRow++; pushTasksToExcel(gardenTasks);
                 }
 
-                // 3. ใส่ส่วนท้าย (เรื่องแจ้ง/ประเด็น)
-                aoa.push(["เรื่องแจ้ง / ประเด็น", "", "", ""]);
-                merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 3 } });
-                currentRow++;
+                aoa.push(["เรื่องแจ้ง / ประเด็น", "", "", ""]); merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 3 } }); currentRow++;
+                aoa.push(["1", "", "", ""]); merges.push({ s: { r: currentRow, c: 1 }, e: { r: currentRow, c: 3 } }); currentRow++;
+                aoa.push(["2", "", "", ""]); merges.push({ s: { r: currentRow, c: 1 }, e: { r: currentRow, c: 3 } }); currentRow++;
 
-                aoa.push(["1", "", "", ""]);
-                merges.push({ s: { r: currentRow, c: 1 }, e: { r: currentRow, c: 3 } });
-                currentRow++;
-
-                aoa.push(["2", "", "", ""]);
-                merges.push({ s: { r: currentRow, c: 1 }, e: { r: currentRow, c: 3 } });
-                currentRow++;
-
-                // สร้าง Worksheet จากข้อมูล
                 const ws = XLSX.utils.aoa_to_sheet(aoa);
-
-                // กำหนดความกว้างคอลัมน์ให้สวยงามตอนเปิดไฟล์
-                ws['!cols'] = [
-                    { wch: 10 }, // ลำดับที่
-                    { wch: 45 }, // ชื่องาน
-                    { wch: 25 }, // เจ้าของงาน
-                    { wch: 45 }  // ผู้ปฏิบัติงาน
-                ];
-                
-                // กำหนดเซลล์ที่ต้องถูก Merge
+                ws['!cols'] = [ { wch: 10 }, { wch: 45 }, { wch: 25 }, { wch: 45 } ];
                 ws['!merges'] = merges;
-
-                // สร้าง Workbook และดาวน์โหลดไฟล์
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "WorkPlan");
+                const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "WorkPlan");
                 XLSX.writeFile(wb, `แผนงานประจำวัน_${date}.xlsx`);
             };
 
             return (
-                <div className="min-h-screen flex flex-col relative">
-                        
+                <div className="min-h-screen flex flex-col relative pb-20 md:pb-0">
+
+                    {/* =====================================
+                        INITIAL LOADING
+                    ===================================== */}
                     {isInitialLoading && (
                         <div className="fixed inset-0 z-[9999] bg-slate-50 flex items-center justify-center">
                             <div className="text-center px-6 flex flex-col items-center">
@@ -388,20 +423,20 @@
                                     <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-transparent border-none outline-none font-medium text-gray-700 w-36 cursor-pointer" />
                                 </div>
                                 
-                                {/* 🌟 ปุ่มส่งออกเป็น Excel 🌟 */}
                                 <button onClick={handleExportExcel} disabled={isLoadingData || isInitialLoading} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-md flex items-center gap-2">
-                                    <i className="fa-solid fa-file-excel"></i> ส่งออก Excel
+                                    <i className="fa-solid fa-file-excel"></i> <span className="hidden sm:inline">ส่งออก</span> Excel
                                 </button>
 
                                 <button onClick={handleSavePlan} disabled={isSaving || isLoadingData} className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-md flex items-center gap-2">
                                     {isSaving ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-floppy-disk"></i>}
-                                    {isSaving ? "กำลังบันทึก..." : "บันทึกอัปเดต"}
+                                    {isSaving ? "กำลังบันทึก..." : <span className="hidden sm:inline">บันทึกอัปเดต</span>}
                                 </button>
                             </div>
                         </div>
                     </header>
 
                     <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex flex-col md:flex-row gap-6 lg:gap-8">
+                        
                         <div className="w-full md:w-1/3 lg:w-1/4">
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-0 sticky top-24 overflow-hidden">
                                 <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
@@ -443,8 +478,9 @@
                         </div>
 
                         <div className="w-full md:w-2/3 lg:w-3/4 flex flex-col gap-6">
+                            
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-                                <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center border-b border-gray-100 pb-3"><i className="fa-solid fa-circle-plus text-blue-500 mr-2"></i>เพิ่มงานใหม่</h2>
+                                <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center border-b border-gray-100 pb-3"><i className="fa-solid fa-circle-plus text-blue-500 mr-2"></i>เพิ่มงานด้วยตัวเอง</h2>
                                 <form onSubmit={handleAddTask} className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
                                     <div className="w-full sm:w-20">
                                         <label className="block text-xs font-semibold text-gray-600 mb-1">หมายเลข</label>
@@ -554,6 +590,138 @@
                             </div>
                         </div>
                     </main>
+
+                    {/* =====================================
+                        🌟 FAB BUTTON (ปุ่มลอย AI) 🌟
+                    ===================================== */}
+                    <button 
+                        onClick={() => setIsAIPanelOpen(true)}
+                        className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-full p-4 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 group border-4 border-white"
+                    >
+                        <i className="fa-solid fa-wand-magic-sparkles text-xl group-hover:rotate-12 transition-transform"></i>
+                        <span className="hidden md:inline font-bold pr-1">AI จัดงาน</span>
+                    </button>
+
+                    {/* =====================================
+                        🌟 AI PANEL (Side Panel / Bottom Sheet) 🌟
+                    ===================================== */}
+                    {isAIPanelOpen && (
+                        <div className="fixed inset-0 z-[100] flex justify-end">
+                            {/* Backdrop */}
+                            <div 
+                                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" 
+                                onClick={() => { setIsAIPanelOpen(false); setAiPreviewTasks([]); setAiPrompt(""); }}
+                            ></div>
+                            
+                            {/* Panel Container */}
+                            <div className="relative w-full md:w-[450px] bg-white h-[90vh] md:h-full mt-auto md:mt-0 rounded-t-3xl md:rounded-none md:rounded-l-3xl shadow-2xl flex flex-col animate-slide-up md:animate-slide-left overflow-hidden">
+                                
+                                {/* Header */}
+                                <div className="p-5 border-b border-violet-100 bg-gradient-to-r from-violet-50 to-fuchsia-50 flex justify-between items-center shrink-0">
+                                    <div>
+                                        <h2 className="text-xl font-bold text-violet-800 flex items-center">
+                                            <i className="fa-solid fa-wand-magic-sparkles mr-2 text-violet-600"></i> AI Assistant
+                                        </h2>
+                                        <p className="text-xs text-violet-600 mt-0.5">วางข้อความงาน แล้วให้ AI ช่วยจัดตาราง</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => { setIsAIPanelOpen(false); setAiPreviewTasks([]); setAiPrompt(""); }} 
+                                        className="w-8 h-8 flex justify-center items-center rounded-full bg-white text-gray-500 hover:text-gray-800 shadow-sm"
+                                    >
+                                        <i className="fa-solid fa-xmark text-lg"></i>
+                                    </button>
+                                </div>
+
+                                {/* Body */}
+                                <div className="p-5 flex-1 overflow-y-auto bg-gray-50/50">
+                                    {aiPreviewTasks.length === 0 ? (
+                                        // 1. หน้ากรอกคำสั่ง
+                                        <div className="h-full flex flex-col">
+                                            <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm mb-4">
+                                                <h3 className="text-sm font-bold text-gray-700 mb-2">ตัวอย่างข้อความ:</h3>
+                                                <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg border border-dashed border-gray-200">
+                                                    <p>1. ตัดหญ้าหน้าอาคาร (สมชาย, สมศักดิ์) เต็มวัน</p>
+                                                    <p>2. กวาดออฟฟิศช่วงเช้า ให้พี่วิชัยรับผิดชอบ</p>
+                                                </div>
+                                            </div>
+
+                                            <textarea 
+                                                className="w-full flex-1 min-h-[150px] border border-violet-200 rounded-xl p-4 focus:ring-2 focus:ring-violet-400 outline-none text-sm bg-white shadow-inner resize-none"
+                                                placeholder="วางข้อความรายละเอียดงาน หรือพิมพ์สั่งงานที่นี่..."
+                                                value={aiPrompt}
+                                                onChange={e => setAiPrompt(e.target.value)}
+                                            ></textarea>
+
+                                            <button 
+                                                onClick={handleAnalyzeAI} 
+                                                disabled={isGeneratingAI || !aiPrompt.trim()} 
+                                                className="mt-4 w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white p-3.5 rounded-xl font-bold shadow-md hover:shadow-lg disabled:opacity-50 transition-all flex items-center justify-center shrink-0"
+                                            >
+                                                {isGeneratingAI ? <i className="fa-solid fa-spinner fa-spin mr-2"></i> : <i className="fa-solid fa-bolt mr-2"></i>}
+                                                {isGeneratingAI ? "กำลังวิเคราะห์ข้อมูล..." : "วิเคราะห์และแยกงาน"}
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        // 2. หน้า Preview
+                                        <div className="pb-20">
+                                            <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center">
+                                                <i className="fa-solid fa-eye text-violet-500 mr-2"></i> พรีวิวแผนงาน ({aiPreviewTasks.length} งาน)
+                                            </h3>
+                                            
+                                            <div className="space-y-3">
+                                                {aiPreviewTasks.map((task, idx) => {
+                                                    let badgeColor = "bg-blue-100 text-blue-700 border-blue-200";
+                                                    let periodText = "เต็มวัน";
+                                                    if (task.period === "morning") { badgeColor = "bg-orange-100 text-orange-700 border-orange-200"; periodText = "ครึ่งวันเช้า"; }
+                                                    if (task.period === "afternoon") { badgeColor = "bg-purple-100 text-purple-700 border-purple-200"; periodText = "ครึ่งวันบ่าย"; }
+
+                                                    return (
+                                                        <div key={task.id} className="bg-white border border-gray-200 rounded-xl p-3.5 shadow-sm">
+                                                            <div className="flex justify-between items-start mb-2">
+                                                                <span className="font-bold text-sm text-gray-800">#{idx + 1} {task.name}</span>
+                                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${badgeColor}`}>{periodText}</span>
+                                                            </div>
+                                                            {task.owner && <div className="text-xs text-gray-500 mb-2"><i className="fa-solid fa-briefcase mr-1"></i>{task.owner}</div>}
+                                                            
+                                                            <div className="bg-gray-50 rounded-lg p-2 flex flex-wrap gap-1 mt-2 border border-dashed border-gray-200 min-h-[40px] items-center">
+                                                                {task.assignees.length === 0 ? (
+                                                                    <span className="text-xs text-gray-400 w-full text-center">ไม่มีผู้ปฏิบัติงานที่ดึงได้</span>
+                                                                ) : (
+                                                                    task.assignees.map(emp => (
+                                                                        <span key={emp.id} className="bg-white border border-gray-200 shadow-sm rounded-md px-2 py-1 text-[11px] font-medium text-gray-700">
+                                                                            <i className="fa-solid fa-user text-gray-400 mr-1"></i>{emp.name}
+                                                                        </span>
+                                                                    ))
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Footer (สำหรับหน้า Preview) */}
+                                {aiPreviewTasks.length > 0 && (
+                                    <div className="p-4 border-t bg-white flex gap-3 shrink-0">
+                                        <button 
+                                            onClick={handleCancelAIPreview} 
+                                            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl transition-colors text-sm"
+                                        >
+                                            ยกเลิก
+                                        </button>
+                                        <button 
+                                            onClick={handleConfirmAITasks} 
+                                            className="flex-1 bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 rounded-xl transition-colors shadow-md text-sm flex items-center justify-center"
+                                        >
+                                            <i className="fa-solid fa-check mr-2"></i> เพิ่มลงแผนงาน
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         }
