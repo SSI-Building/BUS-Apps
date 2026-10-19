@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TCS Steel Properties Table</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; }
+        .table-container { max-height: calc(100vh - 220px); overflow-y: auto; }
+        /* Sticky header */
+        thead th { position: sticky; top: 0; z-index: 10; background-color: #1f2937; color: white; }
+        /* Row Colors */
+        .row-available { color: #dc2626; font-weight: 500; } /* สีแดง (มีจำหน่าย) */
+        .row-special { color: #111827; font-weight: 500; } /* สีดำ (สั่งพิเศษ) */
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+    </style>
+</head>
+<body class="text-gray-800 h-screen flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="bg-blue-800 text-white shadow-md p-4 flex justify-between items-center z-20">
+        <div>
+            <h1 class="text-2xl font-bold"><i class="fas fa-industry mr-2"></i>TCS Steel Properties Viewer</h1>
+            <p class="text-sm text-blue-200">อ้างอิงข้อมูลจาก บริษัท ธนาสารเซ็นทรัลสตีล จำกัด (TIS / JIS Standards)</p>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="flex items-center text-sm bg-white/10 px-3 py-1 rounded">
+                <span class="w-3 h-3 rounded-full bg-red-600 mr-2"></span> มีจำหน่ายในประเทศ
+            </div>
+            <div class="flex items-center text-sm bg-white/10 px-3 py-1 rounded">
+                <span class="w-3 h-3 rounded-full bg-black mr-2"></span> สั่งพิเศษ
+            </div>
+            <div class="relative">
+                <i class="fas fa-search absolute left-3 top-2.5 text-gray-400"></i>
+                <input type="text" id="searchInput" placeholder="ค้นหาขนาด เช่น 100x50" class="pl-10 pr-4 py-2 rounded shadow-sm text-gray-800 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar Navigation -->
+        <nav class="w-64 bg-white shadow-lg z-10 flex flex-col overflow-y-auto">
+            <div class="p-4 font-bold text-gray-600 uppercase text-xs tracking-wider border-b">Steel Categories</div>
+            <ul id="categoryList" class="flex-1 py-2">
+                <!-- Categories will be injected here -->
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col relative">
+            
+            <!-- Category Title & Diagram Area -->
+            <div class="bg-white p-4 shadow-sm z-10 border-b flex justify-between items-end">
+                <div>
+                    <h2 id="currentCategoryTitle" class="text-xl font-bold text-blue-800 mb-1">Wide Flange Shape</h2>
+                    <p id="currentCategorySub" class="text-sm text-gray-500">TIS 1227 / JIS G3192</p>
+                </div>
+                <!-- Diagram Container -->
+                <div id="diagramContainer" class="h-24 w-auto object-contain text-blue-900 opacity-80">
+                    <!-- SVG Diagram injected here -->
+                </div>
+            </div>
+
+            <!-- Table Area -->
+            <div class="table-container flex-1 bg-gray-50 p-4">
+                <div class="bg-white rounded-lg shadow overflow-x-auto border border-gray-200">
+                    <table class="w-full text-sm text-left whitespace-nowrap">
+                        <thead id="tableHeader" class="text-xs uppercase bg-gray-800 text-white">
+                            <!-- Headers injected here -->
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-gray-200">
+                            <!-- Rows injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-green-600 text-white px-6 py-3 rounded shadow-lg transform transition-transform duration-300 translate-y-20 opacity-0 z-50">
+        <i class="fas fa-check-circle mr-2"></i> คัดลอกข้อมูลลง Clipboard สำเร็จ!
+    </div>
+
+    <script>
+        // --- 1. DATA DEFINITIONS ---
+        // Format: Array of arrays. Final boolean in each row: true = Special (Black), false/undefined = Available (Red)
+        const steelData = {
+            "wide-flange": {
+                title: "Wide Flange Shape",
+                spec: "TIS 1227",
+                diagram: `<svg viewBox="0 0 100 100" class="h-full"><path d="M20,10 h60 v10 h-25 v60 h25 v10 h-60 v-10 h25 v-60 h-25 z" fill="currentColor"/><text x="4" y="55" font-size="10">H</text><text x="45" y="9" font-size="10">B</text><text x="56" y="55" font-size="8">t1</text><text x="70" y="18" font-size="8">t2</text></svg>`,
+                headers: ["Size (HxB)", "Weight (kg/m)", "H (mm)", "B (mm)", "t1 (mm)", "t2 (mm)", "Area (cm²)", "Ix (cm⁴)", "Iy (cm⁴)", "ix (cm)", "iy (cm)", "Zx (cm³)", "Zy (cm³)", "Action"],
+                data: [
+                    ["100x100", "17.2", "100", "100", "6.0", "8.0", "21.90", "383", "134", "4.18", "2.47", "77", "27"],
+                    ["125x125", "23.8", "125", "125", "6.5", "9.0", "30.31", "847", "293", "5.29", "3.11", "136", "47"],
+                    ["150x75", "14.0", "150", "75", "5.0", "7.0", "17.85", "666", "50", "6.11", "1.66", "89", "13"],
+                    ["150x100", "21.1", "148", "100", "6.0", "9.0", "26.84", "1,020", "151", "6.17", "2.37", "138", "30"],
+                    ["150x150", "31.5", "150", "150", "7.0", "10.0", "40.14", "1,640", "563", "6.39", "3.75", "219", "75"],
+                    ["175x175", "40.2", "175", "175", "7.5", "11.0", "51.21", "2,880", "984", "7.50", "4.38", "330", "112"],
+                    ["200x100", "18.2", "198", "99", "4.5", "7.0", "23.18", "1,580", "114", "8.26", "2.21", "160", "23"],
+                    ["200x100", "21.3", "200", "100", "5.5", "8.0", "27.16", "1,840", "134", "8.24", "2.22", "184", "27"],
+                    ["200x150", "30.6", "194", "150", "6.0", "9.0", "39.01", "2,690", "507", "8.30", "3.61", "277", "68"],
+                    ["200x200", "49.9", "200", "200", "8.0", "12.0", "63.53", "4,720", "1,600", "8.62", "5.02", "472", "160"],
+                    ["200x200", "56.2", "200", "204", "12.0", "12.0", "71.53", "4,980", "1,700", "8.35", "4.88", "498", "167", true], // Sample Special
+                    ["250x125", "25.7", "248", "124", "5.0", "8.0", "32.68", "3,540", "255", "10.40", "2.79", "285", "41"],
+                    ["250x125", "29.6", "250", "125", "6.0", "9.0", "37.66", "4,050", "294", "10.40", "2.79", "324", "47"],
+                    ["250x250", "72.4", "250", "250", "14.0", "14.0", "92.18", "10,800", "3,650", "10.80", "6.29", "867", "292"],
+                    ["300x150", "36.7", "300", "150", "6.5", "9.0", "46.78", "7,210", "508", "12.40", "3.29", "481", "68"],
+                    ["300x300", "94.0", "300", "300", "10.0", "15.0", "119.80", "20,400", "6,750", "13.10", "7.51", "1,360", "450"],
+                    ["400x200", "66.0", "400", "200", "8.0", "13.0", "84.12", "23,700", "1,740", "16.80", "4.54", "1,190", "174"],
+                    ["400x400", "172.0", "400", "400", "13.0", "21.0", "218.70", "66,600", "22,400", "17.50", "10.10", "3,330", "1,120", true]
+                ]
+            },
+            "lip-channel": {
+                title: "Lip Channel (C-Channel)",
+                spec: "TIS 1228",
+                diagram: `<svg viewBox="0 0 100 100" class="h-full"><path d="M70,20 h-40 v60 h40 v-15 h-10 v5 h-20 v-40 h20 v5 h10 z" fill="currentColor"/><text x="15" y="55" font-size="10">H</text><text x="45" y="15" font-size="10">B</text><text x="75" y="30" font-size="10">C</text><text x="40" y="45" font-size="8">T</text></svg>`,
+                headers: ["Size (HxBxC)", "T (mm)", "Weight (kg/m)", "Area (cm²)", "Cx (cm)", "Cy (cm)", "Ix (cm⁴)", "Iy (cm⁴)", "ix (cm)", "iy (cm)", "Zx (cm³)", "Zy (cm³)", "Action"],
+                data: [
+                    ["75x45x15", "1.6", "2.317", "2.952", "0", "1.72", "27.1", "8.71", "3.03", "1.72", "7.24", "3.13"],
+                    ["75x45x15", "2.0", "2.855", "3.637", "0", "1.72", "33.0", "10.50", "3.01", "1.70", "8.79", "3.76"],
+                    ["75x45x15", "2.3", "3.248", "4.137", "0", "1.69", "37.1", "11.80", "3.00", "1.69", "9.90", "4.24"],
+                    // ชุดข้อมูลเหล็ก C หน้า 100x50x20 ครบทุกความหนาตามที่ขอ
+                    ["100x50x20", "1.6", "2.883", "3.672", "0", "1.87", "58.4", "14.00", "3.99", "1.95", "11.70", "4.47"],
+                    ["100x50x20", "2.0", "3.562", "4.537", "0", "1.86", "71.4", "16.90", "3.97", "1.93", "14.30", "5.40"],
+                    ["100x50x20", "2.3", "4.060", "5.172", "0", "1.86", "80.7", "19.00", "3.95", "1.92", "16.10", "6.06"],
+                    ["100x50x20", "2.8", "4.871", "6.205", "0", "1.88", "99.8", "23.20", "3.96", "1.91", "20.00", "7.44"],
+                    ["100x50x20", "3.2", "5.500", "7.007", "0", "1.86", "107.0", "24.50", "3.90", "1.87", "21.30", "7.81"],
+                    ["100x50x20", "4.0", "6.710", "8.584", "0", "1.86", "127.0", "28.70", "3.85", "1.83", "25.40", "9.13"],
+                    ["100x50x20", "4.5", "7.433", "9.469", "0", "1.86", "139.0", "30.90", "3.82", "1.81", "27.70", "9.82", true],
+                    ["125x50x20", "2.3", "4.511", "5.747", "0", "1.69", "137.0", "20.60", "4.88", "1.89", "21.90", "6.22"],
+                    ["125x50x20", "3.2", "6.128", "7.807", "0", "1.68", "181.0", "26.60", "4.82", "1.85", "29.00", "8.02"],
+                    ["150x50x20", "3.2", "6.756", "8.607", "0", "1.54", "280.0", "28.30", "5.71", "1.81", "37.40", "8.19"],
+                    ["150x75x20", "3.2", "8.012", "10.207", "0", "2.51", "366.0", "76.40", "5.99", "2.74", "48.90", "15.30"],
+                    ["200x75x20", "3.2", "9.268", "11.807", "0", "2.19", "716.0", "84.10", "7.79", "2.67", "71.60", "15.80"]
+                ]
+            },
+            "cut-beam": {
+                title: "Cut Beam (T-Section)",
+                spec: "TIS 1227",
+                diagram: `<svg viewBox="0 0 100 100" class="h-full"><path d="M20,20 h60 v15 h-25 v45 h-10 v-45 h-25 z" fill="currentColor"/><text x="4" y="55" font-size="10">H</text><text x="45" y="15" font-size="10">B</text></svg>`,
+                headers: ["Size (HxB)", "Weight (kg/m)", "H (mm)", "B (mm)", "t1 (mm)", "t2 (mm)", "Area (cm²)", "Ix (cm⁴)", "Iy (cm⁴)", "ix (cm)", "iy (cm)", "Zx (cm³)", "Zy (cm³)", "Cx (cm)", "Action"],
+                data: [
+                    ["50x100", "8.60", "50.0", "100", "6.0", "8", "10.950", "66.9", "16.1", "2.47", "1.21", "13.4", "4.03", "1.00"],
+                    ["62.5x125", "11.90", "62.5", "125", "6.5", "9", "15.160", "147.0", "35.0", "3.11", "1.52", "23.5", "6.91", "1.19"],
+                    ["75x75", "7.00", "75.0", "75", "5.0", "7", "8.925", "42.6", "24.7", "2.18", "1.66", "7.46", "6.6", "1.79"],
+                    ["100x100", "9.10", "99.0", "99", "4.5", "7", "11.590", "93.8", "56.8", "2.84", "2.21", "12.10", "11.5", "2.14"],
+                    ["100x150", "15.30", "97.0", "150", "6.0", "9", "19.510", "254.0", "125.0", "3.61", "2.53", "33.8", "15.80", "1.79"],
+                    ["150x150", "16.00", "149.0", "149", "5.5", "8", "20.400", "393.0", "221.0", "4.39", "3.29", "29.7", "33.80", "3.26"],
+                    ["200x200", "28.30", "198.0", "199", "7.0", "11", "36.08", "1,190.0", "723.0", "5.76", "4.48", "72.7", "76.40", "4.17"],
+                    ["300x300", "68.50", "291.0", "300", "12.0", "17", "87.24", "6,360.0", "3,830.0", "8.54", "6.63", "280.00", "256.0", "6.39", true]
+                ]
+            },
+            "equal-angle": {
+                title: "Equal Angle",
+                spec: "TIS 1227",
+                diagram: `<svg viewBox="0 0 100 100" class="h-full"><path d="M20,20 v60 h60 v-15 h-45 v-45 z" fill="currentColor"/><text x="4" y="55" font-size="10">H</text><text x="45" y="95" font-size="10">B</text></svg>`,
+                headers: ["Size (HxB)", "t (mm)", "Weight (kg/m)", "Area (cm²)", "Ix=Iy (cm⁴)", "ix=iy (cm)", "Zx=Zy (cm³)", "Cx=Cy (cm)", "Action"],
+                data: [
+                    ["25x25", "3", "1.12", "1.427", "0.797", "0.747", "0.448", "0.719"],
+                    ["30x30", "3", "1.36", "1.727", "1.420", "0.908", "0.661", "0.844"],
+                    ["40x40", "3", "1.83", "2.336", "3.530", "1.230", "1.210", "1.090"],
+                    ["50x50", "4", "3.06", "3.892", "9.060", "1.530", "2.490", "1.370"],
+                    ["65x65", "6", "5.91", "7.527", "29.400", "1.980", "6.260", "1.810"],
+                    ["75x75", "6", "6.85", "8.727", "46.100", "2.300", "8.470", "2.060"],
+                    ["100x100", "7", "10.70", "13.620", "129.000", "3.080", "17.700", "2.710"],
+                    ["130x130", "9", "17.90", "22.740", "366.000", "4.010", "38.700", "3.530"],
+                    ["250x250", "25", "93.70", "119.400", "6,950.0", "7.630", "388.0", "7.100", true]
+                ]
+            },
+            "square-pipe": {
+                title: "Square Pipe",
+                spec: "TIS 107",
+                diagram: `<svg viewBox="0 0 100 100" class="h-full"><path d="M20,20 h60 v60 h-60 z M30,30 v40 h40 v-40 z" fill="currentColor" fill-rule="evenodd"/><text x="4" y="55" font-size="10">D</text><text x="45" y="95" font-size="10">D</text></svg>`,
+                headers: ["Size (DxD)", "T (mm)", "Weight (kg/m)", "Area (cm²)", "Ix=Iy (cm⁴)", "Zx=Zy (cm³)", "rx=ry (cm)", "Action"],
+                data: [
+                    ["25x25", "2.0", "1.36", "1.737", "1.48", "1.18", "0.924"],
+                    ["32x32", "2.3", "2.04", "2.596", "3.71", "2.32", "1.200"],
+                    ["38x38", "2.3", "2.47", "3.148", "6.54", "3.44", "1.440"],
+                    ["50x50", "2.3", "3.34", "4.252", "15.90", "6.36", "1.930"],
+                    ["50x50", "3.2", "4.50", "5.727", "20.40", "8.16", "1.890"],
+                    ["75x75", "3.2", "7.01", "8.927", "75.50", "20.10", "2.910"],
+                    ["100x100", "3.2", "9.52", "12.130", "187.00", "37.40", "3.930"],
+                    ["150x150", "4.5", "20.10", "25.670", "896.00", "119.5", "5.910", true]
+                ]
+            }
+        };
+
+        // Populate sidebar
+        const categoryList = document.getElementById('categoryList');
+        let currentCat = "lip-channel"; // Default focus to requested table
+
+        function renderSidebar() {
+            categoryList.innerHTML = "";
+            for (const key in steelData) {
+                const li = document.createElement('li');
+                li.className = `cursor-pointer px-6 py-3 border-b text-sm transition-colors duration-150 ${key === currentCat ? 'bg-blue-50 text-blue-700 font-bold border-l-4 border-l-blue-600' : 'text-gray-700 hover:bg-gray-100 border-l-4 border-l-transparent'}`;
+                li.innerHTML = `<div class="flex items-center"><i class="fas fa-cube w-5 text-gray-400 mr-2"></i> ${steelData[key].title}</div>`;
+                li.onclick = () => selectCategory(key);
+                categoryList.appendChild(li);
+            }
+        }
+
+        function selectCategory(key) {
+            currentCat = key;
+            renderSidebar();
+            renderTable();
+        }
+
+        function renderTable(searchTerm = "") {
+            const data = steelData[currentCat];
+            document.getElementById('currentCategoryTitle').innerText = data.title;
+            document.getElementById('currentCategorySub').innerText = data.spec;
+            document.getElementById('diagramContainer').innerHTML = data.diagram;
+            
+            // Header
+            const thead = document.getElementById('tableHeader');
+            thead.innerHTML = `<tr>${data.headers.map(h => `<th scope="col" class="px-4 py-3 border-b border-gray-300 font-medium tracking-wider text-center">${h}</th>`).join('')}</tr>`;
+
+            // Body
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = "";
+            
+            const filteredData = data.data.filter(row => row.join(' ').toLowerCase().includes(searchTerm.toLowerCase()));
+
+            filteredData.forEach((row, rowIndex) => {
+                const tr = document.createElement('tr');
+                const isSpecial = row[row.length - 1] === true;
+                const rowClass = isSpecial ? 'row-special bg-gray-50' : 'row-available hover:bg-red-50';
+                
+                // We omit the last boolean value for display if it's the flag
+                const displayRow = (typeof row[row.length - 1] === 'boolean') ? row.slice(0, -1) : row;
+
+                tr.className = `border-b border-gray-100 transition duration-150 ease-in-out ${rowClass}`;
+                
+                let html = "";
+                displayRow.forEach(cell => {
+                    html += `<td class="px-4 py-2 text-center border-r border-gray-100">${cell}</td>`;
+                });
+                
+                // Add Copy Button
+                html += `<td class="px-4 py-2 text-center">
+                    <button onclick='copyRow(${JSON.stringify(displayRow)})' class="text-blue-500 hover:text-blue-700 hover:bg-blue-100 p-1 rounded transition-colors" title="Copy to Excel">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </td>`;
+                
+                tr.innerHTML = html;
+                tbody.appendChild(tr);
+            });
+
+            if(filteredData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${data.headers.length}" class="text-center py-8 text-gray-500">ไม่พบข้อมูลที่ค้นหา</td></tr>`;
+            }
+        }
+
+        // Copy functionality for Excel (Tab Separated)
+        function copyRow(rowData) {
+            const tsvData = rowData.join('\t');
+            navigator.clipboard.writeText(tsvData).then(() => {
+                showToast();
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                alert("ไม่สามารถคัดลอกข้อมูลได้");
+            });
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+
+        // Event Listeners
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            renderTable(e.target.value);
+        });
+
+        // Init
+        renderSidebar();
+        renderTable();
+    </script>
+</body>
+</html>
