@@ -3,9 +3,7 @@
  <head>
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
-  <title>
-   ตารางเหล็กรูปพรรณ
-  </title>
+  <title>ตารางเหล็กรูปพรรณ</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
   <style>
   :root {
@@ -49,12 +47,8 @@
   --accsoft:#3a2418;
   --warn:#e9b44c
   }
-  *,*::before,*::after {
-  box-sizing:inherit
-  }
-  html {
-  scroll-padding-top:env(safe-area-inset-top,0px)
-  }
+  *,*::before,*::after { box-sizing:inherit }
+  html { scroll-padding-top:env(safe-area-inset-top,0px) }
   body {
   margin:0;
   background:var(--bg);
@@ -110,12 +104,7 @@
   align-items:start
   }
   @media (max-width:980px) {
-  main {
-  grid-template-columns:minmax(0,1fr)
-  }
-  #det {
-  order:-1
-  }
+  main { grid-template-columns:minmax(0,1fr) }
   }
   .card {
   background:var(--panel);
@@ -123,13 +112,21 @@
   border-radius:6px;
   min-width:0
   }
+  
+  /* จัด Layout ใหม่ของแถบหัวตารางให้มีรูปด้านซ้าย */
   .bar {
+  display:flex;
+  gap:14px;
+  align-items:center;
+  padding:12px 14px;
+  border-bottom:1px solid var(--line)
+  }
+  .bar-title-wrap {
   display:flex;
   gap:10px;
   align-items:center;
   flex-wrap:wrap;
-  padding:12px 14px;
-  border-bottom:1px solid var(--line)
+  flex:1 1 auto;
   }
   .bar h2 {
   margin:0;
@@ -141,6 +138,24 @@
   color:var(--mute);
   font-weight:400
   }
+  .figs {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:14px;
+  background:#fff;
+  border-bottom:1px solid var(--line);
+  border-radius:5px 5px 0 0;
+  }
+  .figs img {
+  height:180px;
+  max-width:100%;
+  object-fit:contain;
+  }
+  .figs .fig-fallback, .figs span {
+  display:none;
+  }
+  
   input[type=search] {
   font:inherit;
   font-size:14px;
@@ -196,30 +211,13 @@
   z-index:3;
   background:var(--head)
   }
-  td.n {
-  cursor:copy
-  }
-  td.n:hover {
-  background:var(--accsoft)
-  }
-  tbody tr:hover td {
-  background:color-mix(in srgb,var(--accsoft) 55%,var(--panel))
-  }
-  tbody tr.sel td {
-  background:var(--accsoft)
-  }
-  tbody tr.sel td:first-child {
-  box-shadow:inset 3px 0 0 var(--acc);
-  font-weight:600
-  }
-  td.w {
-  color:var(--warn);
-  text-decoration:underline dotted
-  }
-  td.name {
-  cursor:pointer;
-  font-weight:600
-  }
+  td.n { cursor:copy }
+  td.n:hover { background:var(--accsoft) }
+  tbody tr:hover td { background:color-mix(in srgb,var(--accsoft) 55%,var(--panel)) }
+  tbody tr.sel td { background:var(--accsoft) }
+  tbody tr.sel td:first-child { box-shadow:inset 3px 0 0 var(--acc); font-weight:600 }
+  td.w { color:var(--warn); text-decoration:underline dotted }
+  td.name { cursor:pointer; font-weight:600 }
   button {
   font:inherit;
   font-size:13px;
@@ -236,58 +234,15 @@
   color:#fff;
   font-weight:600
   }
-  button.s {
-  padding:2px 8px;
-  font-size:12px
-  }
+  button.s { padding:2px 8px; font-size:12px }
   button:focus-visible,input:focus-visible,select:focus-visible,th:focus-visible {
   outline:2px solid var(--acc);
   outline-offset:1px
   }
-  .figs {
-  display:flex;
-  gap:12px;
-  align-items:center;
-  flex-wrap:wrap;
-  padding:10px 14px;
-  border-bottom:1px solid var(--line)
-  }
-  .figs img {
-  height:128px;
-  max-width:46%;
-  object-fit:contain;
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:4px;
-  padding:3px
-  }
-  .figs .fig-fallback {
-  color:var(--warn);
-  font-size:12px;
-  flex:1 1 140px;
-  }
-  .figs span {
-  font-size:12px;
-  color:var(--mute);
-  flex:1 1 140px
-  }
-  .nl {
-  font-size:12.5px;
-  color:var(--warn);
-  margin:0 0 8px
-  }
-  #det {
-  position:sticky;
-  top:12px
-  }
-  #det .body {
-  padding:12px 14px
-  }
-  .hint {
-  color:var(--mute);
-  padding:18px 14px;
-  margin:0
-  }
+  .nl { font-size:12.5px; color:var(--warn); margin:0 0 8px }
+  #det { position:sticky; top:12px }
+  #det .body { padding:12px 14px }
+  .hint { color:var(--mute); padding:18px 14px; margin:0 }
   .copy-details {
   margin-top:10px;
   border:1px solid var(--line);
@@ -319,40 +274,12 @@
   padding:5px 0;
   border-bottom:1px dashed var(--line)
   }
-  .prop .l {
-  font-size:13px;
-  color:var(--mute);
-  line-height:1.25
-  }
-  .prop .v {
-  font-weight:600;
-  font-variant-numeric:tabular-nums;
-  text-align:right
-  }
-  .prop .v i {
-  font-style:normal;
-  font-weight:400;
-  color:var(--mute);
-  font-size:12px;
-  margin-left:3px
-  }
-  .prop.w .v {
-  color:var(--warn)
-  }
-  .wm {
-  grid-column:2/-1;
-  font-size:12px;
-  color:var(--warn);
-  margin-top:-2px
-  }
-  .opts {
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-  align-items:center;
-  margin:10px 0;
-  font-size:13px
-  }
+  .prop .l { font-size:13px; color:var(--mute); line-height:1.25 }
+  .prop .v { font-weight:600; font-variant-numeric:tabular-nums; text-align:right }
+  .prop .v i { font-style:normal; font-weight:400; color:var(--mute); font-size:12px; margin-left:3px }
+  .prop.w .v { color:var(--warn) }
+  .wm { grid-column:2/-1; font-size:12px; color:var(--warn); margin-top:-2px }
+  .opts { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:10px 0; font-size:13px }
   select {
   font:inherit;
   font-size:13px;
@@ -362,17 +289,8 @@
   background:var(--bg);
   color:var(--ink)
   }
-  .acts {
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap
-  }
-  .foot {
-  color:var(--mute);
-  font-size:12.5px;
-  padding:0 clamp(14px,3vw,32px) 24px;
-  max-width:110ch
-  }
+  .acts { display:flex; gap:8px; flex-wrap:wrap }
+  .foot { color:var(--mute); font-size:12.5px; padding:0 clamp(14px,3vw,32px) 24px; max-width:110ch }
   #toast {
   position:fixed;
   left:50%;
@@ -389,11 +307,9 @@
   z-index:9;
   max-width:90vw
   }
-  #toast.on {
-  opacity:1;
-  transform:translate(-50%,0)
-  }
+  #toast.on { opacity:1; transform:translate(-50%,0) }
   
+  /* ราคา */
   .price-search { margin:12px 0; padding:12px; border:1px solid var(--line); border-radius:6px; background:var(--bg); }
   .price-search .price-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:0 0 10px; }
   .price-search .price-heading { display:block; flex-basis:100%; font-weight:700; font-size:16px; margin:0 0 3px; }
@@ -410,44 +326,241 @@
   .price-search a { color:var(--acc); }
   .price-search .price-note { font-size:12px; color:var(--mute); margin-top:10px; }
 
+  /* แถบสถานะ AI มุมล่างขวา */
+  .ai-status {
+  position:fixed;
+  bottom:16px;
+  right:16px;
+  font-size:12.5px;
+  color:var(--mute);
+  z-index:99;
+  pointer-events:none;
+  background:rgba(0,0,0,0.4);
+  padding:4px 12px;
+  border-radius:6px;
+  color:#fff;
+  }
+  .ai-status span.acc {
+  color:#e9b44c;
+  font-weight:700;
+  }
+
+  /* UX refresh: modern responsive finish; keeps existing table and API logic intact */
+  body { line-height:1.55; }
+  header {
+    position:relative;
+    background:linear-gradient(125deg,#172b3c 0%,#273f52 58%,#354f61 100%);
+    padding-top:22px;
+    box-shadow:0 8px 24px rgba(10,25,38,.16);
+  }
+  h1 { font-size:clamp(22px,2.3vw,29px); letter-spacing:.1px; }
+  header p { max-width:900px; line-height:1.65; opacity:.82; }
+  nav { gap:6px; padding-top:4px; }
+  nav button {
+    border-radius:10px 10px 0 0;
+    padding:10px 15px;
+    transition:background .18s ease,opacity .18s ease,transform .18s ease;
+  }
+  nav button:hover { opacity:1; background:rgba(255,255,255,.1); }
+  nav button[aria-selected="true"] {
+    box-shadow:inset 0 3px 0 var(--acc);
+    font-weight:700;
+  }
+  main { gap:18px; padding-top:20px; }
+  .card {
+    border-radius:14px;
+    border-color:color-mix(in srgb,var(--line) 86%,transparent);
+    box-shadow:0 5px 18px rgba(19,39,54,.055);
+    overflow:hidden;
+  }
+  .bar { gap:12px; padding:15px 16px; flex-wrap:wrap; }
+  .bar h2 { line-height:1.35; }
+  .bar small { display:inline-block; margin-top:3px; }
+  input[type=search] {
+    min-height:40px;
+    border-radius:10px;
+    padding:8px 12px;
+    transition:border-color .18s ease,box-shadow .18s ease;
+  }
+  input[type=search]:focus { border-color:var(--acc); box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 16%,transparent); }
+  .wrap { scrollbar-color:var(--line) transparent; }
+  th,td { padding:9px 12px; }
+  thead th { padding-top:12px; padding-bottom:12px; }
+  tbody tr { transition:background .15s ease; }
+  tbody tr:hover td { background:color-mix(in srgb,var(--accsoft) 72%,var(--panel)); }
+  tbody tr.sel td { background:var(--accsoft); }
+  button {
+    min-height:32px;
+    border-color:var(--line);
+    border-radius:8px;
+    transition:background .16s ease,border-color .16s ease,color .16s ease,transform .16s ease,box-shadow .16s ease;
+  }
+  button:hover { border-color:var(--acc); box-shadow:0 2px 7px rgba(20,35,48,.08); }
+  button:active { transform:translateY(1px); }
+  button.p { box-shadow:0 3px 10px color-mix(in srgb,var(--acc) 22%,transparent); }
+  button.s { min-height:27px; }
+  .figs {
+    min-height:190px;
+    background:linear-gradient(180deg,#fff 0%,#f7f9fb 100%);
+    padding:18px;
+  }
+  .figs img { height:180px; }
+  #det { scroll-behavior:smooth; }
+  #det .body { padding:15px 16px 18px; }
+  #det .bar { background:color-mix(in srgb,var(--bg) 65%,var(--panel)); border-radius:10px; }
+  .hint { line-height:1.75; }
+  .copy-details { border-radius:10px; }
+  .copy-details > summary { padding:13px 14px; }
+  .prop { padding:8px 0; }
+  .prop .l { line-height:1.4; }
+  .acts button { min-height:36px; }
+  .price-search {
+    margin:14px 0 16px;
+    padding:15px;
+    border-radius:13px;
+    background:linear-gradient(145deg,color-mix(in srgb,var(--bg) 88%,var(--panel)),var(--panel));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.35);
+  }
+  .price-search .price-heading { font-size:17px; letter-spacing:.1px; }
+  .price-search .price-actions button {
+    min-height:40px;
+    min-width:76px;
+    border-radius:10px;
+    font-weight:700;
+  }
+  .price-search .price-actions button.is-selected {
+    background:var(--acc);
+    border-color:var(--acc);
+    color:#fff;
+    box-shadow:0 3px 10px color-mix(in srgb,var(--acc) 24%,transparent);
+  }
+  .price-search .price-status {
+    padding:10px 12px;
+    margin:10px 0;
+    border:1px solid var(--line);
+    border-radius:9px;
+    background:var(--panel);
+    line-height:1.65;
+  }
+  .price-search[aria-busy="true"] .price-status {
+    border-color:color-mix(in srgb,var(--acc) 55%,var(--line));
+    background:var(--accsoft);
+  }
+  .price-search[aria-busy="true"] .price-status::before {
+    content:"";
+    display:inline-block;
+    width:9px;height:9px;margin-right:8px;
+    border:2px solid color-mix(in srgb,var(--acc) 30%,transparent);
+    border-top-color:var(--acc);
+    border-radius:50%;
+    vertical-align:middle;
+    animation:steel-spin .8s linear infinite;
+  }
+  @keyframes steel-spin { to { transform:rotate(360deg); } }
+  .price-search .price-list { gap:10px; }
+  .price-search .price-item {
+    padding:13px;
+    border-radius:11px;
+    box-shadow:0 2px 8px rgba(15,30,45,.035);
+    transition:border-color .16s ease,transform .16s ease;
+  }
+  .price-search .price-item:hover { border-color:color-mix(in srgb,var(--acc) 55%,var(--line)); transform:translateY(-1px); }
+  .price-search .price-value { font-size:21px; line-height:1.35; }
+  .price-search .price-meta { line-height:1.6; }
+  .price-search .price-note {
+    padding-top:10px;
+    border-top:1px solid var(--line);
+    line-height:1.65;
+  }
+  .price-search a { font-weight:700; text-underline-offset:3px; }
+  .ai-status {
+    bottom:calc(14px + env(safe-area-inset-bottom,0px));
+    right:14px;
+    max-width:min(440px,calc(100vw - 28px));
+    padding:9px 13px;
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:12px;
+    background:rgba(20,34,46,.92);
+    box-shadow:0 8px 28px rgba(0,0,0,.2);
+    color:#edf5fa;
+    line-height:1.55;
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+  }
+  .ai-status::before {
+    content:"";
+    display:inline-block;
+    width:7px;height:7px;
+    margin:0 8px 1px 0;
+    border-radius:50%;
+    background:#5ee0a0;
+    box-shadow:0 0 0 3px rgba(94,224,160,.14);
+  }
+  .ai-status span.acc { color:#ffd08a; }
+  .foot { line-height:1.8; }
+  @media (max-width:980px) {
+    main { gap:14px; }
+    #det { position:static; }
+    .wrap { max-height:65vh; }
+  }
+  @media (max-width:600px) {
+    header { padding:17px 14px 0; }
+    h1 { font-size:22px; }
+    header p { font-size:12.5px; }
+    nav { margin-right:-14px; padding-right:14px; }
+    nav button { padding:9px 12px; font-size:13px; }
+    main { padding:12px 10px 22px; gap:12px; }
+    .card { border-radius:11px; }
+    .bar { padding:12px; }
+    .bar h2 { font-size:16px; }
+    input[type=search] { width:100%; max-width:none; }
+    th,td { padding:8px 10px; font-size:13px; }
+    .wrap { max-height:62vh; }
+    #det .body { padding:12px; }
+    .price-search { padding:12px; }
+    .price-search .price-actions { gap:6px; }
+    .price-search .price-actions button { flex:1 1 68px; }
+    .prop { grid-template-columns:18px minmax(0,1fr) auto; gap:6px; }
+    .prop button { grid-column:3; grid-row:1; }
+    .prop .v { grid-column:2; grid-row:2; text-align:left; }
+    .wm { grid-column:2/-1; }
+    .ai-status { font-size:11.5px; padding:7px 10px; right:8px; bottom:calc(8px + env(safe-area-inset-bottom,0px)); }
+    .foot { padding-left:12px; padding-right:12px; }
+  }
+  @media (prefers-reduced-motion:reduce) {
+    *,*::before,*::after { animation-duration:.01ms !important; transition-duration:.01ms !important; scroll-behavior:auto !important; }
+  }
   </style>
  </head>
  <body>
   <header>
-   <h1>
-    ตารางเหล็กรูปพรรณ
-   </h1>
-   <p>
-    ค้นหาขนาด ดูคุณสมบัติหน้าตัด และคัดลอกค่าไปใช้ได้ทันที &middot; คลิกที่ตัวเลขเพื่อคัดลอกค่านั้น &middot; ข้อมูลจากตารางเหล็กใน PDF
-   </p>
-   <nav id="tabs" role="tablist">
-   </nav>
+   <h1>ตารางเหล็กรูปพรรณ</h1>
+   <p>ค้นหาขนาด ดูคุณสมบัติหน้าตัด และคัดลอกค่าไปใช้ได้ทันที &middot; คลิกที่ตัวเลขเพื่อคัดลอกค่านั้น &middot; ข้อมูลจากตารางเหล็กใน PDF</p>
+   <nav id="tabs" role="tablist"></nav>
   </header>
   <main>
    <section class="card">
     <div class="bar">
-     <h2 id="ttl">
-     </h2>
+     <h2 id="ttl"></h2>
      <input aria-label="ค้นหาขนาด" id="q" placeholder="ค้นหา เช่น 200x100" type="search"/>
     </div>
-    <div class="figs" id="figs">
-    </div>
-    <div class="wrap">
-     <table id="tb">
-     </table>
+    <div class="wrap" style="max-height: 82vh;">
+     <table id="tb"></table>
     </div>
    </section>
-   <aside class="card" id="det">
-    <p class="hint">
-     เลือกแถวในตารางเพื่อดูคุณสมบัติทั้งหมดและเลือกค่าที่ต้องการคัดลอก
-    </p>
+   <aside class="card" style="display:flex; flex-direction:column;">
+    <div class="figs" id="figs"></div>
+    <div id="det" style="flex:1; overflow-y:auto;">
+     <p class="hint">เลือกแถวในตารางเพื่อดูคุณสมบัติทั้งหมดและเลือกค่าที่ต้องการคัดลอก</p>
+    </div>
    </aside>
   </main>
   <p class="foot">
    ข้อมูลมาจากไฟล์ Steel_All.pdf ที่ให้มา (มาตรฐาน ASTM A6, TIS 1227, TIS 1228, TIS 1390 / JIS) เครื่องหมาย * ท้ายชื่อรุ่นคือแถวที่มีเครื่องหมาย * หน้าตัวเลขน้ำหนักในตารางต้นฉบับ ตัวเลขที่มีเครื่องหมาย ⚠ สีส้มคือค่าที่ไม่สอดคล้องกับค่าอื่นในแถวเดียวกัน (เช่น I กับ r และพื้นที่ไม่ตรงกัน) น่าจะพิมพ์ผิดในต้นฉบับ เว็บแสดงค่าตามไฟล์ และบอกค่าที่คำนวณย้อนกลับได้ให้เปรียบเทียบ ยกเว้นแถว H 350&times;350 ที่ตารางต้นฉบับพิมพ์คอลัมน์เลื่อน ซึ่งผมจัดคอลัมน์ใหม่และเติมค่าที่หายตามที่ระบุในแผงรายละเอียด ควรตรวจกับแคตตาล็อกหรือมาตรฐานก่อนนำไปใช้งานจริง
   </p>
-  <div aria-live="polite" id="toast" role="status">
-  </div>
+  <div aria-live="polite" id="toast" role="status"></div>
+  <div id="aiStatus" class="ai-status" style="display:none;"></div>
+  
   <script>
    var D = [
   {
@@ -11241,235 +11354,269 @@
     ],
     "img": ["https://www.koyda.com/steel-section-tables/diagrams/koyda-pfc-section-diagram.svg", "https://www.koyda.com/steel-section-tables/diagrams/koyda-pfc-section-diagram.svg"]
   }
-];;
-var cur=0,sel=-1,sk=null,sd=1,q='',chosen={},fmt='kv',units=true;
-var $=function(i){return document.getElementById(i)};
-function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-function sym(c){return c.s||c.k}
-function sec(){return D[cur]}
-function chs(){var s=sec();if(!chosen[s.id])chosen[s.id]=s.cols.map(function(c){return c.k});return chosen[s.id]}
-function toast(m){var t=$('toast');t.textContent=m;t.className='on';clearTimeout(toast.t);toast.t=setTimeout(function(){t.className=''},1800)}
-function copy(text,msg){
- var ok=function(){toast(msg)};
- var fb=function(){var a=document.createElement('textarea');a.value=text;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}a.remove();ok()};
- if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(ok,fb);else fb()}
-function build(row,keys,f,u){
- var s=sec(),cs=s.cols.filter(function(c){return keys.indexOf(c.k)>=0&&row.v[c.k]!==undefined});
- var one=function(c){return sym(c)+' = '+row.v[c.k]+(u&&c.u?' '+c.u:'')};
- if(f=='tab')return row.name+'\t'+cs.map(function(c){return row.v[c.k]}).join('\t');
- if(f=='lines')return cs.map(one).join('\n');
- return row.name+': '+cs.map(one).join(', ')}
-function renderTabs(){$('tabs').innerHTML=D.map(function(s,i){return '<button role="tab" aria-selected="'+(i==cur)+'" data-t="'+i+'">'+esc(s.title)+'</button>'}).join('')}
-function rows(){
- var s=sec(),n=q.toLowerCase().replace(/[x×*]/g,'x').replace(/\s+/g,'');
- var r=s.rows.map(function(x,i){return {x:x,i:i}}).filter(function(o){return !n||o.x.name.toLowerCase().replace(/[x×*]/g,'x').replace(/\s+/g,'').indexOf(n)>=0});
- if(sk)r.sort(function(a,b){var p=a.x.v[sk],q2=b.x.v[sk];if(p===undefined)return 1;if(q2===undefined)return -1;return (p-q2)*sd});
- return r}
-function sizeLabel(section,row){
- var v=row.v||{}, n=function(k){return v[k]===undefined?'':String(v[k]).replace(/\.0+$/,'')};
- if(section.id==='wf') return 'W '+n('H')+'x'+n('B')+'x'+n('weight');
- if(section.id==='h') return 'H '+n('H')+'x'+n('B')+'x'+n('weight');
- if(section.id==='i') return 'I '+n('H')+'x'+n('B')+'x'+n('weight');
- if(section.id==='t') return 'T '+n('H')+'x'+n('B')+'x'+n('t1')+'x'+n('t2');
- return row.name;
-}
-function renderTable(){
- var s=sec(),h='<thead><tr><th data-s="">ขนาด</th>';
- s.cols.forEach(function(c){h+='<th tabindex="0" data-s="'+c.k+'" title="'+esc(c.l+(c.u?' ('+c.u+')':''))+'">'+esc(sym(c))+(sk==c.k?(sd>0?' ▲':' ▼'):'')+'<small>'+esc(c.u||'')+'</small></th>'});
- h+='<th>คัดลอก</th></tr></thead><tbody>';
- var rs=rows();
- rs.forEach(function(o){var r=o.x;h+='<tr data-i="'+o.i+'"'+(o.i==sel?' class="sel"':'')+'><td class="name">'+esc(sizeLabel(s,r))+'</td>';
-  s.cols.forEach(function(c){var v=r.v[c.k],w=r.f[c.k];h+=v===undefined?'<td>–</td>':'<td class="n'+(w?' w':'')+'" data-k="'+c.k+'"'+(w?' title="'+esc(w)+'"':'')+'>'+(w?'⚠ ':'')+v+'</td>'});
-  h+='<td><button class="s" data-r="'+o.i+'">คัดลอก</button></td></tr>'});
- $('tb').innerHTML=h+'</tbody>';
- $('ttl').innerHTML=esc(s.title)+' <small>'+esc(s.en)+' · '+rs.length+' รายการ</small>';
- $('figs').innerHTML='<img src="'+s.img[0]+'" alt="แผนผังหน้าตัดพร้อมสัญลักษณ์" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\'"><span class="fig-fallback" style="display:none">โหลดรูปจากแหล่งภายนอกไม่สำเร็จ</span><span>แผนผังหน้าตัดอ้างอิงจาก Koyda Steel Section Tables · ภาพประกอบอาจไม่ใช่ภาพจาก PDF ต้นฉบับไทย</span>'}
-function renderDet(){
- var s=sec(),d=$('det');
- if(sel<0||!s.rows[sel]){d.innerHTML='<p class="hint">เลือกแถวในตารางเพื่อดูคุณสมบัติทั้งหมดและเลือกค่าที่ต้องการคัดลอก</p>';return}
- var r=s.rows[sel],ks=chs(),h='<div class="bar"><h2>'+esc(r.name)+'</h2></div><div class="body">'+(r.nl?'<p class="nl">'+esc(r.nl)+'</p>':'');
- h+='<details class="copy-details"><summary>เลือกข้อมูลที่ต้องการคัดลอก</summary><div class="copy-details-body">';
- s.cols.forEach(function(c){var v=r.v[c.k];if(v===undefined)return;var w=r.f[c.k];
-  h+='<div class="prop'+(w?' w':'')+'"><input type="checkbox" data-c="'+c.k+'"'+(ks.indexOf(c.k)>=0?' checked':'')+' aria-label="เลือก '+esc(sym(c))+'"><span class="l">'+esc(c.l)+'</span><span class="v">'+(w?'⚠ ':'')+v+'<i>'+esc(c.u||'')+'</i></span><button class="s" data-p="'+c.k+'">คัดลอก</button>'+(w?'<div class="wm">'+esc(w)+'</div>':'')+'</div>'});
- h+='<div class="opts"><label>รูปแบบ <select id="fm"><option value="kv">ข้อความ (ชื่อ: ค่า, ...)</option><option value="tab">แท็บ (วางใน Excel)</option><option value="lines">บรรทัดละค่า</option></select></label><label><input type="checkbox" id="un"'+(units?' checked':'')+'> ใส่หน่วย</label></div>';
- h+='<div class="acts"><button class="p" id="cs">คัดลอกที่เลือก</button><button id="ca">เลือกทั้งหมด</button><button id="cn">ล้างที่เลือก</button></div></div></details></div>';
- d.innerHTML=h;$('fm').value=fmt}
+];
+   var cur=0,sel=-1,sk=null,sd=1,q='',chosen={},fmt='kv',units=true;
+   var $=function(i){return document.getElementById(i)};
+   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+   function sym(c){return c.s||c.k}
+   function sec(){return D[cur]}
+   function chs(){var s=sec();if(!chosen[s.id])chosen[s.id]=s.cols.map(function(c){return c.k});return chosen[s.id]}
+   function toast(m){var t=$('toast');t.textContent=m;t.className='on';clearTimeout(toast.t);toast.t=setTimeout(function(){t.className=''},1800)}
+   function copy(text,msg){
+   var ok=function(){toast(msg)};
+   var fb=function(){var a=document.createElement('textarea');a.value=text;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}a.remove();ok()};
+   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(ok,fb);else fb()}
+   function build(row,keys,f,u){
+   var s=sec(),cs=s.cols.filter(function(c){return keys.indexOf(c.k)>=0&&row.v[c.k]!==undefined});
+   var one=function(c){return sym(c)+' = '+row.v[c.k]+(u&&c.u?' '+c.u:'')};
+   if(f=='tab')return row.name+'\t'+cs.map(function(c){return row.v[c.k]}).join('\t');
+   if(f=='lines')return cs.map(one).join('\n');
+   return row.name+': '+cs.map(one).join(', ')}
+   function renderTabs(){$('tabs').innerHTML=D.map(function(s,i){return '<button role="tab" aria-selected="'+(i==cur)+'" data-t="'+i+'">'+esc(s.title)+'</button>'}).join('')}
+   function rows(){
+   var s=sec(),n=q.toLowerCase().replace(/[x×*]/g,'x').replace(/\s+/g,'');
+   var r=s.rows.map(function(x,i){return {x:x,i:i}}).filter(function(o){return !n||o.x.name.toLowerCase().replace(/[x×*]/g,'x').replace(/\s+/g,'').indexOf(n)>=0});
+   if(sk)r.sort(function(a,b){var p=a.x.v[sk],q2=b.x.v[sk];if(p===undefined)return 1;if(q2===undefined)return -1;return (p-q2)*sd});
+   return r}
+   function sizeLabel(section,row){
+   var v=row.v||{}, n=function(k){return v[k]===undefined?'':String(v[k]).replace(/\.0+$/,'')};
+   if(section.id==='wf') return 'W '+n('H')+'x'+n('B')+'x'+n('weight');
+   if(section.id==='h') return 'H '+n('H')+'x'+n('B')+'x'+n('weight');
+   if(section.id==='i') return 'I '+n('H')+'x'+n('B')+'x'+n('weight');
+   if(section.id==='t') return 'T '+n('H')+'x'+n('B')+'x'+n('t1')+'x'+n('t2');
+   return row.name;
+   }
+   function renderTable(){
+   var s=sec(),h='<thead><tr><th data-s="">ขนาด</th>';
+   s.cols.forEach(function(c){h+='<th tabindex="0" data-s="'+c.k+'" title="'+esc(c.l+(c.u?' ('+c.u+')':''))+'">'+esc(sym(c))+(sk==c.k?(sd>0?' ▲':' ▼'):'')+'<small>'+esc(c.u||'')+'</small></th>'});
+   h+='<th>คัดลอก</th></tr></thead><tbody>';
+   var rs=rows();
+   rs.forEach(function(o){var r=o.x;h+='<tr data-i="'+o.i+'"'+(o.i==sel?' class="sel"':'')+'><td class="name">'+esc(sizeLabel(s,r))+'</td>';
+   s.cols.forEach(function(c){var v=r.v[c.k],w=r.f[c.k];h+=v===undefined?'<td>–</td>':'<td class="n'+(w?' w':'')+'" data-k="'+c.k+'"'+(w?' title="'+esc(w)+'"':'')+'>'+(w?'⚠ ':'')+v+'</td>'});
+   h+='<td><button class="s" data-r="'+o.i+'">คัดลอก</button></td></tr>'});
+   $('tb').innerHTML=h+'</tbody>';
+   $('ttl').innerHTML=esc(s.title)+' <small>'+esc(s.en)+' · '+rs.length+' รายการ</small>';
+   $('figs').innerHTML='<img src="'+s.img[0]+'" alt="หน้าตัด" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'" title="แผนผังหน้าตัดอ้างอิงจาก Koyda Steel Section Tables">';}
+   function renderDet(){
+   var s=sec(),d=$('det');
+   if(sel<0||!s.rows[sel]){d.innerHTML='<p class="hint">เลือกแถวในตารางเพื่อดูคุณสมบัติทั้งหมดและเลือกค่าที่ต้องการคัดลอก</p>';return}
+   var r=s.rows[sel],ks=chs(),h='<div class="bar"><h2>'+esc(r.name)+'</h2></div><div class="body">'+(r.nl?'<p class="nl">'+esc(r.nl)+'</p>':'');
+   h+='<details class="copy-details"><summary>เลือกข้อมูลที่ต้องการคัดลอก</summary><div class="copy-details-body">';
+   s.cols.forEach(function(c){var v=r.v[c.k];if(v===undefined)return;var w=r.f[c.k];
+   h+='<div class="prop'+(w?' w':'')+'"><input type="checkbox" data-c="'+c.k+'"'+(ks.indexOf(c.k)>=0?' checked':'')+' aria-label="เลือก '+esc(sym(c))+'"><span class="l">'+esc(c.l)+'</span><span class="v">'+(w?'⚠ ':'')+v+'<i>'+esc(c.u||'')+'</i></span><button class="s" data-p="'+c.k+'">คัดลอก</button>'+(w?'<div class="wm">'+esc(w)+'</div>':'')+'</div>'});
+   h+='<div class="opts"><label>รูปแบบ <select id="fm"><option value="kv">ข้อความ (ชื่อ: ค่า, ...)</option><option value="tab">แท็บ (วางใน Excel)</option><option value="lines">บรรทัดละค่า</option></select></label><label><input type="checkbox" id="un"'+(units?' checked':'')+'> ใส่หน่วย</label></div>';
+   h+='<div class="acts"><button class="p" id="cs">คัดลอกที่เลือก</button><button id="ca">เลือกทั้งหมด</button><button id="cn">ล้างที่เลือก</button></div></div></details></div>';
+   d.innerHTML=h;$('fm').value=fmt}
 
- 
-function pick(i){sel=i;renderTable();renderDet()}
-document.addEventListener('click',function(e){
- var t=e.target,s=sec(),b;
- if(b=t.closest('[data-t]')){cur=+b.dataset.t;sel=-1;sk=null;q='';$('q').value='';renderTabs();renderTable();renderDet();return}
- if(b=t.closest('thead th')){var k=b.dataset.s;if(k){if(sk==k)sd=-sd;else{sk=k;sd=1}renderTable()}return}
- if(b=t.closest('button[data-r]')){var r=s.rows[+b.dataset.r];copy(build(r,chs(),fmt,units),'คัดลอก '+r.name+' แล้ว');pick(+b.dataset.r);return}
- if(b=t.closest('td.n')){var tr=b.parentNode,r2=s.rows[+tr.dataset.i],c=s.cols.filter(function(x){return x.k==b.dataset.k})[0];
-  copy(String(r2.v[c.k]),'คัดลอก '+sym(c)+' = '+r2.v[c.k]+(c.u?' '+c.u:'')+(r2.f[c.k]?' (ค่านี้อาจผิดในไฟล์ต้นฉบับ)':''));pick(+tr.dataset.i);return}
- if(b=t.closest('tbody tr')){pick(+b.dataset.i);return}
- if(b=t.closest('button[data-p]')){var r3=s.rows[sel],c3=s.cols.filter(function(x){return x.k==b.dataset.p})[0];
-  copy(String(r3.v[c3.k]),'คัดลอก '+sym(c3)+' = '+r3.v[c3.k]+(c3.u?' '+c3.u:'')+(r3.f[c3.k]?' (ค่านี้อาจผิดในไฟล์ต้นฉบับ)':''));return}
- if(t.id=='cs'){copy(build(s.rows[sel],chs(),fmt,units),'คัดลอกค่าที่เลือกแล้ว');return}
- if(t.id=='ca'){chosen[s.id]=s.cols.map(function(c){return c.k});renderDet();return}
- if(t.id=='cn'){chosen[s.id]=[];renderDet();return}
-});
-document.addEventListener('change',function(e){var t=e.target;
- if(t.dataset.c){var a=chs(),i=a.indexOf(t.dataset.c);if(t.checked&&i<0)a.push(t.dataset.c);if(!t.checked&&i>=0)a.splice(i,1)}
- if(t.id=='fm')fmt=t.value;if(t.id=='un')units=t.checked});
-document.addEventListener('keydown',function(e){var th=e.target.closest&&e.target.closest('thead th');if(th&&(e.key=='Enter'||e.key==' ')){e.preventDefault();th.click()}});
-$('q').addEventListener('input',function(){q=this.value;renderTable()});
-renderTabs();renderTable();renderDet();
+   function pick(i){sel=i;renderTable();renderDet()}
+   document.addEventListener('click',function(e){
+   var t=e.target,s=sec(),b;
+   if(b=t.closest('[data-t]')){cur=+b.dataset.t;sel=-1;sk=null;q='';$('q').value='';renderTabs();renderTable();renderDet();return}
+   if(b=t.closest('thead th')){var k=b.dataset.s;if(k){if(sk==k)sd=-sd;else{sk=k;sd=1}renderTable()}return}
+   if(b=t.closest('button[data-r]')){var r=s.rows[+b.dataset.r];copy(build(r,chs(),fmt,units),'คัดลอก '+r.name+' แล้ว');pick(+b.dataset.r);return}
+   if(b=t.closest('td.n')){var tr=b.parentNode,r2=s.rows[+tr.dataset.i],c=s.cols.filter(function(x){return x.k==b.dataset.k})[0];
+   copy(String(r2.v[c.k]),'คัดลอก '+sym(c)+' = '+r2.v[c.k]+(c.u?' '+c.u:'')+(r2.f[c.k]?' (ค่านี้อาจผิดในไฟล์ต้นฉบับ)':''));pick(+tr.dataset.i);return}
+   if(b=t.closest('tbody tr')){pick(+b.dataset.i);return}
+   if(b=t.closest('button[data-p]')){var r3=s.rows[sel],c3=s.cols.filter(function(x){return x.k==b.dataset.p})[0];
+   copy(String(r3.v[c3.k]),'คัดลอก '+sym(c3)+' = '+r3.v[c3.k]+(c3.u?' '+c3.u:'')+(r3.f[c3.k]?' (ค่านี้อาจผิดในไฟล์ต้นฉบับ)':''));return}
+   if(t.id=='cs'){copy(build(s.rows[sel],chs(),fmt,units),'คัดลอกค่าที่เลือกแล้ว');return}
+   if(t.id=='ca'){chosen[s.id]=s.cols.map(function(c){return c.k});renderDet();return}
+   if(t.id=='cn'){chosen[s.id]=[];renderDet();return}
+   });
+   document.addEventListener('change',function(e){var t=e.target;
+   if(t.dataset.c){var a=chs(),i=a.indexOf(t.dataset.c);if(t.checked&&i<0)a.push(t.dataset.c);if(!t.checked&&i>=0)a.splice(i,1)}
+   if(t.id=='fm')fmt=t.value;if(t.id=='un')units=t.checked});
+   document.addEventListener('keydown',function(e){var th=e.target.closest&&e.target.closest('thead th');if(th&&(e.key=='Enter'||e.key==' ')){e.preventDefault();th.click()}});
+   $('q').addEventListener('input',function(){q=this.value;renderTable()});
+   renderTabs();renderTable();renderDet();
 
   </script>
   <script>
-(function(){
+  (function(){
   // URL ของ Apps Script Web App เดิม
   var APPS_URL = 'https://script.google.com/macros/s/AKfycbxRNw1qQFNBhCNnWlEoRGK3j_9U0jHc0hhTYpVhoMqjRb2ALyS_cd1kwKVAczy7VNkV/exec';
 
   function priceBox(){
-    return '<div class="price-search" id="priceSearch">'
-      + '<div class="price-actions">'
-      + '<span class="price-heading">ค้นหาราคาอ้างอิง</span>'
-      + '<button type="button" data-price-len="6" onclick="checkPrice(6)">6 ม.</button>'
-      + '<button type="button" data-price-len="9" onclick="checkPrice(9)">9 ม.</button>'
-      + '<button type="button" data-price-len="12" onclick="checkPrice(12)">12 ม.</button>'
-      + '</div>'
-      + '<div id="pr" class="price-status" aria-live="polite">เลือกความยาวแล้วกดค้นหา เพื่อค้นหาราคาจากแหล่งข้อมูลออนไลน์</div>'
-      + '<div id="priceResults" class="price-list"></div>'
-      + '<div class="price-note">ราคาเป็นข้อมูลอ้างอิงจากแหล่งที่ค้นพบ ไม่ใช่ใบเสนอราคา โปรดตรวจสอบขนาด ความหนา VAT ค่าขนส่ง และราคากับผู้ขายก่อนสั่งซื้อ</div>'
-      + '</div>';
+   return '<div class="price-search" id="priceSearch">'
+     + '<div class="price-actions">'
+     + '<span class="price-heading">ค้นหาราคาอ้างอิง</span>'
+     + '<button type="button" data-price-len="6" onclick="checkPrice(6)">6 ม.</button>'
+     + '<button type="button" data-price-len="9" onclick="checkPrice(9)">9 ม.</button>'
+     + '<button type="button" data-price-len="12" onclick="checkPrice(12)">12 ม.</button>'
+     + '</div>'
+     + '<div id="pr" class="price-status" aria-live="polite">เลือกความยาวแล้วกดค้นหา เพื่อค้นหาราคาจากแหล่งข้อมูลออนไลน์</div>'
+     + '<div id="priceResults" class="price-list"></div>'
+     + '<div class="price-note">ราคาเป็นข้อมูลอ้างอิงจากแหล่งที่ค้นพบ ไม่ใช่ใบเสนอราคา โปรดตรวจสอบขนาด ความหนา VAT ค่าขนส่ง และราคากับผู้ขายก่อนสั่งซื้อ</div>'
+     + '</div>';
   }
 
   // เพิ่มส่วนค้นหาราคาในแผงรายละเอียด โดยคงตารางและระบบคัดลอกเดิมไว้
   var originalRenderDet = renderDet;
   renderDet = function(){
-    originalRenderDet();
-    var s = sec();
-    if (sel < 0 || !s.rows[sel]) return;
-    var body = document.querySelector('#det .body');
-    if (!body || document.getElementById('priceSearch')) return;
-    var wrap = document.createElement('div');
-    wrap.innerHTML = priceBox();
-    var copyDetails = body.querySelector('.copy-details');
-    if (copyDetails) body.insertBefore(wrap.firstChild, copyDetails);
-    else body.appendChild(wrap.firstChild);
+   originalRenderDet();
+   var s = sec();
+   if (sel < 0 || !s.rows[sel]) return;
+   var body = document.querySelector('#det .body');
+   if (!body || document.getElementById('priceSearch')) return;
+   var wrap = document.createElement('div');
+   wrap.innerHTML = priceBox();
+   var copyDetails = body.querySelector('.copy-details');
+   if (copyDetails) body.insertBefore(wrap.firstChild, copyDetails);
+   else body.appendChild(wrap.firstChild);
   };
 
   function safeUrl(url){
-    try {
-      var u = new URL(String(url || ''));
-      return (u.protocol === 'https:' || u.protocol === 'http:') ? u.href : '';
-    } catch(e) { return ''; }
+   try {
+     var u = new URL(String(url || ''));
+     return (u.protocol === 'https:' || u.protocol === 'http:') ? u.href : '';
+   } catch(e) { return ''; }
   }
 
   function fmtPrice(value){
-    var n = Number(value);
-    return Number.isFinite(n) ? n.toLocaleString('th-TH', {maximumFractionDigits:2}) : '';
+   var n = Number(value);
+   return Number.isFinite(n) ? n.toLocaleString('th-TH', {maximumFractionDigits:2}) : '';
   }
 
   function renderPrices(data, len, box, results){
-    results.innerHTML = '';
-    // รองรับ schema ใหม่ (prices[]) และ schema เก่าที่มี price_per_bar
-    var prices = Array.isArray(data.prices) ? data.prices.slice() : [];
-    if (!prices.length && data.price_per_bar != null) {
-      prices.push({price:data.price_per_bar, unit:'บาท/เส้น ('+len+' ม.)', seller:'แหล่งข้อมูลจาก API', date:null, url:'', exact_match:true, description:data.note||''});
+   results.innerHTML = '';
+   var prices = Array.isArray(data.prices) ? data.prices.slice() : [];
+   if (!prices.length && data.price_per_bar != null) {
+     prices.push({price:data.price_per_bar, unit:'บาท/เส้น ('+len+' ม.)', seller:'แหล่งข้อมูลจาก API', date:null, url:'', exact_match:true, description:data.note||''});
+   }
+
+   box.textContent = prices.length ? 'พบข้อมูล ' + prices.length + ' รายการ' : (data.note || 'ยังไม่พบราคาที่มีแหล่งอ้างอิงตรวจสอบได้');
+
+   prices.forEach(function(p){
+     var item = document.createElement('div');
+     item.className = 'price-item';
+     var priceLine = document.createElement('div');
+     priceLine.className = 'price-value';
+     priceLine.textContent = p.price == null ? 'ราคาไม่ระบุ' : fmtPrice(p.price) + ' ' + (p.unit || 'บาท');
+     item.appendChild(priceLine);
+
+     var seller = document.createElement('div');
+     seller.textContent = p.seller || 'ไม่ระบุแหล่งข้อมูล';
+     item.appendChild(seller);
+
+     var description = document.createElement('div');
+     description.className = 'price-meta';
+     description.textContent = (p.exact_match === true ? 'ตรงรุ่น' : p.exact_match === false ? 'ขนาดใกล้เคียง/ยังไม่ยืนยันตรงรุ่น' : 'ยังไม่ยืนยันขนาด')
+       + (p.date ? ' · วันที่ข้อมูล: ' + p.date : '')
+       + (p.description ? ' · ' + p.description : '');
+     item.appendChild(description);
+
+     var url = safeUrl(p.url);
+     if (url) {
+       var link = document.createElement('a');
+       link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+       link.textContent = 'เปิดแหล่งราคาต้นทาง'; link.style.display = 'inline-block'; link.style.marginTop = '6px';
+       item.appendChild(link);
+     }
+     results.appendChild(item);
+   });
+
+   var sources = Array.isArray(data.sources) ? data.sources : [];
+   var validSources = sources.map(function(source){
+     if (typeof source === 'string') return {url:source, title:'แหล่งข้อมูล'};
+     return {url:source && source.url, title:source && source.title || 'แหล่งข้อมูล'};
+   }).filter(function(source){ return !!safeUrl(source.url); });
+
+   if (validSources.length) {
+     var sourceWrap = document.createElement('div');
+     sourceWrap.className = 'price-meta'; sourceWrap.style.marginTop = '8px';
+     sourceWrap.appendChild(document.createTextNode('แหล่งค้นพบ: '));
+     validSources.slice(0,5).forEach(function(source,i){
+       if (i) sourceWrap.appendChild(document.createTextNode(' · '));
+       var a = document.createElement('a'); a.href = safeUrl(source.url); a.target = '_blank'; a.rel = 'noopener noreferrer';
+       a.textContent = source.title; sourceWrap.appendChild(a);
+     });
+     results.appendChild(sourceWrap);
+   }
+  }
+  
+  // ฟังก์ชันอัปเดตสถานะ AI มุมล่างขวา
+  function updateAiStatus(meta) {
+    var el = document.getElementById('aiStatus');
+    if (!el || !meta) return;
+
+    var remaining = Number(meta.groq_remaining_total);
+    var activeKey = Number(meta.active_key);
+    var totalKeys = Number(meta.total_keys);
+    var appRemaining = Number(meta.app_rate_remaining);
+    var appLimit = Number(meta.app_rate_limit);
+    var parts = [];
+
+    if (Number.isFinite(remaining)) {
+      parts.push('โควตา AI โดยประมาณ <span class="acc">' + Math.max(0, remaining).toLocaleString('th-TH') + '</span>');
+    }
+    if (totalKeys > 0) {
+      parts.push('Key <span class="acc">' + activeKey + '/' + totalKeys + '</span>');
+    }
+    if (Number.isFinite(appRemaining) && Number.isFinite(appLimit)) {
+      parts.push('คำขอระบบ <span class="acc">' + Math.max(0, appRemaining) + '/' + appLimit + '</span>');
     }
 
-    box.textContent = prices.length ? 'พบข้อมูล ' + prices.length + ' รายการ' : (data.note || 'ยังไม่พบราคาที่มีแหล่งอ้างอิงตรวจสอบได้');
-
-    prices.forEach(function(p){
-      var item = document.createElement('div');
-      item.className = 'price-item';
-      var priceLine = document.createElement('div');
-      priceLine.className = 'price-value';
-      priceLine.textContent = p.price == null ? 'ราคาไม่ระบุ' : fmtPrice(p.price) + ' ' + (p.unit || 'บาท');
-      item.appendChild(priceLine);
-
-      var seller = document.createElement('div');
-      seller.textContent = p.seller || 'ไม่ระบุแหล่งข้อมูล';
-      item.appendChild(seller);
-
-      var description = document.createElement('div');
-      description.className = 'price-meta';
-      description.textContent = (p.exact_match === true ? 'ตรงรุ่น' : p.exact_match === false ? 'ขนาดใกล้เคียง/ยังไม่ยืนยันตรงรุ่น' : 'ยังไม่ยืนยันขนาด')
-        + (p.date ? ' · วันที่ข้อมูล: ' + p.date : '')
-        + (p.description ? ' · ' + p.description : '');
-      item.appendChild(description);
-
-      var url = safeUrl(p.url);
-      if (url) {
-        var link = document.createElement('a');
-        link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer';
-        link.textContent = 'เปิดแหล่งราคาต้นทาง'; link.style.display = 'inline-block'; link.style.marginTop = '6px';
-        item.appendChild(link);
-      }
-      results.appendChild(item);
-    });
-
-    var sources = Array.isArray(data.sources) ? data.sources : [];
-    var validSources = sources.map(function(source){
-      if (typeof source === 'string') return {url:source, title:'แหล่งข้อมูล'};
-      return {url:source && source.url, title:source && source.title || 'แหล่งข้อมูล'};
-    }).filter(function(source){ return !!safeUrl(source.url); });
-
-    if (validSources.length) {
-      var sourceWrap = document.createElement('div');
-      sourceWrap.className = 'price-meta'; sourceWrap.style.marginTop = '8px';
-      sourceWrap.appendChild(document.createTextNode('แหล่งค้นพบ: '));
-      validSources.slice(0,5).forEach(function(source,i){
-        if (i) sourceWrap.appendChild(document.createTextNode(' · '));
-        var a = document.createElement('a'); a.href = safeUrl(source.url); a.target = '_blank'; a.rel = 'noopener noreferrer';
-        a.textContent = source.title; sourceWrap.appendChild(a);
-      });
-      results.appendChild(sourceWrap);
-    }
+    el.setAttribute('role', 'status');
+    el.setAttribute('aria-live', 'polite');
+    el.style.display = 'block';
+    el.innerHTML = parts.join(' <span aria-hidden="true">·</span> ');
   }
 
-  window.checkPrice = function(len){
-    var s = sec(), r = s.rows[sel];
-    var box = document.getElementById('pr');
-    var results = document.getElementById('priceResults');
-    var searchPanel = document.getElementById('priceSearch');
-    if (!r || !box || !results || !searchPanel || searchPanel.dataset.loading === 'true') return;
-    searchPanel.dataset.loading = 'true';
-    searchPanel.setAttribute('aria-busy', 'true');
-    var priceButtons = searchPanel.querySelectorAll('[data-price-len]');
-    priceButtons.forEach(function(button){
-      button.disabled = true;
-      button.classList.toggle('is-selected', Number(button.dataset.priceLen) === Number(len));
-    });
-    box.textContent = 'กำลังค้นหาราคาออนไลน์ อาจใช้เวลา 10–30 วินาที...';
-    results.innerHTML = '';
-    var weight = r.v.weight;
-    if (weight == null) weight = r.v.wp;
-    if (weight == null) weight = 0;
-
-    fetch(APPS_URL, {
-      method:'POST',
-      headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify({type:s.title, name:r.name, len:len, weight:weight})
-    })
-    .then(function(response){
-      if (!response.ok) throw new Error('HTTP ' + response.status);
-      return response.json();
-    })
+  // ดึงสถานะ AI ครั้งแรกเมื่อเปิดหน้าเว็บ (ยิง GET ไปที่ APPS_URL)
+  fetch(APPS_URL)
+    .then(function(res){ return res.json(); })
     .then(function(data){
-      if (data.error) {
-        box.textContent = data.error + (data.detail ? ' — ' + data.detail : '');
-        return;
-      }
-      renderPrices(data, len, box, results);
+      if(data && data.ai_meta) updateAiStatus(data.ai_meta);
     })
-    .catch(function(error){
-      box.textContent = 'เชื่อมต่อหรือค้นหาราคาไม่สำเร็จ กรุณาตรวจสอบ URL ของ Apps Script, การ Deploy และ Apps Script > Executions' + (error && error.message ? ' ('+error.message+')' : '');
-    })
-    .finally(function(){
-      searchPanel.dataset.loading = 'false';
-      searchPanel.removeAttribute('aria-busy');
-      priceButtons.forEach(function(button){ button.disabled = false; });
-    });
+    .catch(function(e){ console.log('Init API error', e); });
+
+  window.checkPrice = function(len){
+   var s = sec(), r = s.rows[sel];
+   var box = document.getElementById('pr');
+   var results = document.getElementById('priceResults');
+   var searchPanel = document.getElementById('priceSearch');
+   if (!r || !box || !results || !searchPanel || searchPanel.dataset.loading === 'true') return;
+   searchPanel.dataset.loading = 'true';
+   searchPanel.setAttribute('aria-busy', 'true');
+   var priceButtons = searchPanel.querySelectorAll('[data-price-len]');
+   priceButtons.forEach(function(button){
+     button.disabled = true;
+     button.classList.toggle('is-selected', Number(button.dataset.priceLen) === Number(len));
+   });
+   box.textContent = 'กำลังค้นหาราคาออนไลน์ อาจใช้เวลา 10–30 วินาที...';
+   results.innerHTML = '';
+   var weight = r.v.weight;
+   if (weight == null) weight = r.v.wp;
+   if (weight == null) weight = 0;
+
+   fetch(APPS_URL, {
+     method:'POST',
+     headers:{'Content-Type':'text/plain;charset=utf-8'},
+     body:JSON.stringify({type:s.title, name:r.name, len:len, weight:weight})
+   })
+   .then(function(response){
+     if (!response.ok) throw new Error('HTTP ' + response.status);
+     return response.json();
+   })
+   .then(function(data){
+     if (data.ai_meta) updateAiStatus(data.ai_meta); // อัปเดตหลังจากค้นหา
+     if (data.error) {
+       box.textContent = data.error + (data.detail ? ' — ' + data.detail : '');
+       return;
+     }
+     renderPrices(data, len, box, results);
+   })
+   .catch(function(error){
+     box.textContent = 'เชื่อมต่อหรือค้นหาราคาไม่สำเร็จ กรุณาตรวจสอบ URL ของ Apps Script, การ Deploy และ Apps Script > Executions' + (error && error.message ? ' ('+error.message+')' : '');
+   })
+   .finally(function(){
+     searchPanel.dataset.loading = 'false';
+     searchPanel.removeAttribute('aria-busy');
+     priceButtons.forEach(function(button){ button.disabled = false; });
+   });
   };
 
-  renderDet();
-})();
-</script>
+  })();
+  </script>
  </body>
 </html>
