@@ -11450,173 +11450,312 @@
      + '</div>';
   }
 
-  // เพิ่มส่วนค้นหาราคาในแผงรายละเอียด โดยคงตารางและระบบคัดลอกเดิมไว้
-  var originalRenderDet = renderDet;
-  renderDet = function(){
-   originalRenderDet();
-   var s = sec();
-   if (sel < 0 || !s.rows[sel]) return;
-   var body = document.querySelector('#det .body');
-   if (!body || document.getElementById('priceSearch')) return;
-   var wrap = document.createElement('div');
-   wrap.innerHTML = priceBox();
-   var copyDetails = body.querySelector('.copy-details');
-   if (copyDetails) body.insertBefore(wrap.firstChild, copyDetails);
-   else body.appendChild(wrap.firstChild);
-  };
+// ==========================================
+   // 1. ตัวแปรและโหลดค่าการตั้งค่าจาก LocalStorage
+   // ==========================================
+   var cur=0,sel=-1,sk=null,sd=1,q='';
+   var chosen = JSON.parse(localStorage.getItem('koyda_chosen') || '{}');
+   var fmt = localStorage.getItem('koyda_fmt') || 'kv';
+   var units = localStorage.getItem('koyda_units') !== 'false';
 
-  function safeUrl(url){
-   try {
-     var u = new URL(String(url || ''));
-     return (u.protocol === 'https:' || u.protocol === 'http:') ? u.href : '';
-   } catch(e) { return ''; }
-  }
-
-  function fmtPrice(value){
-   var n = Number(value);
-   return Number.isFinite(n) ? n.toLocaleString('th-TH', {maximumFractionDigits:2}) : '';
-  }
-
-  function renderPrices(data, len, box, results){
-   results.innerHTML = '';
-   var prices = Array.isArray(data.prices) ? data.prices.slice() : [];
-   if (!prices.length && data.price_per_bar != null) {
-     prices.push({price:data.price_per_bar, unit:'บาท/เส้น ('+len+' ม.)', seller:'แหล่งข้อมูลจาก API', date:null, url:'', exact_match:true, description:data.note||''});
+   var $=function(i){return document.getElementById(i)};
+   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+   function sym(c){return c.s||c.k}
+   function sec(){return D[cur]}
+   
+   // บันทึกค่า Default กรณีไม่เคยมีข้อมูลใน localStorage
+   function chs(){
+       var s=sec();
+       if(!chosen[s.id]){
+           chosen[s.id]=s.cols.map(function(c){return c.k});
+           localStorage.setItem('koyda_chosen', JSON.stringify(chosen));
+       }
+       return chosen[s.id]
+   }
+   
+   function toast(m){var t=$('toast');t.textContent=m;t.className='on';clearTimeout(toast.t);toast.t=setTimeout(function(){t.className=''},1800)}
+   function copy(text,msg){
+       var ok=function(){toast(msg)};
+       var fb=function(){var a=document.createElement('textarea');a.value=text;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}a.remove();ok()};
+       if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(ok,fb);else fb()
+   }
+   function build(row,keys,f,u){
+       var s=sec(),cs=s.cols.filter(function(c){return keys.indexOf(c.k)>=0&&row.v[c.k]!==undefined});
+       var one=function(c){return sym(c)+' = '+row.v[c.k]+(u&&c.u?' '+c.u:'')};
+       if(f=='tab')return row.name+'\t'+cs.map(function(c){return row.v[c.k]}).join('\t');
+       if(f=='lines')return cs.map(one).join('\n');
+       return row.name+': '+cs.map(one).join(', ')
+   }
+   function renderTabs(){$('tabs').innerHTML=D.map(function(s,i){return '<button role="tab" aria-selected="'+(i==cur)+'" data-t="'+i+'">'+esc(s.title)+'</button>'}).join('')}
+   function rows(){
+       var s=sec(),n=q.toLowerCase().replace(/[x×*]/g,'x').replace(/\s+/g,'');
+       var r=s.rows.map(function(x,i){return {x:x,i:i}}).filter(function(o){return !n||o.x.name.toLowerCase().replace(/[x×*]/g,'x').replace(/\s+/g,'').indexOf(n)>=0});
+       if(sk)r.sort(function(a,b){var p=a.x.v[sk],q2=b.x.v[sk];if(p===undefined)return 1;if(q2===undefined)return -1;return (p-q2)*sd});
+       return r
+   }
+   function sizeLabel(section,row){
+       var v=row.v||{}, n=function(k){return v[k]===undefined?'':String(v[k]).replace(/\.0+$/,'')};
+       if(section.id==='wf') return 'W '+n('H')+'x'+n('B')+'x'+n('weight');
+       if(section.id==='h') return 'H '+n('H')+'x'+n('B')+'x'+n('weight');
+       if(section.id==='i') return 'I '+n('H')+'x'+n('B')+'x'+n('weight');
+       if(section.id==='t') return 'T '+n('H')+'x'+n('B')+'x'+n('t1')+'x'+n('t2');
+       return row.name;
+   }
+   function renderTable(){
+       var s=sec(),h='<thead><tr><th data-s="">ขนาด</th>';
+       s.cols.forEach(function(c){h+='<th tabindex="0" data-s="'+c.k+'" title="'+esc(c.l+(c.u?' ('+c.u+')':''))+'">'+esc(sym(c))+(sk==c.k?(sd>0?' ▲':' ▼'):'')+'<small>'+esc(c.u||'')+'</small></th>'});
+       h+='<th>คัดลอก</th></tr></thead><tbody>';
+       var rs=rows();
+       rs.forEach(function(o){var r=o.x;h+='<tr data-i="'+o.i+'"'+(o.i==sel?' class="sel"':'')+'><td class="name">'+esc(sizeLabel(s,r))+'</td>';
+       s.cols.forEach(function(c){var v=r.v[c.k],w=r.f[c.k];h+=v===undefined?'<td>–</td>':'<td class="n'+(w?' w':'')+'" data-k="'+c.k+'"'+(w?' title="'+esc(w)+'"':'')+'>'+(w?'⚠ ':'')+v+'</td>'});
+       h+='<td><button class="s" data-r="'+o.i+'">คัดลอก</button></td></tr>'});
+       $('tb').innerHTML=h+'</tbody>';
+       $('ttl').innerHTML=esc(s.title)+' <small>'+esc(s.en)+' · '+rs.length+' รายการ</small>';
+       $('figs').innerHTML='<img src="'+s.img[0]+'" alt="หน้าตัด" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'" title="แผนผังหน้าตัดอ้างอิงจาก Koyda Steel Section Tables">';
    }
 
-   box.textContent = prices.length ? 'พบข้อมูล ' + prices.length + ' รายการ' : (data.note || 'ยังไม่พบราคาที่มีแหล่งอ้างอิงตรวจสอบได้');
+   // ประกาศฟังก์ชัน renderDet ตัวตั้งต้น
+   function renderDet(){
+       var s=sec(),d=$('det');
+       if(sel<0||!s.rows[sel]){d.innerHTML='<p class="hint">เลือกแถวในตารางเพื่อดูคุณสมบัติทั้งหมดและเลือกค่าที่ต้องการคัดลอก</p>';return}
+       var r=s.rows[sel],ks=chs(),h='<div class="bar"><h2>'+esc(r.name)+'</h2></div><div class="body">'+(r.nl?'<p class="nl">'+esc(r.nl)+'</p>':'');
+       h+='<details class="copy-details"><summary>เลือกข้อมูลที่ต้องการคัดลอก</summary><div class="copy-details-body">';
+       s.cols.forEach(function(c){var v=r.v[c.k];if(v===undefined)return;var w=r.f[c.k];
+       h+='<div class="prop'+(w?' w':'')+'"><input type="checkbox" data-c="'+c.k+'"'+(ks.indexOf(c.k)>=0?' checked':'')+' aria-label="เลือก '+esc(sym(c))+'"><span class="l">'+esc(c.l)+'</span><span class="v">'+(w?'⚠ ':'')+v+'<i>'+esc(c.u||'')+'</i></span><button class="s" data-p="'+c.k+'">คัดลอก</button>'+(w?'<div class="wm">'+esc(w)+'</div>':'')+'</div>'});
+       h+='<div class="opts"><label>รูปแบบ <select id="fm"><option value="kv">ข้อความ (ชื่อ: ค่า, ...)</option><option value="tab">แท็บ (วางใน Excel)</option><option value="lines">บรรทัดละค่า</option></select></label><label><input type="checkbox" id="un"'+(units?' checked':'')+'> ใส่หน่วย</label></div>';
+       h+='<div class="acts"><button class="p" id="cs">คัดลอกที่เลือก</button><button id="ca">เลือกทั้งหมด</button><button id="cn">ล้างที่เลือก</button></div></div></details></div>';
+       d.innerHTML=h;$('fm').value=fmt;
+   }
 
-   prices.forEach(function(p){
-     var item = document.createElement('div');
-     item.className = 'price-item';
-     var priceLine = document.createElement('div');
-     priceLine.className = 'price-value';
-     priceLine.textContent = p.price == null ? 'ราคาไม่ระบุ' : fmtPrice(p.price) + ' ' + (p.unit || 'บาท');
-     item.appendChild(priceLine);
-
-     var seller = document.createElement('div');
-     seller.textContent = p.seller || 'ไม่ระบุแหล่งข้อมูล';
-     item.appendChild(seller);
-
-     var description = document.createElement('div');
-     description.className = 'price-meta';
-     description.textContent = (p.exact_match === true ? 'ตรงรุ่น' : p.exact_match === false ? 'ขนาดใกล้เคียง/ยังไม่ยืนยันตรงรุ่น' : 'ยังไม่ยืนยันขนาด')
-       + (p.date ? ' · วันที่ข้อมูล: ' + p.date : '')
-       + (p.description ? ' · ' + p.description : '');
-     item.appendChild(description);
-
-     var url = safeUrl(p.url);
-     if (url) {
-       var link = document.createElement('a');
-       link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer';
-       link.textContent = 'เปิดแหล่งราคาต้นทาง'; link.style.display = 'inline-block'; link.style.marginTop = '6px';
-       item.appendChild(link);
-     }
-     results.appendChild(item);
+   // ==========================================
+   // 2. Event Listeners และ บันทึกลง LocalStorage
+   // ==========================================
+   function pick(i){sel=i;renderTable();renderDet()}
+   document.addEventListener('click',function(e){
+       var t=e.target,s=sec(),b;
+       if(b=t.closest('[data-t]')){cur=+b.dataset.t;sel=-1;sk=null;q='';$('q').value='';renderTabs();renderTable();renderDet();return}
+       if(b=t.closest('thead th')){var k=b.dataset.s;if(k){if(sk==k)sd=-sd;else{sk=k;sd=1}renderTable()}return}
+       if(b=t.closest('button[data-r]')){var r=s.rows[+b.dataset.r];copy(build(r,chs(),fmt,units),'คัดลอก '+r.name+' แล้ว');pick(+b.dataset.r);return}
+       if(b=t.closest('td.n')){var tr=b.parentNode,r2=s.rows[+tr.dataset.i],c=s.cols.filter(function(x){return x.k==b.dataset.k})[0];
+       copy(String(r2.v[c.k]),'คัดลอก '+sym(c)+' = '+r2.v[c.k]+(c.u?' '+c.u:'')+(r2.f[c.k]?' (ค่านี้อาจผิดในไฟล์ต้นฉบับ)':''));pick(+tr.dataset.i);return}
+       if(b=t.closest('tbody tr')){pick(+b.dataset.i);return}
+       if(b=t.closest('button[data-p]')){var r3=s.rows[sel],c3=s.cols.filter(function(x){return x.k==b.dataset.p})[0];
+       copy(String(r3.v[c3.k]),'คัดลอก '+sym(c3)+' = '+r3.v[c3.k]+(c3.u?' '+c3.u:'')+(r3.f[c3.k]?' (ค่านี้อาจผิดในไฟล์ต้นฉบับ)':''));return}
+       if(t.id=='cs'){copy(build(s.rows[sel],chs(),fmt,units),'คัดลอกค่าที่เลือกแล้ว');return}
+       if(t.id=='ca'){
+           chosen[s.id]=s.cols.map(function(c){return c.k});
+           localStorage.setItem('koyda_chosen', JSON.stringify(chosen));
+           renderDet();
+           return
+       }
+       if(t.id=='cn'){
+           chosen[s.id]=[];
+           localStorage.setItem('koyda_chosen', JSON.stringify(chosen));
+           renderDet();
+           return
+       }
    });
+   
+   // บันทึกค่าการเปลี่ยนแปลงต่างๆ (Checkbox, รูปแบบ, ใส่หน่วย)
+   document.addEventListener('change',function(e){
+       var t=e.target;
+       if(t.dataset.c){
+           var a=chs(),i=a.indexOf(t.dataset.c);
+           if(t.checked&&i<0) a.push(t.dataset.c);
+           if(!t.checked&&i>=0) a.splice(i,1);
+           localStorage.setItem('koyda_chosen', JSON.stringify(chosen));
+       }
+       if(t.id=='fm'){
+           fmt=t.value;
+           localStorage.setItem('koyda_fmt', fmt);
+       }
+       if(t.id=='un'){
+           units=t.checked;
+           localStorage.setItem('koyda_units', units);
+       }
+   });
+   
+   document.addEventListener('keydown',function(e){var th=e.target.closest&&e.target.closest('thead th');if(th&&(e.key=='Enter'||e.key==' ')){e.preventDefault();th.click()}});
+   $('q').addEventListener('input',function(){q=this.value;renderTable()});
 
-   var sources = Array.isArray(data.sources) ? data.sources : [];
-   var validSources = sources.map(function(source){
-     if (typeof source === 'string') return {url:source, title:'แหล่งข้อมูล'};
-     return {url:source && source.url, title:source && source.title || 'แหล่งข้อมูล'};
-   }).filter(function(source){ return !!safeUrl(source.url); });
+   // ==========================================
+   // 3. ส่วนค้นหาราคา (ของคุณที่เพิ่มเข้ามา)
+   // ==========================================
+   var originalRenderDet = renderDet;
+   renderDet = function(){
+    originalRenderDet();
+    var s = sec();
+    if (sel < 0 || !s.rows[sel]) return;
+    var body = document.querySelector('#det .body');
+    if (!body || document.getElementById('priceSearch')) return;
+    var wrap = document.createElement('div');
+    if (typeof priceBox === 'function') {
+        wrap.innerHTML = priceBox();
+    }
+    var copyDetails = body.querySelector('.copy-details');
+    if (copyDetails) body.insertBefore(wrap.firstChild, copyDetails);
+    else body.appendChild(wrap.firstChild);
+   };
 
-   if (validSources.length) {
-     var sourceWrap = document.createElement('div');
-     sourceWrap.className = 'price-meta'; sourceWrap.style.marginTop = '8px';
-     sourceWrap.appendChild(document.createTextNode('แหล่งค้นพบ: '));
-     validSources.slice(0,5).forEach(function(source,i){
-       if (i) sourceWrap.appendChild(document.createTextNode(' · '));
-       var a = document.createElement('a'); a.href = safeUrl(source.url); a.target = '_blank'; a.rel = 'noopener noreferrer';
-       a.textContent = source.title; sourceWrap.appendChild(a);
-     });
-     results.appendChild(sourceWrap);
+   function safeUrl(url){
+    try {
+      var u = new URL(String(url || ''));
+      return (u.protocol === 'https:' || u.protocol === 'http:') ? u.href : '';
+    } catch(e) { return ''; }
    }
-  }
-  
-  // ฟังก์ชันอัปเดตสถานะ AI มุมล่างขวา
-  function updateAiStatus(meta) {
-    var el = document.getElementById('aiStatus');
-    if (!el || !meta) return;
 
-    var remaining = Number(meta.groq_remaining_total);
-    var activeKey = Number(meta.active_key);
-    var totalKeys = Number(meta.total_keys);
-    var appRemaining = Number(meta.app_rate_remaining);
-    var appLimit = Number(meta.app_rate_limit);
-    var parts = [];
+   function fmtPrice(value){
+    var n = Number(value);
+    return Number.isFinite(n) ? n.toLocaleString('th-TH', {maximumFractionDigits:2}) : '';
+   }
 
-    if (Number.isFinite(remaining)) {
-      parts.push('โควตา AI โดยประมาณ <span class="acc">' + Math.max(0, remaining).toLocaleString('th-TH') + '</span>');
-    }
-    if (totalKeys > 0) {
-      parts.push('Key <span class="acc">' + activeKey + '/' + totalKeys + '</span>');
-    }
-    if (Number.isFinite(appRemaining) && Number.isFinite(appLimit)) {
-      parts.push('คำขอระบบ <span class="acc">' + Math.max(0, appRemaining) + '/' + appLimit + '</span>');
+   function renderPrices(data, len, box, results){
+    results.innerHTML = '';
+    var prices = Array.isArray(data.prices) ? data.prices.slice() : [];
+    if (!prices.length && data.price_per_bar != null) {
+      prices.push({price:data.price_per_bar, unit:'บาท/เส้น ('+len+' ม.)', seller:'แหล่งข้อมูลจาก API', date:null, url:'', exact_match:true, description:data.note||''});
     }
 
-    el.setAttribute('role', 'status');
-    el.setAttribute('aria-live', 'polite');
-    el.style.display = 'block';
-    el.innerHTML = parts.join(' <span aria-hidden="true">·</span> ');
-  }
+    box.textContent = prices.length ? 'พบข้อมูล ' + prices.length + ' รายการ' : (data.note || 'ยังไม่พบราคาที่มีแหล่งอ้างอิงตรวจสอบได้');
 
-  // ดึงสถานะ AI ครั้งแรกเมื่อเปิดหน้าเว็บ (ยิง GET ไปที่ APPS_URL)
-  fetch(APPS_URL)
-    .then(function(res){ return res.json(); })
-    .then(function(data){
-      if(data && data.ai_meta) updateAiStatus(data.ai_meta);
+    prices.forEach(function(p){
+      var item = document.createElement('div');
+      item.className = 'price-item';
+      var priceLine = document.createElement('div');
+      priceLine.className = 'price-value';
+      priceLine.textContent = p.price == null ? 'ราคาไม่ระบุ' : fmtPrice(p.price) + ' ' + (p.unit || 'บาท');
+      item.appendChild(priceLine);
+
+      var seller = document.createElement('div');
+      seller.textContent = p.seller || 'ไม่ระบุแหล่งข้อมูล';
+      item.appendChild(seller);
+
+      var description = document.createElement('div');
+      description.className = 'price-meta';
+      description.textContent = (p.exact_match === true ? 'ตรงรุ่น' : p.exact_match === false ? 'ขนาดใกล้เคียง/ยังไม่ยืนยันตรงรุ่น' : 'ยังไม่ยืนยันขนาด')
+        + (p.date ? ' · วันที่ข้อมูล: ' + p.date : '')
+        + (p.description ? ' · ' + p.description : '');
+      item.appendChild(description);
+
+      var url = safeUrl(p.url);
+      if (url) {
+        var link = document.createElement('a');
+        link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+        link.textContent = 'เปิดแหล่งราคาต้นทาง'; link.style.display = 'inline-block'; link.style.marginTop = '6px';
+        item.appendChild(link);
+      }
+      results.appendChild(item);
+    });
+
+    var sources = Array.isArray(data.sources) ? data.sources : [];
+    var validSources = sources.map(function(source){
+      if (typeof source === 'string') return {url:source, title:'แหล่งข้อมูล'};
+      return {url:source && source.url, title:source && source.title || 'แหล่งข้อมูล'};
+    }).filter(function(source){ return !!safeUrl(source.url); });
+
+    if (validSources.length) {
+      var sourceWrap = document.createElement('div');
+      sourceWrap.className = 'price-meta'; sourceWrap.style.marginTop = '8px';
+      sourceWrap.appendChild(document.createTextNode('แหล่งค้นพบ: '));
+      validSources.slice(0,5).forEach(function(source,i){
+        if (i) sourceWrap.appendChild(document.createTextNode(' · '));
+        var a = document.createElement('a'); a.href = safeUrl(source.url); a.target = '_blank'; a.rel = 'noopener noreferrer';
+        a.textContent = source.title; sourceWrap.appendChild(a);
+      });
+      results.appendChild(sourceWrap);
+    }
+   }
+   
+   // ฟังก์ชันอัปเดตสถานะ AI มุมล่างขวา
+   function updateAiStatus(meta) {
+     var el = document.getElementById('aiStatus');
+     if (!el || !meta) return;
+
+     var remaining = Number(meta.groq_remaining_total);
+     var activeKey = Number(meta.active_key);
+     var totalKeys = Number(meta.total_keys);
+     var appRemaining = Number(meta.app_rate_remaining);
+     var appLimit = Number(meta.app_rate_limit);
+     var parts = [];
+
+     if (Number.isFinite(remaining)) {
+       parts.push('โควตา AI โดยประมาณ <span class="acc">' + Math.max(0, remaining).toLocaleString('th-TH') + '</span>');
+     }
+     if (totalKeys > 0) {
+       parts.push('Key <span class="acc">' + activeKey + '/' + totalKeys + '</span>');
+     }
+     if (Number.isFinite(appRemaining) && Number.isFinite(appLimit)) {
+       parts.push('คำขอระบบ <span class="acc">' + Math.max(0, appRemaining) + '/' + appLimit + '</span>');
+     }
+
+     el.setAttribute('role', 'status');
+     el.setAttribute('aria-live', 'polite');
+     el.style.display = 'block';
+     el.innerHTML = parts.join(' <span aria-hidden="true">·</span> ');
+   }
+
+   // ดึงสถานะ AI ครั้งแรกเมื่อเปิดหน้าเว็บ (ยิง GET ไปที่ APPS_URL)
+   if (typeof APPS_URL !== 'undefined') {
+       fetch(APPS_URL)
+         .then(function(res){ return res.json(); })
+         .then(function(data){
+           if(data && data.ai_meta) updateAiStatus(data.ai_meta);
+         })
+         .catch(function(e){ console.log('Init API error', e); });
+   }
+
+   window.checkPrice = function(len){
+    var s = sec(), r = s.rows[sel];
+    var box = document.getElementById('pr');
+    var results = document.getElementById('priceResults');
+    var searchPanel = document.getElementById('priceSearch');
+    if (!r || !box || !results || !searchPanel || searchPanel.dataset.loading === 'true') return;
+    searchPanel.dataset.loading = 'true';
+    searchPanel.setAttribute('aria-busy', 'true');
+    var priceButtons = searchPanel.querySelectorAll('[data-price-len]');
+    priceButtons.forEach(function(button){
+      button.disabled = true;
+      button.classList.toggle('is-selected', Number(button.dataset.priceLen) === Number(len));
+    });
+    box.textContent = 'กำลังค้นหาราคาออนไลน์ อาจใช้เวลา 10–30 วินาที...';
+    results.innerHTML = '';
+    var weight = r.v.weight;
+    if (weight == null) weight = r.v.wp;
+    if (weight == null) weight = 0;
+
+    fetch(APPS_URL, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({type:s.title, name:r.name, len:len, weight:weight})
     })
-    .catch(function(e){ console.log('Init API error', e); });
+    .then(function(response){
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      return response.json();
+    })
+    .then(function(data){
+      if (data.ai_meta) updateAiStatus(data.ai_meta); // อัปเดตหลังจากค้นหา
+      if (data.error) {
+        box.textContent = data.error + (data.detail ? ' — ' + data.detail : '');
+        return;
+      }
+      renderPrices(data, len, box, results);
+    })
+    .catch(function(error){
+      box.textContent = 'เชื่อมต่อหรือค้นหาราคาไม่สำเร็จ กรุณาตรวจสอบ URL ของ Apps Script, การ Deploy และ Apps Script > Executions' + (error && error.message ? ' ('+error.message+')' : '');
+    })
+    .finally(function(){
+      searchPanel.dataset.loading = 'false';
+      searchPanel.removeAttribute('aria-busy');
+      priceButtons.forEach(function(button){ button.disabled = false; });
+    });
+   };
 
-  window.checkPrice = function(len){
-   var s = sec(), r = s.rows[sel];
-   var box = document.getElementById('pr');
-   var results = document.getElementById('priceResults');
-   var searchPanel = document.getElementById('priceSearch');
-   if (!r || !box || !results || !searchPanel || searchPanel.dataset.loading === 'true') return;
-   searchPanel.dataset.loading = 'true';
-   searchPanel.setAttribute('aria-busy', 'true');
-   var priceButtons = searchPanel.querySelectorAll('[data-price-len]');
-   priceButtons.forEach(function(button){
-     button.disabled = true;
-     button.classList.toggle('is-selected', Number(button.dataset.priceLen) === Number(len));
-   });
-   box.textContent = 'กำลังค้นหาราคาออนไลน์ อาจใช้เวลา 10–30 วินาที...';
-   results.innerHTML = '';
-   var weight = r.v.weight;
-   if (weight == null) weight = r.v.wp;
-   if (weight == null) weight = 0;
+   // เริ่มการทำงานของ UI
+   renderTabs();
+   renderTable();
+   renderDet();
 
-   fetch(APPS_URL, {
-     method:'POST',
-     headers:{'Content-Type':'text/plain;charset=utf-8'},
-     body:JSON.stringify({type:s.title, name:r.name, len:len, weight:weight})
-   })
-   .then(function(response){
-     if (!response.ok) throw new Error('HTTP ' + response.status);
-     return response.json();
-   })
-   .then(function(data){
-     if (data.ai_meta) updateAiStatus(data.ai_meta); // อัปเดตหลังจากค้นหา
-     if (data.error) {
-       box.textContent = data.error + (data.detail ? ' — ' + data.detail : '');
-       return;
-     }
-     renderPrices(data, len, box, results);
-   })
-   .catch(function(error){
-     box.textContent = 'เชื่อมต่อหรือค้นหาราคาไม่สำเร็จ กรุณาตรวจสอบ URL ของ Apps Script, การ Deploy และ Apps Script > Executions' + (error && error.message ? ' ('+error.message+')' : '');
-   })
-   .finally(function(){
-     searchPanel.dataset.loading = 'false';
-     searchPanel.removeAttribute('aria-busy');
-     priceButtons.forEach(function(button){ button.disabled = false; });
-   });
-  };
-
-  })();
+})();
   </script>
  </body>
 </html>
